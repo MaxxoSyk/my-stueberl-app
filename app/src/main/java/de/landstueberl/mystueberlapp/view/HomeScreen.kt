@@ -32,7 +32,10 @@ import de.landstueberl.mystueberlapp.viewmodel.HomeViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel
+    viewModel: HomeViewModel,
+    onNavigateToProducts: () -> Unit,
+    onNavigateToOrders: () -> Unit,
+    onNavigateToStatistics: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -70,7 +73,7 @@ fun HomeScreen(
                 salesVolume = "€0,00",
                 soldToday = 0,
                 onSale = 0,
-                onClick = { /* @todo Navigate to Statistics */ }
+                onClick = { onNavigateToStatistics() }
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -85,13 +88,13 @@ fun HomeScreen(
             ) {
                 ProductsTile(
                     availableProducts = 0,
-                    onClick = { /* @todo Navigate to Products */ },
+                    onClick = { onNavigateToProducts() },
                     modifier = Modifier.weight(1f)
                 )
                 OrdersTile(
                     openOrders = 0,
                     nextOrder = null,
-                    onClick = { /* @todo Navigate to Orders */ },
+                    onClick = { onNavigateToOrders() },
                     modifier = Modifier.weight(1f)
                 )
             }

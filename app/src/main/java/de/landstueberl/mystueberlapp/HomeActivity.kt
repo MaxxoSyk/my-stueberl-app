@@ -4,13 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
+import de.landstueberl.mystueberlapp.navigation.NavGraph
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.ui.theme.MyStueberlAppTheme
-import de.landstueberl.mystueberlapp.view.HomeScreen
 import de.landstueberl.mystueberlapp.viewmodel.HomeViewModelFactory
+import de.landstueberl.mystueberlapp.viewmodel.ProductsViewModelFactory
 
 class HomeActivity : ComponentActivity() {
 
@@ -34,19 +36,26 @@ class HomeActivity : ComponentActivity() {
         )
     }
 
-    private val factory by lazy {
+    private val homeViewModelFactory by lazy {
         HomeViewModelFactory(
             productRepository = productRepository,
             orderRepository = orderRepository
         )
     }
 
+    private val productsViewModelFactory by lazy {
+        ProductsViewModelFactory(productRepository)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MyStueberlAppTheme {
-                HomeScreen(
-                    viewModel = viewModel(factory = factory)
+                val navController = rememberNavController()
+                NavGraph(
+                    navController = navController,
+                    homeViewModel = viewModel(factory = homeViewModelFactory),
+                    productsViewModelFactory = productsViewModelFactory
                 )
             }
         }

@@ -20,4 +20,17 @@
     <string name="orders_open">Offene Bestellungen</string>
     <string name="orders_next">Nächste Bestellung</string>
     <string name="orders_no_next">Keine anstehenden Bestellungen</string>
+
+    <!-- Products Screen -->
+    <string name="products_screen_title">Werkstücke</string>
+    <string name="products_screen_filter">Filter</string>
+    <string name="products_screen_empty">Noch keine Produkte</string>
+    <string name="products_screen_delete">Ausgewählte löschen</string>
+    <string name="products_screen_selected">%1$d ausgewählt</string>
+    <string name="products_screen_status_available">Verfügbar</string>
+    <string name="products_screen_status_sold">Verkauft</string>
+    <string name="products_screen_status_removed">Entfernt</string>
+    <string name="products_screen_purchase_price">Einkauf</string>
+    <string name="products_screen_sales_price">Verkauf</string>
+    <string name="products_screen_no_image">Kein Bild</string>
 </resources>
