@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mein Stüberl</string>
+    <string name="home_screen_title">Landstüberl</string>
+
+    <!-- Tile Titles -->
+    <string name="home_screen_tile_statistics">Statistiken</string>
+    <string name="home_screen_tile_products">Werkstücke</string>
+    <string name="home_screen_tile_orders">Bestellungen</string>
+
+    <!-- Statistics Tile -->
+    <string name="stats_sales_volume">Heutiger Umsatz</string>
+    <string name="stats_sold_today">Heute verkauft</string>
+    <string name="stats_on_sale">Aktuell im Verkauf</string>
+
+    <!-- Products Tile -->
+    <string name="products_available">Verfügbare Werkstücke</string>
+
+    <!-- Orders Tile -->
+    <string name="orders_open">Offene Bestellungen</string>
+    <string name="orders_next">Nächste Bestellung</string>
+    <string name="orders_no_next">Keine anstehenden Bestellungen</string>
+</resources>
