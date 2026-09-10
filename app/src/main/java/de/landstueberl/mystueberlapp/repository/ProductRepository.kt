@@ -42,4 +42,12 @@ class ProductRepository(private val dao: ProductDao) {
         return dao.getProduct(finalProductId)
     }
 
+    suspend fun getAllProducts(): List<Product> {
+        return dao.getAllProducts()
+    }
+
+    suspend fun deleteProductsByIds(ids: List<Int>) {
+        dao.deleteProductsByIds(ids)
+    }
+
 }

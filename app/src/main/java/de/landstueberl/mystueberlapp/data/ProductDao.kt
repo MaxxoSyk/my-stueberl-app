@@ -28,4 +28,11 @@ interface ProductDao {
     @Transaction
     @Query("SELECT * FROM ProductDetail WHERE id = :id")
     suspend fun getProduct(id: Int): Product
+
+    @Transaction
+    @Query("SELECT * FROM ProductDetail")
+    suspend fun getAllProducts(): List<Product>
+
+    @Query("DELETE FROM ProductDetail WHERE id IN (:ids)")
+    suspend fun deleteProductsByIds(ids: List<Int>)
 }

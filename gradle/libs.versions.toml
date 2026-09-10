@@ -12,6 +12,7 @@ composeBom = "2026.02.01"
 room = "2.8.3"
 ksp = "2.3.6"
 materialIconsExtended = "1.7.8"
+navigation = "2.7.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -33,6 +34,7 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

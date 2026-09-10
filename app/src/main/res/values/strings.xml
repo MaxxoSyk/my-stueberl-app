@@ -20,4 +20,17 @@
     <string name="orders_open">Open Orders</string>
     <string name="orders_next">Next Order</string>
     <string name="orders_no_next">No upcoming orders</string>
+
+    <!-- Products Screen -->
+    <string name="products_screen_title">Products</string>
+    <string name="products_screen_filter">Filter</string>
+    <string name="products_screen_empty">No products yet</string>
+    <string name="products_screen_delete">Delete selected</string>
+    <string name="products_screen_selected">%1$d selected</string>
+    <string name="products_screen_status_available">Available</string>
+    <string name="products_screen_status_sold">Sold</string>
+    <string name="products_screen_status_removed">Removed</string>
+    <string name="products_screen_purchase_price">Purchase</string>
+    <string name="products_screen_sales_price">Sales</string>
+    <string name="products_screen_no_image">No image</string>
 </resources>
