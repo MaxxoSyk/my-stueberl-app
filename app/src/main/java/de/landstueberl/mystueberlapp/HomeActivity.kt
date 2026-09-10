@@ -1,0 +1,54 @@
+package de.landstueberl.mystueberlapp
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.room.Room
+import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
+import de.landstueberl.mystueberlapp.repository.OrderRepository
+import de.landstueberl.mystueberlapp.repository.ProductRepository
+import de.landstueberl.mystueberlapp.ui.theme.MyStueberlAppTheme
+import de.landstueberl.mystueberlapp.view.HomeScreen
+import de.landstueberl.mystueberlapp.viewmodel.HomeViewModelFactory
+
+class HomeActivity : ComponentActivity() {
+
+    private val database by lazy {
+        Room.databaseBuilder(
+                applicationContext,
+                StueberlDatabase::class.java,
+                "stueberl_database"
+            ).fallbackToDestructiveMigration(true)
+            .build()
+    }
+
+    private val productRepository by lazy {
+        ProductRepository(database.productDao())
+    }
+
+    private val orderRepository by lazy {
+        OrderRepository(
+            orderDao = database.orderDao(),
+            productDao = database.productDao()
+        )
+    }
+
+    private val factory by lazy {
+        HomeViewModelFactory(
+            productRepository = productRepository,
+            orderRepository = orderRepository
+        )
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MyStueberlAppTheme {
+                HomeScreen(
+                    viewModel = viewModel(factory = factory)
+                )
+            }
+        }
+    }
+}
