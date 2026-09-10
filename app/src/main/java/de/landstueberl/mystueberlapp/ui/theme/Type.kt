@@ -2,33 +2,64 @@ package de.landstueberl.mystueberlapp.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import de.landstueberl.mystueberlapp.R
 
-// Set of Material typography styles to start with
+// ── Merriweather Font Family ───────────────────
+val Merriweather = FontFamily(
+    Font(R.font.merriweather, FontWeight.Normal),
+    Font(R.font.merriweather_italic, FontWeight.Normal, FontStyle.Italic),
+)
+
+// ── Typography ─────────────────────────────────
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
+    displayLarge = TextStyle(
+        fontFamily = Merriweather,
+        fontWeight = FontWeight.Bold,
+        fontSize = 32.sp
+    ),
+    displayMedium = TextStyle(
+        fontFamily = Merriweather,
+        fontWeight = FontWeight.Bold,
+        fontSize = 28.sp
+    ),
+    headlineLarge = TextStyle(
+        fontFamily = Merriweather,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp
+    ),
+    headlineMedium = TextStyle(
+        fontFamily = Merriweather,
+        fontWeight = FontWeight.Bold,
+        fontSize = 20.sp
+    ),
     titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = Merriweather,
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = Merriweather,
         fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+        fontSize = 16.sp
+    ),
+    bodyLarge = TextStyle(
+        fontFamily = Merriweather,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp
+    ),
+    bodyMedium = TextStyle(
+        fontFamily = Merriweather,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        fontFamily = Merriweather,
+        fontWeight = FontWeight.Normal,
+        fontSize = 11.sp
     )
-    */
 )
