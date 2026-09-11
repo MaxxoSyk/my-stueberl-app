@@ -11,8 +11,9 @@ import de.landstueberl.mystueberlapp.navigation.NavGraph
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.ui.theme.MyStueberlAppTheme
-import de.landstueberl.mystueberlapp.viewmodel.HomeViewModelFactory
-import de.landstueberl.mystueberlapp.viewmodel.ProductsViewModelFactory
+import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModelFactory
+import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModelFactory
+import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModelFactory
 
 class HomeActivity : ComponentActivity() {
 
@@ -47,6 +48,10 @@ class HomeActivity : ComponentActivity() {
         ProductsViewModelFactory(productRepository)
     }
 
+    private val addProductViewModelFactory by lazy {
+        AddProductViewModelFactory(productRepository)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -55,7 +60,8 @@ class HomeActivity : ComponentActivity() {
                 NavGraph(
                     navController = navController,
                     homeViewModel = viewModel(factory = homeViewModelFactory),
-                    productsViewModelFactory = productsViewModelFactory
+                    productsViewModelFactory = productsViewModelFactory,
+                    addProductViewModelFactory = addProductViewModelFactory
                 )
             }
         }

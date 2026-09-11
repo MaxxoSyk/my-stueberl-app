@@ -1,4 +1,4 @@
-package de.landstueberl.mystueberlapp.view
+package de.landstueberl.mystueberlapp.view.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
-import de.landstueberl.mystueberlapp.viewmodel.HomeViewModel
+import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

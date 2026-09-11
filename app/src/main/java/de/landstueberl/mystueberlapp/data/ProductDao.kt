@@ -6,6 +6,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductDao {
@@ -32,6 +33,10 @@ interface ProductDao {
     @Transaction
     @Query("SELECT * FROM ProductDetail")
     suspend fun getAllProducts(): List<Product>
+
+    @Transaction
+    @Query("SELECT * FROM ProductDetail")
+    fun getAllProductsFlow(): Flow<List<Product>>
 
     @Query("DELETE FROM ProductDetail WHERE id IN (:ids)")
     suspend fun deleteProductsByIds(ids: List<Int>)

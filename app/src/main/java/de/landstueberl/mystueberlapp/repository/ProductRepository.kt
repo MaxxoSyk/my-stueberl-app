@@ -3,6 +3,7 @@ package de.landstueberl.mystueberlapp.repository
 import androidx.room.Transaction
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductDao
+import kotlinx.coroutines.flow.Flow
 import kotlin.collections.filter
 
 class ProductRepository(private val dao: ProductDao) {
@@ -44,6 +45,10 @@ class ProductRepository(private val dao: ProductDao) {
 
     suspend fun getAllProducts(): List<Product> {
         return dao.getAllProducts()
+    }
+
+    fun getAllProductsFlow(): Flow<List<Product>> {
+        return dao.getAllProductsFlow()
     }
 
     suspend fun deleteProductsByIds(ids: List<Int>) {

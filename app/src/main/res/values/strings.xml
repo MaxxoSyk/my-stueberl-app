@@ -33,4 +33,16 @@
     <string name="products_screen_purchase_price">Purchase</string>
     <string name="products_screen_sales_price">Sales</string>
     <string name="products_screen_no_image">No image</string>
+
+    <!-- Add Product Screen -->
+    <string name="add_product_screen_title">Add Product</string>
+    <string name="add_product_screen_description">Description</string>
+    <string name="add_product_screen_description_placeholder">Enter product description</string>
+    <string name="add_product_screen_purchase_price">Purchase Price</string>
+    <string name="add_product_screen_sales_price">Sales Price</string>
+    <string name="add_product_screen_currency">Currency</string>
+    <string name="add_product_screen_save">Save</string>
+    <string name="add_product_screen_success">Product saved successfully!</string>
+    <string name="add_product_screen_image_placeholder">Add Image</string>
+    <string name="add_product_screen_price_invalid">Please enter a valid price</string>
 </resources>
