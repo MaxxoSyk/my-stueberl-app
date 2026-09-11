@@ -31,13 +31,16 @@ interface ProductDao {
     suspend fun getProduct(id: Int): Product
 
     @Transaction
-    @Query("SELECT * FROM ProductDetail")
+    @Query("SELECT * FROM ProductDetail") // @todo all products mean also products from orders. Im not sure if its ok
     suspend fun getAllProducts(): List<Product>
 
     @Transaction
-    @Query("SELECT * FROM ProductDetail")
+    @Query("SELECT * FROM ProductDetail") // @todo all products mean also products from orders. Im not sure if its ok
     fun getAllProductsFlow(): Flow<List<Product>>
 
     @Query("DELETE FROM ProductDetail WHERE id IN (:ids)")
     suspend fun deleteProductsByIds(ids: List<Int>)
+
+    @Query("SELECT COUNT(*) FROM ProductDetail WHERE isSold = 0 AND isRemoved = 0 AND orderId IS NULL")
+    fun getAvailableProductsCountFlow(): Flow<Int>
 }

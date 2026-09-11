@@ -8,6 +8,9 @@ import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.Currency
@@ -18,4 +21,13 @@ class HomeViewModel(
 ): ViewModel() {
 
     // @todo decide what FAB on HomeScreen should do
+
+    // ── Available Products Count ───────────────
+    val availableProductsCount: StateFlow<Int> = productRepo
+        .getAvailableProductsCountFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0
+        )
 }
