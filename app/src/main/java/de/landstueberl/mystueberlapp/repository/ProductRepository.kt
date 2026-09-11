@@ -60,6 +60,7 @@ class ProductRepository(private val dao: ProductDao) {
         val product = dao.getProduct(productId)
         val updated = product.details.copy(
             isSold = true,
+            isRemoved = false,
             removedOn = LocalDate.now()
         )
         dao.upsertProductDetail(updated)
@@ -69,7 +70,18 @@ class ProductRepository(private val dao: ProductDao) {
         val product = dao.getProduct(productId)
         val updated = product.details.copy(
             isRemoved = true,
+            isSold = false,
             removedOn = LocalDate.now()
+        )
+        dao.upsertProductDetail(updated)
+    }
+
+    suspend fun resetProductToAvailable(productId: Int) {
+        val product = dao.getProduct(productId)
+        val updated = product.details.copy(
+            isSold = false,
+            isRemoved = false,
+            removedOn = null
         )
         dao.upsertProductDetail(updated)
     }

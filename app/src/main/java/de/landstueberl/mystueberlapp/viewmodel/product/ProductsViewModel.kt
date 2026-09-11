@@ -30,6 +30,41 @@ class ProductsViewModel(
     val isSelectionMode: Boolean
         get() = _selectedProducts.value.isNotEmpty()
 
+    // ── Bottom Sheet ───────────────────────────
+    private val _selectedProduct = MutableStateFlow<Product?>(null)
+    val selectedProduct: StateFlow<Product?> = _selectedProduct
+
+    fun onProductTap(product: Product) {
+        _selectedProduct.value = product
+    }
+
+    fun dismissBottomSheet() {
+        _selectedProduct.value = null
+    }
+
+    // ── Product Status ─────────────────────────
+    fun markAsSold(productId: Int) {
+        viewModelScope.launch {
+            repo.markProductAsSold(productId)
+            dismissBottomSheet()
+        }
+    }
+
+    fun markAsRemoved(productId: Int) {
+        viewModelScope.launch {
+            repo.markProductAsRemoved(productId)
+            dismissBottomSheet()
+        }
+    }
+
+    fun resetToAvailable(productId: Int) {
+        viewModelScope.launch {
+            repo.resetProductToAvailable(productId)
+            dismissBottomSheet()
+        }
+    }
+
+    // ── Selection Mode ─────────────────────────
     fun toggleSelection(productId: Int) {
         val current = _selectedProducts.value.toMutableSet()
         if (current.contains(productId)) {

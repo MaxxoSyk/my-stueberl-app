@@ -45,4 +45,10 @@
     <string name="add_product_screen_success">Product saved successfully!</string>
     <string name="add_product_screen_image_placeholder">Add Image</string>
     <string name="add_product_screen_price_invalid">Please enter a valid price</string>
+
+    <!-- Product Bottom Sheet -->
+    <string name="product_bottom_sheet_mark_sold">Mark as Sold</string>
+    <string name="product_bottom_sheet_mark_removed">Mark as Removed</string>
+    <string name="product_bottom_sheet_reset">Reset to Available</string>
+    <string name="product_bottom_sheet_edit">Edit Product</string>
 </resources>
