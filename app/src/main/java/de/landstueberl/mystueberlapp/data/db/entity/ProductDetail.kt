@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import de.landstueberl.mystueberlapp.data.Money
+import java.time.LocalDate
 
 @Entity(
     foreignKeys = [
@@ -25,5 +26,7 @@ data class ProductDetail(
     @Embedded(prefix = "sales_") val salesPrice: Money?,
     val isSold: Boolean = false,
     val isRemoved: Boolean = false,
-    val orderId: Int? = null
+    val orderId: Int? = null,
+    val createdAt: LocalDate = LocalDate.now(),
+    val removedOn: LocalDate? = null
 )
