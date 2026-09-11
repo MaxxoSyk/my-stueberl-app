@@ -4,6 +4,7 @@ import androidx.room.Transaction
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductDao
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 import kotlin.collections.filter
 
 class ProductRepository(private val dao: ProductDao) {
@@ -53,6 +54,24 @@ class ProductRepository(private val dao: ProductDao) {
 
     suspend fun deleteProductsByIds(ids: List<Int>) {
         dao.deleteProductsByIds(ids)
+    }
+
+    suspend fun markProductAsSold(productId: Int) {
+        val product = dao.getProduct(productId)
+        val updated = product.details.copy(
+            isSold = true,
+            removedOn = LocalDate.now()
+        )
+        dao.upsertProductDetail(updated)
+    }
+
+    suspend fun markProductAsRemoved(productId: Int) {
+        val product = dao.getProduct(productId)
+        val updated = product.details.copy(
+            isRemoved = true,
+            removedOn = LocalDate.now()
+        )
+        dao.upsertProductDetail(updated)
     }
 
 }

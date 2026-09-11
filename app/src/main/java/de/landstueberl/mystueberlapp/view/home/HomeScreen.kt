@@ -55,7 +55,7 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { viewModel.createTestProduct() }
+                onClick = { /* @todo decide FAB functionality */ },
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Product")
             }
