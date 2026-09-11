@@ -1,4 +1,4 @@
-package de.landstueberl.mystueberlapp.view
+package de.landstueberl.mystueberlapp.view.product
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

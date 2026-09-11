@@ -33,4 +33,16 @@
     <string name="products_screen_purchase_price">Einkauf</string>
     <string name="products_screen_sales_price">Verkauf</string>
     <string name="products_screen_no_image">Kein Bild</string>
+
+    <!-- Add Product Screen -->
+    <string name="add_product_screen_title">Werkstück hinzufügen</string>
+    <string name="add_product_screen_description">Beschreibung</string>
+    <string name="add_product_screen_description_placeholder">Werkstückbeschreibung eingeben</string>
+    <string name="add_product_screen_purchase_price">Einkaufspreis</string>
+    <string name="add_product_screen_sales_price">Verkaufspreis</string>
+    <string name="add_product_screen_currency">Währung</string>
+    <string name="add_product_screen_save">Speichern</string>
+    <string name="add_product_screen_success">Werkstück erfolgreich gespeichert!</string>
+    <string name="add_product_screen_image_placeholder">Bild hinzufügen</string>
+    <string name="add_product_screen_price_invalid">Bitte gültigen Preis eingeben</string>
 </resources>

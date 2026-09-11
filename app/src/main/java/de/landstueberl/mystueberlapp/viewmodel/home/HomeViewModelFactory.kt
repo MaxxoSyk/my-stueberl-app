@@ -1,4 +1,4 @@
-package de.landstueberl.mystueberlapp.viewmodel
+package de.landstueberl.mystueberlapp.viewmodel.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
