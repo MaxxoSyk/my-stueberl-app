@@ -44,11 +44,13 @@ fun ProductsScreen(
     viewModel: ProductsViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToAddProduct: () -> Unit,
+    onNavigateToEditProduct: (Int) -> Unit,
     productSaved: Boolean = false,
     onProductSavedConsumed: () -> Unit = {}
 ) {
     val products by viewModel.products.collectAsState()
     val selectedProducts by viewModel.selectedProducts.collectAsState()
+    val selectedProduct by viewModel.selectedProduct.collectAsState()
     val isSelectionMode = selectedProducts.isNotEmpty()
     val snackbarHostState = remember { SnackbarHostState() }
     val successMessage = stringResource(R.string.add_product_screen_success)
@@ -174,7 +176,7 @@ fun ProductsScreen(
                             if (isSelectionMode) {
                                 viewModel.toggleSelection(product.details.id)
                             } else {
-                                // @todo Navigate to edit product
+                                viewModel.onProductTap(product)
                             }
                         },
                         onLongPress = {
@@ -184,5 +186,28 @@ fun ProductsScreen(
                 }
             }
         }
+    }
+
+    // ── Bottom Sheet ───────────────────────────
+    selectedProduct?.let { product ->
+        ProductBottomSheet(
+            product = product,
+            onMarkAsSold = {
+                viewModel.markAsSold(product.details.id)
+            },
+            onMarkAsRemoved = {
+                viewModel.markAsRemoved(product.details.id)
+            },
+            onResetToAvailable = {
+                viewModel.resetToAvailable(product.details.id)
+            },
+            onEdit = {
+                viewModel.dismissBottomSheet()
+                onNavigateToEditProduct(product.details.id)
+            },
+            onDismiss = {
+                viewModel.dismissBottomSheet()
+            }
+        )
     }
 }

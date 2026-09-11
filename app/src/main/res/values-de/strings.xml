@@ -45,4 +45,10 @@
     <string name="add_product_screen_success">Werkstück erfolgreich gespeichert!</string>
     <string name="add_product_screen_image_placeholder">Bild hinzufügen</string>
     <string name="add_product_screen_price_invalid">Bitte gültigen Preis eingeben</string>
+
+    <!-- Product Bottom Sheet -->
+    <string name="product_bottom_sheet_mark_sold">Als verkauft markieren</string>
+    <string name="product_bottom_sheet_mark_removed">Als entfernt markieren</string>
+    <string name="product_bottom_sheet_reset">Zurück auf verfügbar</string>
+    <string name="product_bottom_sheet_edit">Werkstück bearbeiten</string>
 </resources>

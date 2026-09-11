@@ -52,6 +52,9 @@ fun NavGraph(
                 onNavigateToAddProduct = {
                     navController.navigate(Screen.AddProduct.route)
                 },
+                onNavigateToEditProduct = { productId ->
+                    // @todo navigate to edit product
+                },
                 productSaved = productSaved.value,
                 onProductSavedConsumed = {
                     it.savedStateHandle["product_saved"] = false
