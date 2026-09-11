@@ -74,4 +74,8 @@ class ProductRepository(private val dao: ProductDao) {
         dao.upsertProductDetail(updated)
     }
 
+    fun getAvailableProductsCountFlow(): Flow<Int> {
+        return dao.getAvailableProductsCountFlow()
+    }
+
 }

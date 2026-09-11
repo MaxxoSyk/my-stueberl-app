@@ -18,6 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -37,6 +39,8 @@ fun HomeScreen(
     onNavigateToOrders: () -> Unit,
     onNavigateToStatistics: () -> Unit
 ) {
+    val availableProductsCount by viewModel.availableProductsCount.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -87,7 +91,7 @@ fun HomeScreen(
                 verticalAlignment = Alignment.Top
             ) {
                 ProductsTile(
-                    availableProducts = 0,
+                    availableProducts = availableProductsCount,
                     onClick = { onNavigateToProducts() },
                     modifier = Modifier.weight(1f)
                 )
