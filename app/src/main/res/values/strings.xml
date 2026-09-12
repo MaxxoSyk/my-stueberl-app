@@ -51,4 +51,15 @@
     <string name="product_bottom_sheet_mark_removed">Mark as Removed</string>
     <string name="product_bottom_sheet_reset">Reset to Available</string>
     <string name="product_bottom_sheet_edit">Edit Product</string>
+
+    <!-- Edit Product Screen -->
+    <string name="edit_product_screen_title">Edit Product</string>
+    <string name="edit_product_screen_created_at">Created At</string>
+    <string name="edit_product_screen_removed_on">Removed/Sold On</string>
+    <string name="edit_product_screen_success">Product updated!</string>
+
+    <!-- Product Status Badge -->
+    <string name="product_status_badge_available">Available</string>
+    <string name="product_status_badge_sold">Sold</string>
+    <string name="product_status_badge_removed">Removed</string>
 </resources>

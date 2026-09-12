@@ -51,4 +51,15 @@
     <string name="product_bottom_sheet_mark_removed">Als entfernt markieren</string>
     <string name="product_bottom_sheet_reset">Zurück auf verfügbar</string>
     <string name="product_bottom_sheet_edit">Werkstück bearbeiten</string>
+
+    <!-- Edit Product Screen -->
+    <string name="edit_product_screen_title">Werkstück bearbeiten</string>
+    <string name="edit_product_screen_created_at">Erstellt am</string>
+    <string name="edit_product_screen_removed_on">Entfernt/verkauft am</string>
+    <string name="edit_product_screen_success">Werkstück aktualisiert!</string>
+
+    <!-- Product Status Badge -->
+    <string name="product_status_badge_available">Verfügbar</string>
+    <string name="product_status_badge_sold">Verkauft</string>
+    <string name="product_status_badge_removed">Entfernt</string>
 </resources>

@@ -46,7 +46,9 @@ fun ProductsScreen(
     onNavigateToAddProduct: () -> Unit,
     onNavigateToEditProduct: (Int) -> Unit,
     productSaved: Boolean = false,
-    onProductSavedConsumed: () -> Unit = {}
+    onProductSavedConsumed: () -> Unit = {},
+    productUpdated: Boolean = false,
+    onProductUpdatedConsumed: () -> Unit = {}
 ) {
     val products by viewModel.products.collectAsState()
     val selectedProducts by viewModel.selectedProducts.collectAsState()
@@ -54,12 +56,21 @@ fun ProductsScreen(
     val isSelectionMode = selectedProducts.isNotEmpty()
     val snackbarHostState = remember { SnackbarHostState() }
     val successMessage = stringResource(R.string.add_product_screen_success)
+    val updateMessage = stringResource(R.string.edit_product_screen_success)
 
     // ── Show success message when product saved ──
     LaunchedEffect(productSaved) {
         if (productSaved) {
             snackbarHostState.showSnackbar(successMessage)
             onProductSavedConsumed()
+        }
+    }
+
+    // ── Show update message when product updated ──
+    LaunchedEffect(productUpdated) {
+        if (productUpdated) {
+            snackbarHostState.showSnackbar(updateMessage)
+            onProductUpdatedConsumed()
         }
     }
 
