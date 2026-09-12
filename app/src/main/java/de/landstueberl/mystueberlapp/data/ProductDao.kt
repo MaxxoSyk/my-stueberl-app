@@ -28,7 +28,7 @@ interface ProductDao {
 
     @Transaction
     @Query("SELECT * FROM ProductDetail WHERE id = :id")
-    suspend fun getProduct(id: Int): Product
+    suspend fun getProductById(id: Int): Product
 
     @Transaction
     @Query("SELECT * FROM ProductDetail") // @todo all products mean also products from orders. Im not sure if its ok

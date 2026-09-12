@@ -61,7 +61,8 @@ class HomeActivity : ComponentActivity() {
                     navController = navController,
                     homeViewModel = viewModel(factory = homeViewModelFactory),
                     productsViewModelFactory = productsViewModelFactory,
-                    addProductViewModelFactory = addProductViewModelFactory
+                    addProductViewModelFactory = addProductViewModelFactory,
+                    productRepository = productRepository
                 )
             }
         }

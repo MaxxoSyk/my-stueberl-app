@@ -41,7 +41,7 @@ class ProductRepository(private val dao: ProductDao) {
         dao.upsertImages(updatedImages)
 
         // 6. Return fresh product from DB
-        return dao.getProduct(finalProductId)
+        return dao.getProductById(finalProductId)
     }
 
     suspend fun getAllProducts(): List<Product> {
@@ -57,7 +57,7 @@ class ProductRepository(private val dao: ProductDao) {
     }
 
     suspend fun markProductAsSold(productId: Int) {
-        val product = dao.getProduct(productId)
+        val product = dao.getProductById(productId)
         val updated = product.details.copy(
             isSold = true,
             isRemoved = false,
@@ -67,7 +67,7 @@ class ProductRepository(private val dao: ProductDao) {
     }
 
     suspend fun markProductAsRemoved(productId: Int) {
-        val product = dao.getProduct(productId)
+        val product = dao.getProductById(productId)
         val updated = product.details.copy(
             isRemoved = true,
             isSold = false,
@@ -77,7 +77,7 @@ class ProductRepository(private val dao: ProductDao) {
     }
 
     suspend fun resetProductToAvailable(productId: Int) {
-        val product = dao.getProduct(productId)
+        val product = dao.getProductById(productId)
         val updated = product.details.copy(
             isSold = false,
             isRemoved = false,
@@ -88,6 +88,10 @@ class ProductRepository(private val dao: ProductDao) {
 
     fun getAvailableProductsCountFlow(): Flow<Int> {
         return dao.getAvailableProductsCountFlow()
+    }
+
+    suspend fun getProductById(productId: Int): Product {
+        return dao.getProductById(productId)
     }
 
 }
