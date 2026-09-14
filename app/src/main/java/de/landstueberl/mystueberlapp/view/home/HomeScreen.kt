@@ -40,6 +40,7 @@ fun HomeScreen(
     onNavigateToStatistics: () -> Unit
 ) {
     val availableProductsCount by viewModel.availableProductsCount.collectAsState()
+    val totalProductsCurrentYear by viewModel.totalProductsCurrentYear.collectAsState()
 
     Scaffold(
         topBar = {
@@ -92,6 +93,7 @@ fun HomeScreen(
             ) {
                 ProductsTile(
                     availableProducts = availableProductsCount,
+                    totalProductsCurrentYear = totalProductsCurrentYear,
                     onClick = { onNavigateToProducts() },
                     modifier = Modifier.weight(1f)
                 )

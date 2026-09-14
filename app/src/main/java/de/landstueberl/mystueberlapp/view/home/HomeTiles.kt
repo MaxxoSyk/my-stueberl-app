@@ -35,6 +35,7 @@ import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import java.time.LocalDate
 
 @Composable
 private fun TileRow(
@@ -142,6 +143,7 @@ fun StatisticsTile(
 @Composable
 fun ProductsTile(
     availableProducts: Int,
+    totalProductsCurrentYear: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -183,8 +185,17 @@ fun ProductsTile(
             TileRow(
                 icon = Icons.Default.Inventory,
                 iconTint = SageGreen,
-                label = stringResource(R.string.products_available),
+                label = stringResource(R.string.home_screen_tile_products_available),
                 value = availableProducts.toString()
+            )
+            TileRow(
+                icon = Icons.Default.Inventory,
+                iconTint = SageGreen,
+                label = stringResource(
+                    R.string.home_screen_tile_products_total,
+                    LocalDate.now().year
+                ),
+                value = totalProductsCurrentYear.toString()
             )
         }
     }

@@ -116,4 +116,10 @@ class ProductRepository(private val dao: ProductDao) {
         return dao.getAvailableYearsFlow()
     }
 
+    fun getTotalProductsForYearFlow(): Flow<Int> {
+        return dao.getTotalProductsForYearFlow(
+            year = LocalDate.now().year.toString()
+        )
+    }
+
 }
