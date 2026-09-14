@@ -32,6 +32,9 @@
     <string name="products_screen_status_removed">Entfernt</string>
     <string name="products_screen_purchase_price">Einkauf</string>
     <string name="products_screen_sales_price">Verkauf</string>
+    <string name="products_screen_created_at">Erstellt: %1$s</string>
+    <string name="products_screen_sold_on">Verkauft: %1$s</string>
+    <string name="products_screen_removed_on">Entfernt: %1$s</string>
     <string name="products_screen_no_image">Kein Bild</string>
 
     <!-- Add Product Screen -->
