@@ -24,7 +24,7 @@
     <!-- Products Screen -->
     <string name="products_screen_title">Werkstücke</string>
     <string name="products_screen_filter">Filter</string>
-    <string name="products_screen_empty">Noch keine Produkte</string>
+    <string name="products_screen_empty">Noch keine Werkstücke</string>
     <string name="products_screen_delete">Ausgewählte löschen</string>
     <string name="products_screen_selected">%1$d ausgewählt</string>
     <string name="products_screen_status_available">Verfügbar</string>
@@ -36,6 +36,21 @@
     <string name="products_screen_sold_on">Verkauft: %1$s</string>
     <string name="products_screen_removed_on">Entfernt: %1$s</string>
     <string name="products_screen_no_image">Kein Bild</string>
+
+    <!-- Products Screen - Filter Bottom Sheet -->
+    <string name="products_filter_sheet_title">Werkstücke filtern</string>
+    <string name="products_filter_sheet_year">Jahr</string>
+    <string name="products_filter_sheet_status">Werkstück-Status</string>
+    <string name="products_filter_sheet_source">Quelle</string>
+    <string name="products_filter_sheet_reset">Zurücksetzen</string>
+    <string name="products_filter_sheet_apply">Anwenden</string>
+    <string name="products_filter_sheet_status_available">Verfügbar</string>
+    <string name="products_filter_sheet_status_sold">Verkauft</string>
+    <string name="products_filter_sheet_status_removed">Entfernt</string>
+    <string name="products_filter_sheet_source_all">Alle</string>
+    <string name="products_filter_sheet_source_ordered">aus Bestellung</string>
+    <string name="products_filter_sheet_source_sales_area">aus Stüberl</string>
+    <string name="products_filter_sheet_active_count">%1$d aktiv</string>
 
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Werkstück hinzufügen</string>

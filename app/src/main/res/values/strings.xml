@@ -37,6 +37,21 @@
     <string name="products_screen_removed_on">Removed: %1$s</string>
     <string name="products_screen_no_image">No image</string>
 
+    <!-- Products Screen - Filter Bottom Sheet -->
+    <string name="products_filter_sheet_title">Filter Products</string>
+    <string name="products_filter_sheet_year">Year</string>
+    <string name="products_filter_sheet_status">Status</string>
+    <string name="products_filter_sheet_source">Source</string>
+    <string name="products_filter_sheet_reset">Reset to Default</string>
+    <string name="products_filter_sheet_apply">Apply</string>
+    <string name="products_filter_sheet_status_available">Available</string>
+    <string name="products_filter_sheet_status_sold">Sold</string>
+    <string name="products_filter_sheet_status_removed">Removed</string>
+    <string name="products_filter_sheet_source_all">All</string>
+    <string name="products_filter_sheet_source_ordered">From Order</string>
+    <string name="products_filter_sheet_source_sales_area">From Sales Area</string>
+    <string name="products_filter_sheet_active_count">%1$d active</string>
+
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Add Product</string>
     <string name="add_product_screen_description">Description</string>

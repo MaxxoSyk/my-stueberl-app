@@ -11,6 +11,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -36,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
+import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +60,10 @@ fun ProductsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val successMessage = stringResource(R.string.add_product_screen_success)
     val updateMessage = stringResource(R.string.edit_product_screen_success)
+    val filter by viewModel.filter.collectAsState()
+    val availableYears by viewModel.availableYears.collectAsState()
+    val isFilterSheetVisible by viewModel.isFilterSheetVisible.collectAsState()
+    val activeFilterCount by viewModel.activeFilterCount.collectAsState()
 
     // ── Show success message when product saved ──
     LaunchedEffect(productSaved) {
@@ -121,12 +128,28 @@ fun ProductsScreen(
                         }
                     } else {
                         // ── Filter Icon ──
-                        IconButton(onClick = { /* @todo Filter */ }) {
-                            Icon(
-                                imageVector = Icons.Default.FilterList,
-                                contentDescription = stringResource(R.string.products_screen_filter),
-                                tint = Color.White
-                            )
+                        IconButton(onClick = { viewModel.showFilterSheet() }) {
+                            BadgedBox(
+                                badge = {
+                                    if (activeFilterCount > 0) {
+                                        Badge(
+                                            containerColor = SageGreenDark
+                                        ) {
+                                            Text(
+                                                text = activeFilterCount.toString(),
+                                                color = Color.White,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FilterList,
+                                    contentDescription = stringResource(R.string.products_screen_filter),
+                                    tint = Color.White
+                                )
+                            }
                         }
                     }
                 },
@@ -219,6 +242,19 @@ fun ProductsScreen(
             onDismiss = {
                 viewModel.dismissBottomSheet()
             }
+        )
+    }
+
+    if (isFilterSheetVisible) {
+        FilterBottomSheet(
+            filter = filter,
+            availableYears = availableYears,
+            onYearToggle = { viewModel.toggleYearFilter(it) },
+            onStatusToggle = { viewModel.toggleStatusFilter(it) },
+            onProductSourceFilterChange = { viewModel.setOrderFilter(it) },
+            onReset = { viewModel.resetFilter() },
+            onApply = { viewModel.hideFilterSheet() },
+            onDismiss = { viewModel.hideFilterSheet() }
         )
     }
 }
