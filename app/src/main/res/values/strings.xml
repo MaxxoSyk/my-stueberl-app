@@ -14,7 +14,8 @@
     <string name="stats_on_sale">Currently on Sale</string>
 
     <!-- Products Tile -->
-    <string name="products_available">Available Products</string>
+    <string name="home_screen_tile_products_available">Available Products</string>
+    <string name="home_screen_tile_products_total">Total %1$d</string>
 
     <!-- Orders Tile -->
     <string name="orders_open">Open Orders</string>

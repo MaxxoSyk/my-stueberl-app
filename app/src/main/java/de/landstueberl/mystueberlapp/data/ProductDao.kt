@@ -78,4 +78,11 @@ interface ProductDao {
 
     @Query("SELECT DISTINCT strftime('%Y', createdAt) FROM ProductDetail ORDER BY createdAt DESC")
     fun getAvailableYearsFlow(): Flow<List<String>>
+
+    @Query("""
+    SELECT COUNT(*) FROM ProductDetail 
+    WHERE strftime('%Y', createdAt) = :year
+    AND orderId IS NULL
+""")
+    fun getTotalProductsForYearFlow(year: String): Flow<Int>
 }

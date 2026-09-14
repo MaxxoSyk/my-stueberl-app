@@ -14,7 +14,8 @@
     <string name="stats_on_sale">Aktuell im Verkauf</string>
 
     <!-- Products Tile -->
-    <string name="products_available">Verfügbare Werkstücke</string>
+    <string name="home_screen_tile_products_available">Verfügbare Werkstücke</string>
+    <string name="home_screen_tile_products_total">Gesamt %1$d</string>
 
     <!-- Orders Tile -->
     <string name="orders_open">Offene Bestellungen</string>
