@@ -3,6 +3,9 @@
     <string name="app_name">Mein Stüberl</string>
     <string name="home_screen_title">Landstüberl</string>
 
+    <!-- Common -->
+    <string name="common_back">Zurück</string>
+
     <!-- Tile Titles -->
     <string name="home_screen_tile_statistics">Statistiken</string>
     <string name="home_screen_tile_products">Werkstücke</string>
@@ -53,6 +56,9 @@
     <string name="products_filter_sheet_source_sales_area">aus Stüberl</string>
     <string name="products_filter_sheet_active_count">%1$d aktiv</string>
 
+    <!-- Produktformular (gemeinsam für Anlegen & Bearbeiten) -->
+    <string name="product_form_save_failed">Werkstück konnte nicht gespeichert werden. Bitte erneut versuchen.</string>
+
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Werkstück hinzufügen</string>
     <string name="add_product_screen_description">Beschreibung</string>
@@ -76,6 +82,9 @@
     <string name="edit_product_screen_created_at">Erstellt am</string>
     <string name="edit_product_screen_removed_on">Entfernt/verkauft am</string>
     <string name="edit_product_screen_success">Werkstück aktualisiert!</string>
+    <string name="edit_product_screen_load_failed">Werkstück konnte nicht geladen werden.</string>
+    <string name="edit_product_screen_retry">Erneut versuchen</string>
+    <string name="edit_product_screen_section_details">Details</string>
 
     <!-- Product Status Badge -->
     <string name="product_status_badge_available">Verfügbar</string>

@@ -7,6 +7,7 @@ import androidx.room.Upsert
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface ProductDao {
@@ -41,18 +42,14 @@ interface ProductDao {
     @Query("DELETE FROM ProductDetail WHERE id IN (:ids)")
     suspend fun deleteProductsByIds(ids: List<Int>)
 
-    @Query("SELECT COUNT(*) FROM ProductDetail WHERE isSold = 0 AND isRemoved = 0 AND orderId IS NULL")
+    @Query("SELECT COUNT(*) FROM ProductDetail WHERE status = 'AVAILABLE' AND orderId IS NULL")
     fun getAvailableProductsCountFlow(): Flow<Int>
 
     @Transaction
     @Query("""
     SELECT * FROM ProductDetail
     WHERE
-        (
-            (:includeAvailable = 1 AND isSold = 0 AND isRemoved = 0)
-            OR (:includeSold = 1 AND isSold = 1)
-            OR (:includeRemoved = 1 AND isRemoved = 1)
-        )
+        status IN (:statuses)
         AND (
             (:includeOrdered = 1 AND orderId IS NOT NULL)
             OR (:includeNotOrdered = 1 AND orderId IS NULL)
@@ -67,9 +64,7 @@ interface ProductDao {
         description ASC
 """)
     fun getFilteredProductsFlow(
-        includeAvailable: Boolean,
-        includeSold: Boolean,
-        includeRemoved: Boolean,
+        statuses: List<String>,
         includeOrdered: Boolean,
         includeNotOrdered: Boolean,
         noYearFilter: Boolean,
@@ -85,4 +80,25 @@ interface ProductDao {
     AND orderId IS NULL
 """)
     fun getTotalProductsForYearFlow(year: String): Flow<Int>
+
+    @Query("""
+    UPDATE ProductDetail 
+    SET status = :status, soldOn = :date, removedOn = NULL 
+    WHERE id = :id
+""")
+    suspend fun markAsSold(id: Int, status: ProductStatus, date: LocalDate)
+
+    @Query("""
+    UPDATE ProductDetail 
+    SET status = :status, removedOn = :date, soldOn = NULL 
+    WHERE id = :id
+""")
+    suspend fun markAsRemoved(id: Int, status: ProductStatus, date: LocalDate)
+
+    @Query("""
+    UPDATE ProductDetail 
+    SET status = :status, soldOn = NULL, removedOn = NULL 
+    WHERE id = :id
+""")
+    suspend fun resetToAvailable(id: Int, status: ProductStatus)
 }
