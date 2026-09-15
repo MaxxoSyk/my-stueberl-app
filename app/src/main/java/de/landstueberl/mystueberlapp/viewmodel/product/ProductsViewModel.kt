@@ -2,9 +2,11 @@ package de.landstueberl.mystueberlapp.viewmodel.product
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.landstueberl.mystueberlapp.data.ProductSourceFilter
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductFilter
+import de.landstueberl.mystueberlapp.data.ProductSourceFilter
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -160,4 +162,11 @@ class ProductsViewModel(
         }
     }
 
+    companion object {
+        fun factory(repo: ProductRepository) = viewModelFactory {
+            initializer {
+                ProductsViewModel(repo)
+            }
+        }
+    }
 }

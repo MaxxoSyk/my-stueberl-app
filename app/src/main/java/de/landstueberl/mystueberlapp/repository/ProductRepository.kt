@@ -52,33 +52,15 @@ class ProductRepository(private val dao: ProductDao) {
     }
 
     suspend fun markProductAsSold(productId: Int) {
-        val product = dao.getProductById(productId)
-        val updated = product.details.copy(
-            isSold = true,
-            isRemoved = false,
-            removedOn = LocalDate.now()
-        )
-        dao.upsertProductDetail(updated)
+        dao.markAsSold(id = productId, status = ProductStatus.SOLD, date = LocalDate.now())
     }
 
     suspend fun markProductAsRemoved(productId: Int) {
-        val product = dao.getProductById(productId)
-        val updated = product.details.copy(
-            isRemoved = true,
-            isSold = false,
-            removedOn = LocalDate.now()
-        )
-        dao.upsertProductDetail(updated)
+        dao.markAsRemoved(id = productId, status = ProductStatus.REMOVED, date = LocalDate.now())
     }
 
     suspend fun resetProductToAvailable(productId: Int) {
-        val product = dao.getProductById(productId)
-        val updated = product.details.copy(
-            isSold = false,
-            isRemoved = false,
-            removedOn = null
-        )
-        dao.upsertProductDetail(updated)
+        dao.resetToAvailable(id = productId, status = ProductStatus.AVAILABLE)
     }
 
     fun getAvailableProductsCountFlow(): Flow<Int> {
@@ -90,9 +72,7 @@ class ProductRepository(private val dao: ProductDao) {
     }
 
     fun getFilteredProductsFlow(filter: ProductFilter): Flow<List<Product>> {
-        val includeAvailable = filter.statuses.contains(ProductStatus.AVAILABLE)
-        val includeSold = filter.statuses.contains(ProductStatus.SOLD)
-        val includeRemoved = filter.statuses.contains(ProductStatus.REMOVED)
+        val statuses = filter.statuses.map { it.name }
         val includeFromOrder = filter.productSourceFilter == ProductSourceFilter.ALL ||
                 filter.productSourceFilter == ProductSourceFilter.FROM_ORDER
         val includeNotOrdered = filter.productSourceFilter == ProductSourceFilter.ALL ||
@@ -102,9 +82,7 @@ class ProductRepository(private val dao: ProductDao) {
             .ifEmpty { listOf("") }
 
         return dao.getFilteredProductsFlow(
-            includeAvailable = includeAvailable,
-            includeSold = includeSold,
-            includeRemoved = includeRemoved,
+            statuses = statuses,
             includeOrdered = includeFromOrder,
             includeNotOrdered = includeNotOrdered,
             noYearFilter = noYearFilter,

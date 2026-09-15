@@ -1,113 +1,102 @@
 package de.landstueberl.mystueberlapp.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.view.home.HomeScreen
 import de.landstueberl.mystueberlapp.view.product.ProductsScreen
 import de.landstueberl.mystueberlapp.view.product.add.AddProductScreen
 import de.landstueberl.mystueberlapp.view.product.edit.EditProductScreen
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
-import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModelFactory
-import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModelFactory
-import de.landstueberl.mystueberlapp.viewmodel.product.edit.EditProductViewModelFactory
+import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModel
+import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModel
+import de.landstueberl.mystueberlapp.viewmodel.product.edit.EditProductViewModel
+
+private const val KEY_PRODUCT_SAVED = "product_saved"
+private const val KEY_PRODUCT_UPDATED = "product_updated"
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    homeViewModel: HomeViewModel,
-    productsViewModelFactory: ProductsViewModelFactory,
-    addProductViewModelFactory: AddProductViewModelFactory,
-    productRepository: ProductRepository
+    productRepository: ProductRepository,
+    orderRepository: OrderRepository
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = Screen.Home
     ) {
-        composable(Screen.Home.route) {
+        composable<Screen.Home> {
             HomeScreen(
-                viewModel = homeViewModel,
-                onNavigateToProducts = {
-                    navController.navigate(Screen.Products.route)
-                },
-                onNavigateToOrders = {
-                    navController.navigate(Screen.Orders.route)
-                },
-                onNavigateToStatistics = {
-                    navController.navigate(Screen.Statistics.route)
-                }
+                viewModel = viewModel(
+                    factory = HomeViewModel.factory(
+                        productRepository = productRepository,
+                        orderRepository = orderRepository
+                    )
+                ),
+                onNavigateToProducts = { navController.navigate(Screen.Products) },
+                onNavigateToOrders = { navController.navigate(Screen.Orders) },
+                onNavigateToStatistics = { navController.navigate(Screen.Statistics) }
             )
         }
-        composable(Screen.Products.route) {
-            val productSaved = it.savedStateHandle
-                .getStateFlow("product_saved", false)
-                .collectAsState()
 
-            val productUpdated = it.savedStateHandle
-                .getStateFlow("product_updated", false)
-                .collectAsState()
+        composable<Screen.Products> { backStackEntry ->
+            val productSaved by backStackEntry.savedStateHandle
+                .getStateFlow(KEY_PRODUCT_SAVED, false)
+                .collectAsStateWithLifecycle()
+
+            val productUpdated by backStackEntry.savedStateHandle
+                .getStateFlow(KEY_PRODUCT_UPDATED, false)
+                .collectAsStateWithLifecycle()
 
             ProductsScreen(
-                viewModel = viewModel(factory = productsViewModelFactory),
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToAddProduct = {
-                    navController.navigate(Screen.AddProduct.route)
-                },
+                viewModel = viewModel(
+                    factory = ProductsViewModel.factory(productRepository)),
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAddProduct = { navController.navigate(Screen.AddProduct) },
                 onNavigateToEditProduct = { productId ->
-                    navController.navigate(
-                        Screen.EditProduct.createRoute(productId)
-                    )
+                    navController.navigate(Screen.EditProduct(productId))
                 },
-                productSaved = productSaved.value,
+                productSaved = productSaved,
                 onProductSavedConsumed = {
-                    it.savedStateHandle["product_saved"] = false
+                    backStackEntry.savedStateHandle[KEY_PRODUCT_SAVED] = false
                 },
-                productUpdated = productUpdated.value,
+                productUpdated = productUpdated,
                 onProductUpdatedConsumed = {
-                    it.savedStateHandle["product_updated"] = false
+                    backStackEntry.savedStateHandle[KEY_PRODUCT_UPDATED] = false
                 }
             )
         }
-        composable(Screen.AddProduct.route) {
+
+        composable<Screen.AddProduct> {
             AddProductScreen(
-                viewModel = viewModel(factory = addProductViewModelFactory),
+                viewModel = viewModel(
+                    factory = AddProductViewModel.factory(productRepository)),
                 onNavigateBack = { showSuccess ->
                     if (showSuccess) {
                         navController.previousBackStackEntry
                             ?.savedStateHandle
-                            ?.set("product_saved" , true)
+                            ?.set(KEY_PRODUCT_SAVED, true)
                     }
                     navController.popBackStack()
                 }
             )
         }
-        composable(
-            route = Screen.EditProduct.route,
-            arguments = listOf(
-                navArgument("productId") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val productId = backStackEntry.arguments?.getInt("productId") ?: return@composable
+
+        composable<Screen.EditProduct> {
             EditProductScreen(
                 viewModel = viewModel(
-                    factory = EditProductViewModelFactory(
-                        repository = productRepository,
-                        productId = productId
-                    )
-                ),
+                    factory = EditProductViewModel.factory(productRepository)),
                 onNavigateBack = { productUpdated ->
                     if (productUpdated) {
                         navController.previousBackStackEntry
                             ?.savedStateHandle
-                            ?.set("product_updated", true)
+                            ?.set(KEY_PRODUCT_UPDATED, true)
                     }
                     navController.popBackStack()
                 }

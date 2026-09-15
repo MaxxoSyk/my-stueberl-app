@@ -3,6 +3,9 @@
     <string name="app_name">MyStueberlApp</string>
     <string name="home_screen_title">MyStueberl</string>
 
+    <!-- Common -->
+    <string name="common_back">Back</string>
+
     <!-- Tile Titles -->
     <string name="home_screen_tile_statistics">Statistics</string>
     <string name="home_screen_tile_products">Products</string>
@@ -53,6 +56,9 @@
     <string name="products_filter_sheet_source_sales_area">From Sales Area</string>
     <string name="products_filter_sheet_active_count">%1$d active</string>
 
+    <!-- Product form (shared between add & edit) -->
+    <string name="product_form_save_failed">Could not save the product. Please try again.</string>
+
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Add Product</string>
     <string name="add_product_screen_description">Description</string>
@@ -76,6 +82,9 @@
     <string name="edit_product_screen_created_at">Created At</string>
     <string name="edit_product_screen_removed_on">Removed/Sold On</string>
     <string name="edit_product_screen_success">Product updated!</string>
+    <string name="edit_product_screen_load_failed">The product could not be loaded.</string>
+    <string name="edit_product_screen_retry">Try again</string>
+    <string name="edit_product_screen_section_details">Details</string>
 
     <!-- Product Status Badge -->
     <string name="product_status_badge_available">Available</string>

@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import de.landstueberl.mystueberlapp.data.Money
+import de.landstueberl.mystueberlapp.data.ProductStatus
 import java.time.LocalDate
 
 @Entity(
@@ -24,9 +25,9 @@ data class ProductDetail(
     val description: String,
     @Embedded(prefix = "purchase_") val purchasePrice: Money?,
     @Embedded(prefix = "sales_") val salesPrice: Money?,
-    val isSold: Boolean = false,
-    val isRemoved: Boolean = false,
+    val status: ProductStatus = ProductStatus.AVAILABLE,
     val orderId: Int? = null,
     val createdAt: LocalDate = LocalDate.now(),
+    val soldOn: LocalDate? = null,
     val removedOn: LocalDate? = null
 )
