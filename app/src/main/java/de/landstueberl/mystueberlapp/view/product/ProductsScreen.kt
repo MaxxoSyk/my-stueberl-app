@@ -8,12 +8,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -44,6 +51,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.ProductSortOrder
+import de.landstueberl.mystueberlapp.data.labelRes
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModel
@@ -76,11 +85,13 @@ fun ProductsScreen(
     val isSelectionMode = selectedProducts.isNotEmpty()
 
     var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
+    var sortMenuExpanded by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val successMessage = stringResource(R.string.products_screen_success_add)
     val updateMessage = stringResource(R.string.products_screen_success_edit)
     val errorMessage = stringResource(R.string.products_screen_action_failed)
+    val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
 
     // ── Show success message when product saved ──
     LaunchedEffect(productSaved) {
@@ -150,6 +161,41 @@ fun ProductsScreen(
                             )
                         }
                     } else {
+                        // ── Sort Menu ──
+                        Box {
+                            IconButton(onClick = { sortMenuExpanded = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.SwapVert,
+                                    contentDescription = stringResource(R.string.products_screen_sort),
+                                    tint = Color.White
+                                )
+                            }
+
+                            DropdownMenu(
+                                expanded = sortMenuExpanded,
+                                onDismissRequest = { sortMenuExpanded = false }
+                            ) {
+                                ProductSortOrder.entries.forEach { order ->
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(order.labelRes)) },
+                                        onClick = {
+                                            viewModel.setSortOrder(order)
+                                            sortMenuExpanded = false
+                                        },
+                                        trailingIcon = {
+                                            if (order == sortOrder) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = null,
+                                                    tint = SageGreenDark
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                         // ── Filter Icon ──
                         IconButton(onClick = { viewModel.showFilterSheet() }) {
                             BadgedBox(
@@ -168,7 +214,7 @@ fun ProductsScreen(
                                 }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.FilterList,
+                                    imageVector = Icons.Outlined.FilterAlt,
                                     contentDescription = stringResource(R.string.products_screen_filter),
                                     tint = Color.White
                                 )

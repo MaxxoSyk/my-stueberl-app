@@ -53,6 +53,10 @@
         <item quantity="other">%1$d Werkstücke werden dauerhaft gelöscht.</item>
     </plurals>
     <string name="products_screen_order_badge">Bestellung</string>
+    <string name="products_screen_sort">Sortieren</string>
+    <string name="products_sort_oldest">Älteste zuerst</string>
+    <string name="products_sort_newest">Neueste zuerst</string>
+    <string name="products_sort_activity">Letzte Änderung</string>
 
     <!-- Products Screen - Filter Bottom Sheet -->
     <string name="products_filter_sheet_title">Werkstücke filtern</string>

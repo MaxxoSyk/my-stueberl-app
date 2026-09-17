@@ -7,8 +7,10 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductFilter
+import de.landstueberl.mystueberlapp.data.ProductSortOrder
 import de.landstueberl.mystueberlapp.data.ProductSourceFilter
 import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.data.comparator
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -33,6 +36,16 @@ class ProductsViewModel(
     // ── Filter State ───────────────────────────
     private val _filter = MutableStateFlow(ProductFilter())
     val filter: StateFlow<ProductFilter> = _filter.asStateFlow()
+
+    // ── Sort Order ─────────────────────────────
+    // Not part of ProductFilter: changing it re-sorts in memory rather than
+    // re-running the query, and it must not affect the filter badge.
+    private val _sortOrder = MutableStateFlow(ProductSortOrder.OLDEST_FIRST)
+    val sortOrder: StateFlow<ProductSortOrder> = _sortOrder.asStateFlow()
+
+    fun setSortOrder(order: ProductSortOrder) {
+        _sortOrder.value = order
+    }
 
     // ── Available Years ────────────────────────
     val availableYears: StateFlow<List<Int>> = repo
@@ -69,13 +82,17 @@ class ProductsViewModel(
     fun hideFilterSheet() { _isFilterSheetVisible.value = false }
 
     // ── Products List ──────────────────────────
-    val products: StateFlow<List<Product>> = _filter
-        .flatMapLatest { filter -> repo.getFilteredProductsFlow(filter) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = emptyList()
-        )
+    // Filter changes re-query; sort changes only re-sort the existing list.
+    val products: StateFlow<List<Product>> = combine(
+        _filter.flatMapLatest { filter -> repo.getFilteredProductsFlow(filter) },
+        _sortOrder
+    ) { list, order ->
+        list.sortedWith(order.comparator())
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        initialValue = emptyList()
+    )
 
     // ── Selection Mode ─────────────────────────
     private val _selectedProducts = MutableStateFlow<Set<Int>>(emptySet())
@@ -122,6 +139,7 @@ class ProductsViewModel(
         _filter.value = _filter.value.copy(productSourceFilter = productSourceFilter)
     }
 
+    /** Resets filters only — the sort order is controlled separately. */
     fun resetFilter() {
         _filter.value = ProductFilter()
     }
