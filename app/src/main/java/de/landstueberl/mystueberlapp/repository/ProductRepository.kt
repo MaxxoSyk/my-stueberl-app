@@ -4,7 +4,6 @@ import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.ProductFilter
 import de.landstueberl.mystueberlapp.data.ProductSourceFilter
-import de.landstueberl.mystueberlapp.data.ProductStatus
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -18,20 +17,31 @@ class ProductRepository(private val dao: ProductDao) {
         dao.deleteProductsByIds(ids)
     }
 
+    // ── Sales-area products only ───────────────
     suspend fun markProductAsSold(productId: Int) {
-        dao.markAsSold(id = productId, status = ProductStatus.SOLD, date = LocalDate.now())
+        dao.markAsSold(id = productId, date = LocalDate.now())
     }
 
     suspend fun markProductAsRemoved(productId: Int) {
-        dao.markAsRemoved(id = productId, status = ProductStatus.REMOVED, date = LocalDate.now())
+        dao.markAsRemoved(id = productId, date = LocalDate.now())
     }
 
     suspend fun resetProductToAvailable(productId: Int) {
-        dao.resetToAvailable(id = productId, status = ProductStatus.AVAILABLE)
+        dao.resetToAvailable(id = productId)
     }
 
-    fun getAvailableProductsCountFlow(): Flow<Int> {
-        return dao.getAvailableProductsCountFlow()
+    fun getAvailableSalesAreaCountFlow(): Flow<Int> {
+        return dao.getAvailableSalesAreaCountFlow()
+    }
+
+    fun getPendingOrderProductsCountFlow(): Flow<Int> =
+        dao.getPendingOrderProductsCountFlow()
+
+    fun getTotalProductsForYearFlow(): Flow<Int> =
+        dao.getTotalProductsForYearFlow(year = LocalDate.now().year.toString())
+
+    fun getAvailableYearsFlow(): Flow<List<String>> {
+        return dao.getAvailableYearsFlow()
     }
 
     suspend fun getProductById(productId: Int): Product {
@@ -57,14 +67,12 @@ class ProductRepository(private val dao: ProductDao) {
         )
     }
 
-    fun getAvailableYearsFlow(): Flow<List<String>> {
-        return dao.getAvailableYearsFlow()
+    // ── Order-driven transitions ───────────────
+    suspend fun markOrderProductsAsSold(orderId: Int) {
+        dao.markOrderProductsAsSold(orderId = orderId, date = LocalDate.now())
     }
 
-    fun getTotalProductsForYearFlow(): Flow<Int> {
-        return dao.getTotalProductsForYearFlow(
-            year = LocalDate.now().year.toString()
-        )
+    suspend fun detachProductsFromOrder(orderId: Int) {
+        dao.detachProductsFromOrder(orderId)
     }
-
 }

@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
@@ -83,18 +82,8 @@ class ProductsViewModel(
     val selectedProducts: StateFlow<Set<Int>> = _selectedProducts.asStateFlow()
 
     // ── Bottom Sheet ───────────────────────────
-    // Only the id is held; the Product is derived from the live list so the
-    // sheet always reflects the current status and closes if the row vanishes.
     private val _selectedProductId = MutableStateFlow<Int?>(null)
-
-    val selectedProduct: StateFlow<Product?> =
-        combine(_selectedProductId, products) { id, list ->
-            id?.let { wanted -> list.firstOrNull { it.details.id == wanted } }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = null
-        )
+    val selectedProductId: StateFlow<Int?> = _selectedProductId.asStateFlow()
 
     // ── Error Reporting ────────────────────────
     private val _isError = MutableStateFlow(false)

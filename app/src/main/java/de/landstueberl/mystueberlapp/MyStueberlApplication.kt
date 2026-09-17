@@ -13,8 +13,13 @@ class MyStueberlApplication : Application() {
             applicationContext,
             StueberlDatabase::class.java,
             "stueberl_database"
-        ).fallbackToDestructiveMigration(dropAllTables = true)
-        .build()
+        ).apply {
+            if (BuildConfig.DEBUG) {
+                // Development only: wipe and recreate when the schema changes.
+                // Release builds must have a real migration path instead.
+                fallbackToDestructiveMigration(dropAllTables = true)
+            }
+        }.build()
     }
 
     val productRepository by lazy { ProductRepository(database.productDao()) }

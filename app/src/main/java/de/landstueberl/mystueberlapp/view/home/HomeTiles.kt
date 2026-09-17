@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
@@ -142,7 +143,8 @@ fun StatisticsTile(
 // ── Products Tile ──────────────────────────────────────────────────────
 @Composable
 fun ProductsTile(
-    availableProducts: Int,
+    availableSalesAreaProducts: Int,
+    pendingOrderProducts: Int,
     totalProductsCurrentYear: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -156,13 +158,10 @@ fun ProductsTile(
         )
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             // ── Tile Header ──
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Inventory,
                     contentDescription = null,
@@ -183,14 +182,20 @@ fun ProductsTile(
 
             // ── Tile Content ──
             TileRow(
-                icon = Icons.Default.Inventory,
+                icon = Icons.Default.Storefront,
                 iconTint = SageGreen,
-                label = stringResource(R.string.home_screen_tile_products_available),
-                value = availableProducts.toString()
+                label = stringResource(R.string.home_screen_available_sales_area),
+                value = availableSalesAreaProducts.toString()
+            )
+            TileRow(
+                icon = Icons.Default.Receipt,
+                iconTint = AccentGold,
+                label = stringResource(R.string.home_screen_pending_order_products),
+                value = pendingOrderProducts.toString()
             )
             TileRow(
                 icon = Icons.Default.Inventory,
-                iconTint = SageGreen,
+                iconTint = SageGreenDark,
                 label = stringResource(
                     R.string.home_screen_tile_products_total,
                     LocalDate.now().year

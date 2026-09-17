@@ -28,11 +28,16 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 kotlin {
     jvmToolchain(17)
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -26,6 +27,7 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -57,6 +59,10 @@ fun ProductDisplayItem(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val details = product.details
+    val status = details.status
+    val isOrderProduct = details.orderId != null
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -66,7 +72,7 @@ fun ProductDisplayItem(
             )
             .then(
                 if (isSelected) Modifier.border(
-                    width = 2.dp,
+                    width = 3.dp,
                     color = SageGreenDark,
                     shape = RoundedCornerShape(12.dp)
                 ) else Modifier
@@ -74,10 +80,7 @@ fun ProductDisplayItem(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected)
-                SageGreenLight.copy(alpha = 0.3f)
-            else
-                MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -85,9 +88,6 @@ fun ProductDisplayItem(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            val productDetails = product.details
-            val productStatus = productDetails.status
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -127,18 +127,27 @@ fun ProductDisplayItem(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = product.details.description,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    // ── Description + Order Badge ──
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = details.description,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+
+                        if (isOrderProduct) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            OrderBadge()
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    product.details.purchasePrice?.let { price ->
+                    details.purchasePrice?.let { price ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(R.string.products_screen_purchase_price),
@@ -154,7 +163,7 @@ fun ProductDisplayItem(
                         }
                     }
 
-                    product.details.salesPrice?.let { price ->
+                    details.salesPrice?.let { price ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(R.string.products_screen_sales_price),
@@ -175,7 +184,7 @@ fun ProductDisplayItem(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // ── Status Icon ──
-                when (productStatus) {
+                when (status) {
                     ProductStatus.REMOVED -> Icon(
                         imageVector = Icons.Default.Cancel,
                         contentDescription = stringResource(R.string.products_screen_status_removed),
@@ -215,9 +224,7 @@ fun ProductDisplayItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // ── Created At ───────
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.CalendarToday,
                             contentDescription = null,
@@ -228,9 +235,7 @@ fun ProductDisplayItem(
                         Text(
                             text = stringResource(
                                 R.string.products_screen_created_at,
-                                product.details.createdAt.format(
-                                    DateTimeFormatter.ofPattern("dd.MM.yyyy")
-                                )
+                                details.createdAt.format(DATE_FORMAT)
                             ),
                             fontSize = 9.sp,
                             color = TextSecondary.copy(alpha = 0.7f)
@@ -239,15 +244,16 @@ fun ProductDisplayItem(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // ── Sold / Removed date ───────
-                    val statusDate = when (productStatus) {
-                        ProductStatus.SOLD -> productDetails.soldOn
-                        ProductStatus.REMOVED -> productDetails.removedOn
+                    // ── Sold / Removed Date ───────
+                    val statusDate = when (status) {
+                        ProductStatus.SOLD -> details.soldOn
+                        ProductStatus.REMOVED -> details.removedOn
                         ProductStatus.AVAILABLE -> null
                     }
 
                     if (statusDate != null) {
-                        val statusColor = if (productStatus == ProductStatus.SOLD) {
+                        val isSold = status == ProductStatus.SOLD
+                        val statusColor = if (isSold) {
                             SageGreen.copy(alpha = 0.7f)
                         } else {
                             MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
@@ -255,7 +261,7 @@ fun ProductDisplayItem(
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = if (productStatus == ProductStatus.SOLD) {
+                                imageVector = if (isSold) {
                                     Icons.Default.CheckCircle
                                 } else {
                                     Icons.Default.Cancel
@@ -267,7 +273,7 @@ fun ProductDisplayItem(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = stringResource(
-                                    if (productStatus == ProductStatus.SOLD) {
+                                    if (isSold) {
                                         R.string.products_screen_sold_on
                                     } else {
                                         R.string.products_screen_removed_on
@@ -281,6 +287,37 @@ fun ProductDisplayItem(
                     }
                 }
             }
+        }
+    }
+}
+
+// ── Order Source Badge ─────────────────────────────────────────────────
+@Composable
+private fun OrderBadge(
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(4.dp),
+        color = AccentGold.copy(alpha = 0.15f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Receipt,
+                contentDescription = null,
+                tint = AccentGold,
+                modifier = Modifier.size(11.dp)
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            Text(
+                text = stringResource(R.string.products_screen_order_badge),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AccentGold
+            )
         }
     }
 }

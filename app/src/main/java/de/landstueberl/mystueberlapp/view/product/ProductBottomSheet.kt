@@ -36,6 +36,7 @@ import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
+import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +52,9 @@ fun ProductBottomSheet(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     val productStatus = product.details.status
+    val details = product.details
+    //val status = details.status
+    val isOrderProduct = details.orderId != null
 
     /** Animates the sheet away, then runs [action]. */
     fun dismissThen(action: () -> Unit) {
@@ -86,37 +90,47 @@ fun ProductBottomSheet(
                 color = SageGreen.copy(alpha = 0.3f)
             )
 
-            when (productStatus) {
-                ProductStatus.AVAILABLE -> {
-                    BottomSheetItem(
-                        icon = Icons.Default.CheckCircle,
-                        iconTint = SageGreen,
-                        label = stringResource(R.string.product_bottom_sheet_mark_sold),
-                        onClick = { dismissThen(onMarkAsSold) }
-                    )
-                    BottomSheetItem(
-                        icon = Icons.Default.Delete,
-                        iconTint = MaterialTheme.colorScheme.error,
-                        label = stringResource(R.string.product_bottom_sheet_mark_removed),
-                        onClick = { dismissThen(onMarkAsRemoved) }
-                    )
-                }
-                ProductStatus.SOLD, ProductStatus.REMOVED -> {
-                    BottomSheetItem(
-                        icon = Icons.Default.Refresh,
-                        iconTint = AccentGold,
-                        label = stringResource(R.string.product_bottom_sheet_reset),
-                        onClick = { dismissThen(onResetToAvailable) }
-                    )
+            if (isOrderProduct) {
+                // Status is controlled by the order, not here.
+                Text(
+                    text = stringResource(R.string.product_bottom_sheet_order_managed),
+                    fontSize = 13.sp,
+                    color = TextSecondary,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                )
+            } else {
+                when (productStatus) {
+                    ProductStatus.AVAILABLE -> {
+                        BottomSheetItem(
+                            icon = Icons.Default.CheckCircle,
+                            iconTint = SageGreen,
+                            label = stringResource(R.string.product_bottom_sheet_mark_sold),
+                            onClick = { dismissThen(onMarkAsSold) }
+                        )
+                        BottomSheetItem(
+                            icon = Icons.Default.Delete,
+                            iconTint = MaterialTheme.colorScheme.error,
+                            label = stringResource(R.string.product_bottom_sheet_mark_removed),
+                            onClick = { dismissThen(onMarkAsRemoved) }
+                        )
+                    }
+                    ProductStatus.SOLD, ProductStatus.REMOVED -> {
+                        BottomSheetItem(
+                            icon = Icons.Default.Refresh,
+                            iconTint = AccentGold,
+                            label = stringResource(R.string.product_bottom_sheet_reset),
+                            onClick = { dismissThen(onResetToAvailable) }
+                        )
+                    }
                 }
             }
 
-            // ── Edit Product ───────────────────
+            // Edit is always available
             BottomSheetItem(
                 icon = Icons.Default.Edit,
                 iconTint = SageGreenDark,
                 label = stringResource(R.string.product_bottom_sheet_edit),
-                onClick = { dismissThen(onEdit) }
+                onClick = onEdit
             )
         }
     }

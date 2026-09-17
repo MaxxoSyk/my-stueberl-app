@@ -14,27 +14,24 @@ class HomeViewModel(
     private val productRepo: ProductRepository,
     private val orderRepo: OrderRepository
 ): ViewModel() {
+    /** Sales-area products still available. */
+    val availableSalesAreaCount: StateFlow<Int> = productRepo
+        .getAvailableSalesAreaCountFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
 
-    // @todo decide what FAB on HomeScreen should do
+    /** Products made for orders that haven't been resolved yet. */
+    val pendingOrderProductsCount: StateFlow<Int> = productRepo
+        .getPendingOrderProductsCountFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
 
-    // ── Available Products Count ───────────────
-    val availableProductsCount: StateFlow<Int> = productRepo
-        .getAvailableProductsCountFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 0
-        )
-
+    /** All products created this year, both sources. */
     val totalProductsCurrentYear: StateFlow<Int> = productRepo
         .getTotalProductsForYearFlow()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 0
-        )
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
 
     companion object {
+        private const val STOP_TIMEOUT_MILLIS = 5_000L
+
         fun factory(
             productRepository: ProductRepository,
             orderRepository: OrderRepository

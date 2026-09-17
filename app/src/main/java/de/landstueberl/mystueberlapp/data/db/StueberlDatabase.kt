@@ -18,7 +18,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
         Image::class,
         OrderDetail::class],
     version = 3,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(
     MoneyConverters::class,

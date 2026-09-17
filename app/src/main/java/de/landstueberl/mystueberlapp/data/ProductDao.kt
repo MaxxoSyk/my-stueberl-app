@@ -31,19 +31,32 @@ interface ProductDao {
     @Query("SELECT * FROM ProductDetail WHERE id = :id")
     suspend fun getProductById(id: Int): Product
 
-    @Transaction
-    @Query("SELECT * FROM ProductDetail") // @todo all products mean also products from orders. Im not sure if its ok
-    suspend fun getAllProducts(): List<Product>
-
-    @Transaction
-    @Query("SELECT * FROM ProductDetail") // @todo all products mean also products from orders. Im not sure if its ok
-    fun getAllProductsFlow(): Flow<List<Product>>
-
     @Query("DELETE FROM ProductDetail WHERE id IN (:ids)")
     suspend fun deleteProductsByIds(ids: List<Int>)
 
-    @Query("SELECT COUNT(*) FROM ProductDetail WHERE status = 'AVAILABLE' AND orderId IS NULL")
-    fun getAvailableProductsCountFlow(): Flow<Int>
+    // ── Home: sales-area availability (excludes order products by design) ──
+    @Query("""
+        SELECT COUNT(*) FROM ProductDetail
+        WHERE status = 'AVAILABLE' AND orderId IS NULL
+    """)
+    fun getAvailableSalesAreaCountFlow(): Flow<Int>
+
+    // ── Home: order products still pending ──
+    @Query("""
+        SELECT COUNT(*) FROM ProductDetail
+        WHERE status = 'AVAILABLE' AND orderId IS NOT NULL
+    """)
+    fun getPendingOrderProductsCountFlow(): Flow<Int>
+
+    // ── Home: everything created this year, both sources ──
+    @Query("""
+        SELECT COUNT(*) FROM ProductDetail
+        WHERE strftime('%Y', createdAt) = :year
+    """)
+    fun getTotalProductsForYearFlow(year: String): Flow<Int>
+
+    @Query("SELECT DISTINCT strftime('%Y', createdAt) FROM ProductDetail ORDER BY createdAt DESC")
+    fun getAvailableYearsFlow(): Flow<List<String>>
 
     @Transaction
     @Query("""
@@ -71,36 +84,26 @@ interface ProductDao {
         years: List<String>
     ): Flow<List<Product>>
 
-    @Query("SELECT DISTINCT strftime('%Y', createdAt) FROM ProductDetail ORDER BY createdAt DESC")
-    fun getAvailableYearsFlow(): Flow<List<String>>
-
     @Query("""
-    SELECT COUNT(*) FROM ProductDetail 
-    WHERE strftime('%Y', createdAt) = :year
-    AND orderId IS NULL
+    UPDATE ProductDetail 
+    SET status = 'SOLD', soldOn = :date, removedOn = NULL 
+    WHERE id = :id
 """)
-    fun getTotalProductsForYearFlow(year: String): Flow<Int>
+    suspend fun markAsSold(id: Int, date: LocalDate)
 
     @Query("""
     UPDATE ProductDetail 
-    SET status = :status, soldOn = :date, removedOn = NULL 
+    SET status = 'REMOVED', removedOn = :date, soldOn = NULL 
     WHERE id = :id
 """)
-    suspend fun markAsSold(id: Int, status: ProductStatus, date: LocalDate)
+    suspend fun markAsRemoved(id: Int, date: LocalDate)
 
     @Query("""
     UPDATE ProductDetail 
-    SET status = :status, removedOn = :date, soldOn = NULL 
+    SET status = 'AVAILABLE', soldOn = NULL, removedOn = NULL 
     WHERE id = :id
 """)
-    suspend fun markAsRemoved(id: Int, status: ProductStatus, date: LocalDate)
-
-    @Query("""
-    UPDATE ProductDetail 
-    SET status = :status, soldOn = NULL, removedOn = NULL 
-    WHERE id = :id
-""")
-    suspend fun resetToAvailable(id: Int, status: ProductStatus)
+    suspend fun resetToAvailable(id: Int)
 
     @Transaction
     suspend fun upsertProductWithImages(detail: ProductDetail, images: List<Image>): Product {
@@ -132,4 +135,20 @@ interface ProductDao {
         // 6. Return fresh product from DB
         return getProductById(finalProductId)
     }
+
+    // ── Order resolved: all its products are sold ──
+    @Query("""
+        UPDATE ProductDetail
+        SET status = 'SOLD', soldOn = :date, removedOn = NULL
+        WHERE orderId = :orderId
+    """)
+    suspend fun markOrderProductsAsSold(orderId: Int, date: LocalDate)
+
+    // ── Order cancelled: existing products become sales-area stock ──
+    @Query("""
+        UPDATE ProductDetail
+        SET orderId = NULL
+        WHERE orderId = :orderId AND status = 'AVAILABLE'
+    """)
+    suspend fun detachProductsFromOrder(orderId: Int)
 }

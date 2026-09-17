@@ -62,12 +62,16 @@ fun ProductsScreen(
 ) {
     val products by viewModel.products.collectAsStateWithLifecycle()
     val selectedProducts by viewModel.selectedProducts.collectAsStateWithLifecycle()
-    val selectedProduct by viewModel.selectedProduct.collectAsStateWithLifecycle()
+    val selectedProductId by viewModel.selectedProductId.collectAsStateWithLifecycle()
     val filter by viewModel.filter.collectAsStateWithLifecycle()
     val availableYears by viewModel.availableYears.collectAsStateWithLifecycle()
     val isFilterSheetVisible by viewModel.isFilterSheetVisible.collectAsStateWithLifecycle()
     val activeFilterCount by viewModel.activeFilterCount.collectAsStateWithLifecycle()
     val isError by viewModel.isError.collectAsStateWithLifecycle()
+
+    val selectedProduct = remember(selectedProductId, products) {
+        selectedProductId?.let { id -> products.firstOrNull { it.details.id == id } }
+    }
 
     val isSelectionMode = selectedProducts.isNotEmpty()
 

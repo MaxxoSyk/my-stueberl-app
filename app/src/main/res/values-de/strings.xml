@@ -18,8 +18,9 @@
     <string name="stats_on_sale">Aktuell im Verkauf</string>
 
     <!-- Products Tile -->
-    <string name="home_screen_tile_products_available">Verfügbare Werkstücke</string>
+    <string name="home_screen_available_sales_area">Verfügbar im Stüberl</string>
     <string name="home_screen_tile_products_total">Gesamt %1$d</string>
+    <string name="home_screen_pending_order_products">Für offene Bestellungen</string>
 
     <!-- Orders Tile -->
     <string name="orders_open">Offene Bestellungen</string>
@@ -51,6 +52,7 @@
         <item quantity="one">Dieses Werkstück wird dauerhaft gelöscht.</item>
         <item quantity="other">%1$d Werkstücke werden dauerhaft gelöscht.</item>
     </plurals>
+    <string name="products_screen_order_badge">Bestellung</string>
 
     <!-- Products Screen - Filter Bottom Sheet -->
     <string name="products_filter_sheet_title">Werkstücke filtern</string>
@@ -84,6 +86,7 @@
     <string name="product_bottom_sheet_mark_removed">Als entfernt markieren</string>
     <string name="product_bottom_sheet_reset">Zurück auf verfügbar</string>
     <string name="product_bottom_sheet_edit">Werkstück bearbeiten</string>
+    <string name="product_bottom_sheet_order_managed">Status wird über die zugehörige Bestellung verwaltet.</string>
 
     <!-- Edit Product Screen -->
     <string name="edit_product_screen_title">Werkstück bearbeiten</string>
