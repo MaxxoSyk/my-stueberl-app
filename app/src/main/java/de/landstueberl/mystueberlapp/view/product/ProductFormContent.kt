@@ -38,13 +38,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
@@ -77,13 +77,13 @@ fun ProductImagePlaceholder(
         ) {
             Icon(
                 imageVector = Icons.Default.AddAPhoto,
-                contentDescription = stringResource(R.string.add_product_screen_image_placeholder),
+                contentDescription = stringResource(R.string.product_form_image_placeholder),
                 tint = SageGreenDark,
                 modifier = Modifier.size(36.dp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(R.string.add_product_screen_image_placeholder),
+                text = stringResource(R.string.product_form_image_placeholder),
                 fontSize = 11.sp,
                 color = SageGreenDark
             )
@@ -102,11 +102,11 @@ fun ProductDescriptionField(
         value = value,
         onValueChange = onValueChange,
         label = {
-            Text(stringResource(R.string.add_product_screen_description))
+            Text(stringResource(R.string.product_form_description))
         },
         placeholder = {
             Text(
-                stringResource(R.string.add_product_screen_description_placeholder),
+                stringResource(R.string.product_form_description_placeholder),
                 color = TextSecondary
             )
         },
@@ -284,44 +284,34 @@ fun ProductFormDivider(
 // ── Product Status Badge ───────────────────────────────────────────────
 @Composable
 fun ProductStatusBadge(
-    isSold: Boolean,
-    isRemoved: Boolean,
+    status: ProductStatus,
     modifier: Modifier = Modifier
 ) {
-    val icon = when {
-        isRemoved -> Icons.Default.Cancel
-        isSold -> Icons.Default.CheckCircle
-        else -> Icons.Default.RadioButtonUnchecked
+    val icon = when (status) {
+        ProductStatus.AVAILABLE -> Icons.Default.RadioButtonUnchecked
+        ProductStatus.SOLD -> Icons.Default.CheckCircle
+        ProductStatus.REMOVED -> Icons.Default.Cancel
     }
 
-    val tint = when {
-        isRemoved -> Color.Red
-        isSold -> SageGreen
-        else -> TextSecondary
+    val tint = when (status) {
+        ProductStatus.AVAILABLE -> TextSecondary
+        ProductStatus.SOLD -> SageGreen
+        ProductStatus.REMOVED -> MaterialTheme.colorScheme.error
     }
 
-    val label = when {
-        isRemoved -> stringResource(R.string.product_status_badge_removed)
-        isSold -> stringResource(R.string.product_status_badge_sold)
-        else -> stringResource(R.string.product_status_badge_available)
-    }
-
-    val backgroundColor = when {
-        isRemoved -> Color.Red.copy(alpha = 0.1f)
-        isSold -> SageGreen.copy(alpha = 0.1f)
-        else -> TextSecondary.copy(alpha = 0.1f)
+    val label = when (status) {
+        ProductStatus.AVAILABLE -> stringResource(R.string.product_status_badge_available)
+        ProductStatus.SOLD -> stringResource(R.string.product_status_badge_sold)
+        ProductStatus.REMOVED -> stringResource(R.string.product_status_badge_removed)
     }
 
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(50.dp),
-        color = backgroundColor
+        color = tint.copy(alpha = 0.1f)
     ) {
         Row(
-            modifier = Modifier.padding(
-                horizontal = 12.dp,
-                vertical = 6.dp
-            ),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {

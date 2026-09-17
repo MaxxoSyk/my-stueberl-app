@@ -101,4 +101,35 @@ interface ProductDao {
     WHERE id = :id
 """)
     suspend fun resetToAvailable(id: Int, status: ProductStatus)
+
+    @Transaction
+    suspend fun upsertProductWithImages(detail: ProductDetail, images: List<Image>): Product {
+        // 1. Upsert ProductDetail
+        val generatedId = upsertProductDetail(detail).toInt()
+        val finalProductId = if (detail.id == 0) generatedId else detail.id
+
+        // 2. Fetch existing images from DB
+        val existingImages = getImagesByProductId(finalProductId)
+
+        // 3. Determine which images to keep & upsert
+        val updatedImages = images.map { img ->
+            img.copy(productId = finalProductId)
+        }
+
+        // 4. Determine which images to delete
+        val incomingIds = updatedImages.map { it.id }.toSet()
+        val toDelete = existingImages
+            .filter { it.id !in incomingIds }
+            .map { it.id }
+
+        if (toDelete.isNotEmpty()) {
+            deleteImagesByIds(toDelete)
+        }
+
+        // 5. Upsert new & updated images
+        upsertImages(updatedImages)
+
+        // 6. Return fresh product from DB
+        return getProductById(finalProductId)
+    }
 }

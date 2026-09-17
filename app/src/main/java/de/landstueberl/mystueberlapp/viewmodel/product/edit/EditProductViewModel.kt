@@ -1,5 +1,6 @@
 package de.landstueberl.mystueberlapp.viewmodel.product.edit
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
@@ -7,6 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormValues
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import kotlin.coroutines.cancellation.CancellationException
 
 class EditProductViewModel(
     repo: ProductRepository,
@@ -29,14 +32,14 @@ class EditProductViewModel(
     private val _createdAt = MutableStateFlow<LocalDate?>(null)
     val createdAt: StateFlow<LocalDate?> = _createdAt.asStateFlow()
 
+    private val _soldOn = MutableStateFlow<LocalDate?>(null)
+    val soldOn: StateFlow<LocalDate?> = _soldOn.asStateFlow()
+
     private val _removedOn = MutableStateFlow<LocalDate?>(null)
     val removedOn: StateFlow<LocalDate?> = _removedOn.asStateFlow()
 
-    private val _isSold = MutableStateFlow(false)
-    val isSold: StateFlow<Boolean> = _isSold.asStateFlow()
-
-    private val _isRemoved = MutableStateFlow(false)
-    val isRemoved: StateFlow<Boolean> = _isRemoved.asStateFlow()
+    private val _status = MutableStateFlow(ProductStatus.AVAILABLE)
+    val status: StateFlow<ProductStatus> = _status.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -68,10 +71,13 @@ class EditProductViewModel(
 
                 // Edit-only read-only fields
                 _createdAt.value = productDetails.createdAt
+                _soldOn.value = productDetails.soldOn
                 _removedOn.value = productDetails.removedOn
-                _isSold.value = productDetails.isSold
-                _isRemoved.value = productDetails.isRemoved
+                _status.value = productDetails.status
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                Log.e(TAG, "Failed to load product $productId", e)
                 _loadFailed.value = true
             } finally {
                 _isLoading.value = false
@@ -100,8 +106,10 @@ class EditProductViewModel(
     }
 
     companion object {
+        private const val TAG = "EditProductViewModel"
+
         fun factory(repo: ProductRepository) = viewModelFactory {
-            initializer {
+            initializer<EditProductViewModel> {
                 EditProductViewModel(
                     repo = repo,
                     savedStateHandle = createSavedStateHandle()

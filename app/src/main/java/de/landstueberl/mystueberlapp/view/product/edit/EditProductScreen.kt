@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
@@ -61,9 +62,9 @@ fun EditProductScreen(
     val salesPrice by viewModel.salesPrice.collectAsStateWithLifecycle()
     val currency by viewModel.currency.collectAsStateWithLifecycle()
     val createdAt by viewModel.createdAt.collectAsStateWithLifecycle()
+    val soldOn by viewModel.soldOn.collectAsStateWithLifecycle()
     val removedOn by viewModel.removedOn.collectAsStateWithLifecycle()
-    val isSold by viewModel.isSold.collectAsStateWithLifecycle()
-    val isRemoved by viewModel.isRemoved.collectAsStateWithLifecycle()
+    val status by viewModel.status.collectAsStateWithLifecycle()
     val isSaveEnabled by viewModel.isSaveEnabled.collectAsStateWithLifecycle()
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
     val isSaved by viewModel.isSaved.collectAsStateWithLifecycle()
@@ -169,10 +170,7 @@ fun EditProductScreen(
                     onClick = { /* @todo Image picker */ }
                 )
 
-                ProductStatusBadge(
-                    isSold = isSold,
-                    isRemoved = isRemoved
-                )
+                ProductStatusBadge(status = status)
 
                 ProductDescriptionField(
                     value = description,
@@ -212,11 +210,16 @@ fun EditProductScreen(
                     date = createdAt
                 )
 
-                if (removedOn != null) {
-                    ProductReadOnlyDateField(
+                when (status) {
+                    ProductStatus.SOLD -> ProductReadOnlyDateField(
+                        label = stringResource(R.string.edit_product_screen_sold_on),
+                        date = soldOn
+                    )
+                    ProductStatus.REMOVED -> ProductReadOnlyDateField(
                         label = stringResource(R.string.edit_product_screen_removed_on),
                         date = removedOn
                     )
+                    ProductStatus.AVAILABLE -> Unit
                 }
 
                 // ── Save Button ────────────────

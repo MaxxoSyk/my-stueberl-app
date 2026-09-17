@@ -31,7 +31,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,12 +38,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import java.time.format.DateTimeFormatter
+
+private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
 @Composable
 fun ProductDisplayItem(
@@ -83,6 +85,9 @@ fun ProductDisplayItem(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
+            val productDetails = product.details
+            val productStatus = productDetails.status
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -170,20 +175,20 @@ fun ProductDisplayItem(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // ── Status Icon ──
-                when {
-                    product.details.isRemoved -> Icon(
+                when (productStatus) {
+                    ProductStatus.REMOVED -> Icon(
                         imageVector = Icons.Default.Cancel,
                         contentDescription = stringResource(R.string.products_screen_status_removed),
-                        tint = Color.Red,
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(24.dp)
                     )
-                    product.details.isSold -> Icon(
+                    ProductStatus.SOLD -> Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = stringResource(R.string.products_screen_status_sold),
                         tint = SageGreen,
                         modifier = Modifier.size(24.dp)
                     )
-                    else -> Icon(
+                    ProductStatus.AVAILABLE -> Icon(
                         imageVector = Icons.Default.RadioButtonUnchecked,
                         contentDescription = stringResource(R.string.products_screen_status_available),
                         tint = TextSecondary,
@@ -234,39 +239,43 @@ fun ProductDisplayItem(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // ── RemovedOn ───────
-                    product.details.removedOn?.let { date ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    // ── Sold / Removed date ───────
+                    val statusDate = when (productStatus) {
+                        ProductStatus.SOLD -> productDetails.soldOn
+                        ProductStatus.REMOVED -> productDetails.removedOn
+                        ProductStatus.AVAILABLE -> null
+                    }
+
+                    if (statusDate != null) {
+                        val statusColor = if (productStatus == ProductStatus.SOLD) {
+                            SageGreen.copy(alpha = 0.7f)
+                        } else {
+                            MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = if (product.details.isSold)
+                                imageVector = if (productStatus == ProductStatus.SOLD) {
                                     Icons.Default.CheckCircle
-                                else
-                                    Icons.Default.Cancel,
+                                } else {
+                                    Icons.Default.Cancel
+                                },
                                 contentDescription = null,
-                                tint = if (product.details.isSold)
-                                    SageGreen.copy(alpha = 0.7f)
-                                else
-                                    Color.Red.copy(alpha = 0.7f),
+                                tint = statusColor,
                                 modifier = Modifier.size(9.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = stringResource(
-                                    if (product.details.isSold)
+                                    if (productStatus == ProductStatus.SOLD) {
                                         R.string.products_screen_sold_on
-                                    else
-                                        R.string.products_screen_removed_on,
-                                    date.format(
-                                        DateTimeFormatter.ofPattern("dd.MM.yyyy")
-                                    )
+                                    } else {
+                                        R.string.products_screen_removed_on
+                                    },
+                                    statusDate.format(DATE_FORMAT)
                                 ),
                                 fontSize = 9.sp,
-                                color = if (product.details.isSold)
-                                    SageGreen.copy(alpha = 0.7f)
-                                else
-                                    Color.Red.copy(alpha = 0.7f)
+                                color = statusColor
                             )
                         }
                     }

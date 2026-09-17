@@ -3,6 +3,7 @@ package de.landstueberl.mystueberlapp.viewmodel.product.add
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormValues
@@ -19,8 +20,7 @@ class AddProductViewModel(
                 description = values.description,
                 purchasePrice = values.purchasePrice,
                 salesPrice = values.salesPrice,
-                isSold = false,
-                isRemoved = false
+                status = ProductStatus.AVAILABLE
             ),
             imageList = emptyList()
         )
@@ -29,7 +29,7 @@ class AddProductViewModel(
 
     companion object {
         fun factory(repo: ProductRepository) = viewModelFactory {
-            initializer { AddProductViewModel(repo) }
+            initializer<AddProductViewModel> { AddProductViewModel(repo) }
         }
     }
 }
