@@ -21,6 +21,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,9 +32,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
+import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +50,19 @@ fun ProductBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    val productStatus = product.details.status
+    val details = product.details
+    //val status = details.status
+    val isOrderProduct = details.orderId != null
+
+    /** Animates the sheet away, then runs [action]. */
+    fun dismissThen(action: () -> Unit) {
+        scope.launch {
+            sheetState.hide()
+            action()
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -73,37 +90,42 @@ fun ProductBottomSheet(
                 color = SageGreen.copy(alpha = 0.3f)
             )
 
-            // ── Mark as Sold ───────────────────
-            if (!product.details.isSold) {
-                BottomSheetItem(
-                    icon = Icons.Default.CheckCircle,
-                    iconTint = SageGreen,
-                    label = stringResource(R.string.product_bottom_sheet_mark_sold),
-                    onClick = onMarkAsSold
+            if (isOrderProduct) {
+                // Status is controlled by the order, not here.
+                Text(
+                    text = stringResource(R.string.product_bottom_sheet_order_managed),
+                    fontSize = 13.sp,
+                    color = TextSecondary,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 )
+            } else {
+                when (productStatus) {
+                    ProductStatus.AVAILABLE -> {
+                        BottomSheetItem(
+                            icon = Icons.Default.CheckCircle,
+                            iconTint = SageGreen,
+                            label = stringResource(R.string.product_bottom_sheet_mark_sold),
+                            onClick = { dismissThen(onMarkAsSold) }
+                        )
+                        BottomSheetItem(
+                            icon = Icons.Default.Delete,
+                            iconTint = MaterialTheme.colorScheme.error,
+                            label = stringResource(R.string.product_bottom_sheet_mark_removed),
+                            onClick = { dismissThen(onMarkAsRemoved) }
+                        )
+                    }
+                    ProductStatus.SOLD, ProductStatus.REMOVED -> {
+                        BottomSheetItem(
+                            icon = Icons.Default.Refresh,
+                            iconTint = AccentGold,
+                            label = stringResource(R.string.product_bottom_sheet_reset),
+                            onClick = { dismissThen(onResetToAvailable) }
+                        )
+                    }
+                }
             }
 
-            // ── Mark as Removed ────────────────
-            if (!product.details.isRemoved) {
-                BottomSheetItem(
-                    icon = Icons.Default.Delete,
-                    iconTint = Color.Red,
-                    label = stringResource(R.string.product_bottom_sheet_mark_removed),
-                    onClick = onMarkAsRemoved
-                )
-            }
-
-            // ── Reset to Available ─────────────
-            if (product.details.isSold || product.details.isRemoved) {
-                BottomSheetItem(
-                    icon = Icons.Default.Refresh,
-                    iconTint = AccentGold,
-                    label = stringResource(R.string.product_bottom_sheet_reset),
-                    onClick = onResetToAvailable
-                )
-            }
-
-            // ── Edit Product ───────────────────
+            // Edit is always available
             BottomSheetItem(
                 icon = Icons.Default.Edit,
                 iconTint = SageGreenDark,

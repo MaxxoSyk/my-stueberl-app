@@ -8,12 +8,6 @@ data class ProductFilter(
     val productSourceFilter: ProductSourceFilter = ProductSourceFilter.FROM_SALES_AREA
 )
 
-enum class ProductStatus {
-    AVAILABLE,
-    SOLD,
-    REMOVED
-}
-
 enum class ProductSourceFilter {
     ALL,
     FROM_ORDER,

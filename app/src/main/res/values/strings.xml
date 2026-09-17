@@ -3,6 +3,10 @@
     <string name="app_name">MyStueberlApp</string>
     <string name="home_screen_title">MyStueberl</string>
 
+    <!-- Common -->
+    <string name="common_back">Back</string>
+    <string name="common_cancel">Cancel</string>
+
     <!-- Tile Titles -->
     <string name="home_screen_tile_statistics">Statistics</string>
     <string name="home_screen_tile_products">Products</string>
@@ -14,8 +18,9 @@
     <string name="stats_on_sale">Currently on Sale</string>
 
     <!-- Products Tile -->
-    <string name="home_screen_tile_products_available">Available Products</string>
+    <string name="home_screen_available_sales_area">Available in sales area</string>
     <string name="home_screen_tile_products_total">Total %1$d</string>
+    <string name="home_screen_pending_order_products">For open orders</string>
 
     <!-- Orders Tile -->
     <string name="orders_open">Open Orders</string>
@@ -37,6 +42,17 @@
     <string name="products_screen_sold_on">Sold: %1$s</string>
     <string name="products_screen_removed_on">Removed: %1$s</string>
     <string name="products_screen_no_image">No image</string>
+    <string name="products_screen_success_add">Product saved successfully!</string>
+    <string name="products_screen_success_edit">Product updated!</string>
+    <string name="products_screen_add">"Add Product"</string>
+    <string name="products_screen_action_failed">Action failed. Please try again.</string>
+    <string name="products_screen_empty_filtered">No products match the selected filters.</string>
+    <string name="products_screen_delete_confirm_title">Delete products?</string>
+    <plurals name="products_screen_delete_confirm_message">
+        <item quantity="one">This product will be permanently deleted.</item>
+        <item quantity="other">%1$d products will be permanently deleted.</item>
+    </plurals>
+    <string name="products_screen_order_badge">Order</string>
 
     <!-- Products Screen - Filter Bottom Sheet -->
     <string name="products_filter_sheet_title">Filter Products</string>
@@ -53,29 +69,33 @@
     <string name="products_filter_sheet_source_sales_area">From Sales Area</string>
     <string name="products_filter_sheet_active_count">%1$d active</string>
 
+    <!-- Product form (shared between add & edit) -->
+    <string name="product_form_save_failed">Could not save the product. Please try again.</string>
+    <string name="product_form_description">Description</string>
+    <string name="product_form_description_placeholder">Enter product description</string>
+    <string name="product_form_image_placeholder">Add Image</string>
+
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Add Product</string>
-    <string name="add_product_screen_description">Description</string>
-    <string name="add_product_screen_description_placeholder">Enter product description</string>
     <string name="add_product_screen_purchase_price">Purchase Price</string>
     <string name="add_product_screen_sales_price">Sales Price</string>
-    <string name="add_product_screen_currency">Currency</string>
     <string name="add_product_screen_save">Save</string>
-    <string name="add_product_screen_success">Product saved successfully!</string>
-    <string name="add_product_screen_image_placeholder">Add Image</string>
-    <string name="add_product_screen_price_invalid">Please enter a valid price</string>
 
     <!-- Product Bottom Sheet -->
     <string name="product_bottom_sheet_mark_sold">Mark as Sold</string>
     <string name="product_bottom_sheet_mark_removed">Mark as Removed</string>
     <string name="product_bottom_sheet_reset">Reset to Available</string>
     <string name="product_bottom_sheet_edit">Edit Product</string>
+    <string name="product_bottom_sheet_order_managed">Status is managed by the linked order.</string>
 
     <!-- Edit Product Screen -->
     <string name="edit_product_screen_title">Edit Product</string>
     <string name="edit_product_screen_created_at">Created At</string>
-    <string name="edit_product_screen_removed_on">Removed/Sold On</string>
-    <string name="edit_product_screen_success">Product updated!</string>
+    <string name="edit_product_screen_removed_on">Removed On</string>
+    <string name="edit_product_screen_sold_on">Sold On</string>
+    <string name="edit_product_screen_load_failed">The product could not be loaded.</string>
+    <string name="edit_product_screen_retry">Try again</string>
+    <string name="edit_product_screen_section_details">Details</string>
 
     <!-- Product Status Badge -->
     <string name="product_status_badge_available">Available</string>

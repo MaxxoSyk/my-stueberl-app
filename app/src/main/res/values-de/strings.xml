@@ -3,6 +3,10 @@
     <string name="app_name">Mein Stüberl</string>
     <string name="home_screen_title">Landstüberl</string>
 
+    <!-- Common -->
+    <string name="common_back">Zurück</string>
+    <string name="common_cancel">Abbrechen</string>
+
     <!-- Tile Titles -->
     <string name="home_screen_tile_statistics">Statistiken</string>
     <string name="home_screen_tile_products">Werkstücke</string>
@@ -14,8 +18,9 @@
     <string name="stats_on_sale">Aktuell im Verkauf</string>
 
     <!-- Products Tile -->
-    <string name="home_screen_tile_products_available">Verfügbare Werkstücke</string>
+    <string name="home_screen_available_sales_area">Verfügbar im Stüberl</string>
     <string name="home_screen_tile_products_total">Gesamt %1$d</string>
+    <string name="home_screen_pending_order_products">Für offene Bestellungen</string>
 
     <!-- Orders Tile -->
     <string name="orders_open">Offene Bestellungen</string>
@@ -37,6 +42,17 @@
     <string name="products_screen_sold_on">Verkauft: %1$s</string>
     <string name="products_screen_removed_on">Entfernt: %1$s</string>
     <string name="products_screen_no_image">Kein Bild</string>
+    <string name="products_screen_success_add">Werkstück erfolgreich gespeichert!</string>
+    <string name="products_screen_success_edit">Werkstück aktualisiert!</string>
+    <string name="products_screen_add">Werkstück hinzufügen</string>
+    <string name="products_screen_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="products_screen_empty_filtered">Keine Werkstücke entsprechen den gewählten Filtern.</string>
+    <string name="products_screen_delete_confirm_title">Werkstücke löschen?</string>
+    <plurals name="products_screen_delete_confirm_message">
+        <item quantity="one">Dieses Werkstück wird dauerhaft gelöscht.</item>
+        <item quantity="other">%1$d Werkstücke werden dauerhaft gelöscht.</item>
+    </plurals>
+    <string name="products_screen_order_badge">Bestellung</string>
 
     <!-- Products Screen - Filter Bottom Sheet -->
     <string name="products_filter_sheet_title">Werkstücke filtern</string>
@@ -53,29 +69,33 @@
     <string name="products_filter_sheet_source_sales_area">aus Stüberl</string>
     <string name="products_filter_sheet_active_count">%1$d aktiv</string>
 
+    <!-- Produktformular (gemeinsam für Anlegen & Bearbeiten) -->
+    <string name="product_form_save_failed">Werkstück konnte nicht gespeichert werden. Bitte erneut versuchen.</string>
+    <string name="product_form_description">Beschreibung</string>
+    <string name="product_form_description_placeholder">Werkstückbeschreibung eingeben</string>
+    <string name="product_form_image_placeholder">Bild hinzufügen</string>
+
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Werkstück hinzufügen</string>
-    <string name="add_product_screen_description">Beschreibung</string>
-    <string name="add_product_screen_description_placeholder">Werkstückbeschreibung eingeben</string>
     <string name="add_product_screen_purchase_price">Einkaufspreis</string>
     <string name="add_product_screen_sales_price">Verkaufspreis</string>
-    <string name="add_product_screen_currency">Währung</string>
     <string name="add_product_screen_save">Speichern</string>
-    <string name="add_product_screen_success">Werkstück erfolgreich gespeichert!</string>
-    <string name="add_product_screen_image_placeholder">Bild hinzufügen</string>
-    <string name="add_product_screen_price_invalid">Bitte gültigen Preis eingeben</string>
 
     <!-- Product Bottom Sheet -->
     <string name="product_bottom_sheet_mark_sold">Als verkauft markieren</string>
     <string name="product_bottom_sheet_mark_removed">Als entfernt markieren</string>
     <string name="product_bottom_sheet_reset">Zurück auf verfügbar</string>
     <string name="product_bottom_sheet_edit">Werkstück bearbeiten</string>
+    <string name="product_bottom_sheet_order_managed">Status wird über die zugehörige Bestellung verwaltet.</string>
 
     <!-- Edit Product Screen -->
     <string name="edit_product_screen_title">Werkstück bearbeiten</string>
     <string name="edit_product_screen_created_at">Erstellt am</string>
-    <string name="edit_product_screen_removed_on">Entfernt/verkauft am</string>
-    <string name="edit_product_screen_success">Werkstück aktualisiert!</string>
+    <string name="edit_product_screen_removed_on">Entfernt am</string>
+    <string name="edit_product_screen_sold_on">Verkauft am</string>
+    <string name="edit_product_screen_load_failed">Werkstück konnte nicht geladen werden.</string>
+    <string name="edit_product_screen_retry">Erneut versuchen</string>
+    <string name="edit_product_screen_section_details">Details</string>
 
     <!-- Product Status Badge -->
     <string name="product_status_badge_available">Verfügbar</string>

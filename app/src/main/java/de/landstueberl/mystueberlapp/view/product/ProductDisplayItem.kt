@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -26,12 +27,12 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,12 +40,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import java.time.format.DateTimeFormatter
+
+private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 
 @Composable
 fun ProductDisplayItem(
@@ -55,6 +59,10 @@ fun ProductDisplayItem(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val details = product.details
+    val status = details.status
+    val isOrderProduct = details.orderId != null
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -64,7 +72,7 @@ fun ProductDisplayItem(
             )
             .then(
                 if (isSelected) Modifier.border(
-                    width = 2.dp,
+                    width = 3.dp,
                     color = SageGreenDark,
                     shape = RoundedCornerShape(12.dp)
                 ) else Modifier
@@ -72,10 +80,7 @@ fun ProductDisplayItem(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected)
-                SageGreenLight.copy(alpha = 0.3f)
-            else
-                MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -122,18 +127,27 @@ fun ProductDisplayItem(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = product.details.description,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    // ── Description + Order Badge ──
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = details.description,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+
+                        if (isOrderProduct) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            OrderBadge()
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    product.details.purchasePrice?.let { price ->
+                    details.purchasePrice?.let { price ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(R.string.products_screen_purchase_price),
@@ -149,7 +163,7 @@ fun ProductDisplayItem(
                         }
                     }
 
-                    product.details.salesPrice?.let { price ->
+                    details.salesPrice?.let { price ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(R.string.products_screen_sales_price),
@@ -170,20 +184,20 @@ fun ProductDisplayItem(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // ── Status Icon ──
-                when {
-                    product.details.isRemoved -> Icon(
+                when (status) {
+                    ProductStatus.REMOVED -> Icon(
                         imageVector = Icons.Default.Cancel,
                         contentDescription = stringResource(R.string.products_screen_status_removed),
-                        tint = Color.Red,
+                        tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(24.dp)
                     )
-                    product.details.isSold -> Icon(
+                    ProductStatus.SOLD -> Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = stringResource(R.string.products_screen_status_sold),
                         tint = SageGreen,
                         modifier = Modifier.size(24.dp)
                     )
-                    else -> Icon(
+                    ProductStatus.AVAILABLE -> Icon(
                         imageVector = Icons.Default.RadioButtonUnchecked,
                         contentDescription = stringResource(R.string.products_screen_status_available),
                         tint = TextSecondary,
@@ -210,9 +224,7 @@ fun ProductDisplayItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // ── Created At ───────
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.CalendarToday,
                             contentDescription = null,
@@ -223,9 +235,7 @@ fun ProductDisplayItem(
                         Text(
                             text = stringResource(
                                 R.string.products_screen_created_at,
-                                product.details.createdAt.format(
-                                    DateTimeFormatter.ofPattern("dd.MM.yyyy")
-                                )
+                                details.createdAt.format(DATE_FORMAT)
                             ),
                             fontSize = 9.sp,
                             color = TextSecondary.copy(alpha = 0.7f)
@@ -234,44 +244,80 @@ fun ProductDisplayItem(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // ── RemovedOn ───────
-                    product.details.removedOn?.let { date ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    // ── Sold / Removed Date ───────
+                    val statusDate = when (status) {
+                        ProductStatus.SOLD -> details.soldOn
+                        ProductStatus.REMOVED -> details.removedOn
+                        ProductStatus.AVAILABLE -> null
+                    }
+
+                    if (statusDate != null) {
+                        val isSold = status == ProductStatus.SOLD
+                        val statusColor = if (isSold) {
+                            SageGreen.copy(alpha = 0.7f)
+                        } else {
+                            MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = if (product.details.isSold)
+                                imageVector = if (isSold) {
                                     Icons.Default.CheckCircle
-                                else
-                                    Icons.Default.Cancel,
+                                } else {
+                                    Icons.Default.Cancel
+                                },
                                 contentDescription = null,
-                                tint = if (product.details.isSold)
-                                    SageGreen.copy(alpha = 0.7f)
-                                else
-                                    Color.Red.copy(alpha = 0.7f),
+                                tint = statusColor,
                                 modifier = Modifier.size(9.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = stringResource(
-                                    if (product.details.isSold)
+                                    if (isSold) {
                                         R.string.products_screen_sold_on
-                                    else
-                                        R.string.products_screen_removed_on,
-                                    date.format(
-                                        DateTimeFormatter.ofPattern("dd.MM.yyyy")
-                                    )
+                                    } else {
+                                        R.string.products_screen_removed_on
+                                    },
+                                    statusDate.format(DATE_FORMAT)
                                 ),
                                 fontSize = 9.sp,
-                                color = if (product.details.isSold)
-                                    SageGreen.copy(alpha = 0.7f)
-                                else
-                                    Color.Red.copy(alpha = 0.7f)
+                                color = statusColor
                             )
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+// ── Order Source Badge ─────────────────────────────────────────────────
+@Composable
+private fun OrderBadge(
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(4.dp),
+        color = AccentGold.copy(alpha = 0.15f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Receipt,
+                contentDescription = null,
+                tint = AccentGold,
+                modifier = Modifier.size(11.dp)
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            Text(
+                text = stringResource(R.string.products_screen_order_badge),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AccentGold
+            )
         }
     }
 }

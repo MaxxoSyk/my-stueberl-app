@@ -4,14 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,7 +27,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,16 +36,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
-import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModel
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
 import de.landstueberl.mystueberlapp.view.product.ProductDescriptionField
 import de.landstueberl.mystueberlapp.view.product.ProductImagePlaceholder
 import de.landstueberl.mystueberlapp.view.product.ProductPriceField
+import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModel
+import java.util.Currency
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,15 +53,17 @@ fun AddProductScreen(
     viewModel: AddProductViewModel,
     onNavigateBack: (showSuccess: Boolean) -> Unit
 ) {
-    val description by viewModel.description.collectAsState()
-    val purchasePrice by viewModel.purchasePrice.collectAsState()
-    val salesPrice by viewModel.salesPrice.collectAsState()
-    val currency by viewModel.currency.collectAsState()
-    val isSaved by viewModel.isSaved.collectAsState()
-    val isError by viewModel.isError.collectAsState()
+    val description by viewModel.description.collectAsStateWithLifecycle()
+    val purchasePrice by viewModel.purchasePrice.collectAsStateWithLifecycle()
+    val salesPrice by viewModel.salesPrice.collectAsStateWithLifecycle()
+    val currency by viewModel.currency.collectAsStateWithLifecycle()
+    val isSaved by viewModel.isSaved.collectAsStateWithLifecycle()
+    val isError by viewModel.isError.collectAsStateWithLifecycle()
+    val isSaveEnabled by viewModel.isSaveEnabled.collectAsStateWithLifecycle()
+    val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val errorMessage = stringResource(R.string.add_product_screen_price_invalid)
+    val saveErrorMessage = stringResource(R.string.product_form_save_failed)
 
     LaunchedEffect(isSaved) {
         if (isSaved) {
@@ -70,7 +74,7 @@ fun AddProductScreen(
 
     LaunchedEffect(isError) {
         if (isError) {
-            snackbarHostState.showSnackbar(errorMessage)
+            snackbarHostState.showSnackbar(saveErrorMessage)
             viewModel.resetErrorState()
         }
     }
@@ -82,7 +86,7 @@ fun AddProductScreen(
                     IconButton(onClick = { onNavigateBack(false) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = Color.White
                         )
                     }
@@ -121,18 +125,18 @@ fun AddProductScreen(
             // ── Description ───────────────────
             ProductDescriptionField(
                 value = description,
-                onValueChange = { viewModel.onDescriptionChange(it) }
+                onValueChange = viewModel::onDescriptionChange
             )
 
             // ── Purchase Price ─────────────────
             ProductPriceField(
                 label = stringResource(R.string.add_product_screen_purchase_price),
                 value = purchasePrice,
-                onValueChange = { viewModel.onPurchasePriceChange(it) },
+                onValueChange = viewModel::onPurchasePriceChange,
                 currency = currency.currencyCode,
                 availableCurrencies = viewModel.availableCurrencies.map { it.currencyCode },
                 onCurrencyChange = { code ->
-                    viewModel.onCurrencyChange(java.util.Currency.getInstance(code))
+                    viewModel.onCurrencyChange(Currency.getInstance(code))
                 }
             )
 
@@ -140,11 +144,11 @@ fun AddProductScreen(
             ProductPriceField(
                 label = stringResource(R.string.add_product_screen_sales_price),
                 value = salesPrice,
-                onValueChange = { viewModel.onSalesPriceChange(it) },
+                onValueChange = viewModel::onSalesPriceChange,
                 currency = currency.currencyCode,
                 availableCurrencies = viewModel.availableCurrencies.map { it.currencyCode },
                 onCurrencyChange = { code ->
-                    viewModel.onCurrencyChange(java.util.Currency.getInstance(code))
+                    viewModel.onCurrencyChange(Currency.getInstance(code))
                 }
             )
 
@@ -153,7 +157,7 @@ fun AddProductScreen(
             // ── Save Button ────────────────────
             Button(
                 onClick = { viewModel.saveProduct() },
-                enabled = viewModel.isSaveEnabled,
+                enabled = isSaveEnabled && !isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -165,11 +169,19 @@ fun AddProductScreen(
                     disabledContentColor = TextSecondary
                 )
             ) {
-                Text(
-                    text = stringResource(R.string.add_product_screen_save),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.height(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.add_product_screen_save),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                }
             }
         }
     }

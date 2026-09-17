@@ -1,69 +1,51 @@
 package de.landstueberl.mystueberlapp.viewmodel.product.edit
 
-import androidx.lifecycle.ViewModel
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import de.landstueberl.mystueberlapp.data.Money
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.toRoute
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.ProductRepository
+import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormValues
+import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.Currency
+import kotlin.coroutines.cancellation.CancellationException
 
 class EditProductViewModel(
-    private val repo: ProductRepository,
-    private val productId: Int
-) : ViewModel() {
+    repo: ProductRepository,
+    savedStateHandle: SavedStateHandle
+) : ProductFormViewModel(repo) {
 
-    // ── Form Fields ────────────────────────────
-    private val _description = MutableStateFlow("")
-    val description: StateFlow<String> = _description
+    private val productId: Int = savedStateHandle.toRoute<Screen.EditProduct>().productId
+    private var loadedProduct: Product? = null
 
-    private val _purchasePrice = MutableStateFlow("")
-    val purchasePrice: StateFlow<String> = _purchasePrice
-
-    private val _salesPrice = MutableStateFlow("")
-    val salesPrice: StateFlow<String> = _salesPrice
-
-    private val _currency = MutableStateFlow(Currency.getInstance("EUR"))
-    val currency: StateFlow<Currency> = _currency
-
-    // ── Read Only Fields ───────────────────────
+    // ── Read Only Fields (edit-only) ───────────
     private val _createdAt = MutableStateFlow<LocalDate?>(null)
-    val createdAt: StateFlow<LocalDate?> = _createdAt
+    val createdAt: StateFlow<LocalDate?> = _createdAt.asStateFlow()
+
+    private val _soldOn = MutableStateFlow<LocalDate?>(null)
+    val soldOn: StateFlow<LocalDate?> = _soldOn.asStateFlow()
 
     private val _removedOn = MutableStateFlow<LocalDate?>(null)
-    val removedOn: StateFlow<LocalDate?> = _removedOn
+    val removedOn: StateFlow<LocalDate?> = _removedOn.asStateFlow()
 
-    private val _isSold = MutableStateFlow(false)
-    val isSold: StateFlow<Boolean> = _isSold
-
-    private val _isRemoved = MutableStateFlow(false)
-    val isRemoved: StateFlow<Boolean> = _isRemoved
-
-    // ── UI State ───────────────────────────────
-    private val _isSaved = MutableStateFlow(false)
-    val isSaved: StateFlow<Boolean> = _isSaved
-
-    private val _isError = MutableStateFlow(false)
-    val isError: StateFlow<Boolean> = _isError
+    private val _status = MutableStateFlow(ProductStatus.AVAILABLE)
+    val status: StateFlow<ProductStatus> = _status.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // ── Available Currencies ───────────────────
-    val availableCurrencies = listOf(
-        Currency.getInstance("EUR"),
-        Currency.getInstance("USD"),
-        Currency.getInstance("GBP"),
-        Currency.getInstance("CHF")
-    )
-
-    // ── Validation ─────────────────────────────
-    val isSaveEnabled: Boolean
-        get() = _description.value.isNotBlank()
+    private val _loadFailed = MutableStateFlow(false)
+    val loadFailed: StateFlow<Boolean> = _loadFailed.asStateFlow()
 
     init {
         loadProduct()
@@ -71,88 +53,68 @@ class EditProductViewModel(
 
     private fun loadProduct() {
         viewModelScope.launch {
+            _isLoading.value = true
+            _loadFailed.value = false
             try {
                 val product = repo.getProductById(productId)
-                // ── Prefill form fields ──
-                _description.value = product.details.description
-                _purchasePrice.value = product.details.purchasePrice
-                    ?.amount?.toPlainString() ?: ""
-                _salesPrice.value = product.details.salesPrice
-                    ?.amount?.toPlainString() ?: ""
-                _currency.value = product.details.purchasePrice
-                    ?.currency ?: Currency.getInstance("EUR")
-                _createdAt.value = product.details.createdAt
-                _removedOn.value = product.details.removedOn
-                _isSold.value = product.details.isSold
-                _isRemoved.value = product.details.isRemoved
-                _isLoading.value = false
+                loadedProduct = product
+
+                val productDetails = product.details
+
+                // Prefill the inherited form fields
+                _description.value = productDetails.description
+                _purchasePrice.value = productDetails.purchasePrice?.amount?.toPlainString() ?: ""
+                _salesPrice.value = productDetails.salesPrice?.amount?.toPlainString() ?: ""
+                _currency.value = productDetails.purchasePrice?.currency
+                    ?: productDetails.salesPrice?.currency
+                            ?: DEFAULT_CURRENCY
+
+                // Edit-only read-only fields
+                _createdAt.value = productDetails.createdAt
+                _soldOn.value = productDetails.soldOn
+                _removedOn.value = productDetails.removedOn
+                _status.value = productDetails.status
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _isError.value = true
+                Log.e(TAG, "Failed to load product $productId", e)
+                _loadFailed.value = true
+            } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    // ── Field Updates ──────────────────────────
-    fun onDescriptionChange(value: String) {
-        _description.value = value
+    fun retry() {
+        loadProduct()
     }
 
-    fun onPurchasePriceChange(value: String) {
-        if (value.isEmpty() || value.matches(Regex("^\\d*\\.?\\d*$"))) {
-            _purchasePrice.value = value
-        }
+    override suspend fun persist(values: ProductFormValues) {
+        val existing = loadedProduct ?: repo.getProductById(productId)
+
+        val updated = Product(
+            details = existing.details.copy(
+                description = values.description,
+                purchasePrice = values.purchasePrice,
+                salesPrice = values.salesPrice
+            ),
+            imageList = existing.imageList
+        )
+
+        repo.upsertProduct(updated)
+        loadedProduct = updated
     }
 
-    fun onSalesPriceChange(value: String) {
-        if (value.isEmpty() || value.matches(Regex("^\\d*\\.?\\d*$"))) {
-            _salesPrice.value = value
-        }
-    }
+    companion object {
+        private const val TAG = "EditProductViewModel"
 
-    fun onCurrencyChange(value: Currency) {
-        _currency.value = value
-    }
-
-    // ── Save Product ───────────────────────────
-    fun saveProduct() {
-        if (!isSaveEnabled) return
-
-        viewModelScope.launch {
-            try {
-                val existingProduct = repo.getProductById(productId)
-
-                val purchasePrice = _purchasePrice.value
-                    .takeIf { it.isNotBlank() }
-                    ?.let { Money(BigDecimal(it), _currency.value) }
-
-                val salesPrice = _salesPrice.value
-                    .takeIf { it.isNotBlank() }
-                    ?.let { Money(BigDecimal(it), _currency.value) }
-
-                val updatedProduct = Product(
-                    details = existingProduct.details.copy(
-                        description = _description.value.trim(),
-                        purchasePrice = purchasePrice,
-                        salesPrice = salesPrice,
-                    ),
-                    imageList = existingProduct.imageList
+        fun factory(repo: ProductRepository) = viewModelFactory {
+            initializer<EditProductViewModel> {
+                EditProductViewModel(
+                    repo = repo,
+                    savedStateHandle = createSavedStateHandle()
                 )
-
-                repo.upsertProduct(updatedProduct)
-                _isSaved.value = true
-
-            } catch (e: Exception) {
-                _isError.value = true
             }
         }
-    }
-
-    fun resetSavedState() {
-        _isSaved.value = false
-    }
-
-    fun resetErrorState() {
-        _isError.value = false
     }
 }

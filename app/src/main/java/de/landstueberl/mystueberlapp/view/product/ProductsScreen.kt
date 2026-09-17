@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,20 +23,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
@@ -53,17 +60,27 @@ fun ProductsScreen(
     productUpdated: Boolean = false,
     onProductUpdatedConsumed: () -> Unit = {}
 ) {
-    val products by viewModel.products.collectAsState()
-    val selectedProducts by viewModel.selectedProducts.collectAsState()
-    val selectedProduct by viewModel.selectedProduct.collectAsState()
+    val products by viewModel.products.collectAsStateWithLifecycle()
+    val selectedProducts by viewModel.selectedProducts.collectAsStateWithLifecycle()
+    val selectedProductId by viewModel.selectedProductId.collectAsStateWithLifecycle()
+    val filter by viewModel.filter.collectAsStateWithLifecycle()
+    val availableYears by viewModel.availableYears.collectAsStateWithLifecycle()
+    val isFilterSheetVisible by viewModel.isFilterSheetVisible.collectAsStateWithLifecycle()
+    val activeFilterCount by viewModel.activeFilterCount.collectAsStateWithLifecycle()
+    val isError by viewModel.isError.collectAsStateWithLifecycle()
+
+    val selectedProduct = remember(selectedProductId, products) {
+        selectedProductId?.let { id -> products.firstOrNull { it.details.id == id } }
+    }
+
     val isSelectionMode = selectedProducts.isNotEmpty()
+
+    var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
+
     val snackbarHostState = remember { SnackbarHostState() }
-    val successMessage = stringResource(R.string.add_product_screen_success)
-    val updateMessage = stringResource(R.string.edit_product_screen_success)
-    val filter by viewModel.filter.collectAsState()
-    val availableYears by viewModel.availableYears.collectAsState()
-    val isFilterSheetVisible by viewModel.isFilterSheetVisible.collectAsState()
-    val activeFilterCount by viewModel.activeFilterCount.collectAsState()
+    val successMessage = stringResource(R.string.products_screen_success_add)
+    val updateMessage = stringResource(R.string.products_screen_success_edit)
+    val errorMessage = stringResource(R.string.products_screen_action_failed)
 
     // ── Show success message when product saved ──
     LaunchedEffect(productSaved) {
@@ -78,6 +95,14 @@ fun ProductsScreen(
         if (productUpdated) {
             snackbarHostState.showSnackbar(updateMessage)
             onProductUpdatedConsumed()
+        }
+    }
+
+    // ── Show error message when a DB action failed ──
+    LaunchedEffect(isError) {
+        if (isError) {
+            snackbarHostState.showSnackbar(errorMessage)
+            viewModel.resetErrorState()
         }
     }
 
@@ -96,7 +121,7 @@ fun ProductsScreen(
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = Color.White
                         )
                     }
@@ -117,9 +142,7 @@ fun ProductsScreen(
                 actions = {
                     if (isSelectionMode) {
                         // ── Delete Icon ──
-                        IconButton(onClick = {
-                            viewModel.deleteSelectedProducts()
-                        }) {
+                        IconButton(onClick = { showDeleteConfirmation = true }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = stringResource(R.string.products_screen_delete),
@@ -167,7 +190,7 @@ fun ProductsScreen(
                 ) {
                     Icon(
                         Icons.Default.Add,
-                        contentDescription = "Add Product",
+                        contentDescription = stringResource(R.string.products_screen_add),
                         tint = Color.White
                     )
                 }
@@ -180,13 +203,18 @@ fun ProductsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
+                    .padding(padding)
+                    .padding(horizontal = 32.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.products_screen_empty),
+                    text = if (activeFilterCount > 0)
+                        stringResource(R.string.products_screen_empty_filtered)
+                    else
+                        stringResource(R.string.products_screen_empty),
                     color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
                 )
             }
         } else {
@@ -222,29 +250,69 @@ fun ProductsScreen(
         }
     }
 
+    // ── Delete Confirmation ────────────────────
+    if (showDeleteConfirmation) {
+        val count = selectedProducts.size
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = {
+                Text(stringResource(R.string.products_screen_delete_confirm_title))
+            },
+            text = {
+                Text(
+                    pluralStringResource(
+                        R.plurals.products_screen_delete_confirm_message,
+                        count,
+                        count
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        viewModel.deleteSelectedProducts()
+                    }
+                ) {
+                    Text(
+                        text = stringResource(R.string.products_screen_delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
     // ── Bottom Sheet ───────────────────────────
     selectedProduct?.let { product ->
         ProductBottomSheet(
             product = product,
             onMarkAsSold = {
                 viewModel.markAsSold(product.details.id)
+                viewModel.dismissBottomSheet()
             },
             onMarkAsRemoved = {
                 viewModel.markAsRemoved(product.details.id)
+                viewModel.dismissBottomSheet()
             },
             onResetToAvailable = {
                 viewModel.resetToAvailable(product.details.id)
+                viewModel.dismissBottomSheet()
             },
             onEdit = {
                 viewModel.dismissBottomSheet()
                 onNavigateToEditProduct(product.details.id)
             },
-            onDismiss = {
-                viewModel.dismissBottomSheet()
-            }
+            onDismiss = { viewModel.dismissBottomSheet() }
         )
     }
 
+    // ── Filter Sheet ───────────────────────────
     if (isFilterSheetVisible) {
         FilterBottomSheet(
             filter = filter,

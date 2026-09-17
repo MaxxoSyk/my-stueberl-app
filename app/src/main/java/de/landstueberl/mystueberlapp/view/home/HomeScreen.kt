@@ -8,17 +8,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
@@ -39,8 +35,9 @@ fun HomeScreen(
     onNavigateToOrders: () -> Unit,
     onNavigateToStatistics: () -> Unit
 ) {
-    val availableProductsCount by viewModel.availableProductsCount.collectAsState()
-    val totalProductsCurrentYear by viewModel.totalProductsCurrentYear.collectAsState()
+    val availableSalesAreaCount by viewModel.availableSalesAreaCount.collectAsStateWithLifecycle()
+    val pendingOrderProductsCount by viewModel.pendingOrderProductsCount.collectAsStateWithLifecycle()
+    val totalProductsCurrentYear by viewModel.totalProductsCurrentYear.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -57,13 +54,6 @@ fun HomeScreen(
                     titleContentColor = FloralWhite
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* @todo decide FAB functionality */ },
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Product")
-            }
         }
     ) { padding ->
         Column(
@@ -92,7 +82,8 @@ fun HomeScreen(
                 verticalAlignment = Alignment.Top
             ) {
                 ProductsTile(
-                    availableProducts = availableProductsCount,
+                    availableSalesAreaProducts = availableSalesAreaCount,
+                    pendingOrderProducts = pendingOrderProductsCount,
                     totalProductsCurrentYear = totalProductsCurrentYear,
                     onClick = { onNavigateToProducts() },
                     modifier = Modifier.weight(1f)
