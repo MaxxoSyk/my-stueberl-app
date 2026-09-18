@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 3,
-    "identityHash": "e4d00d209273b0e7800e8119e8dccb71",
+    "version": 5,
+    "identityHash": "c091e0440a639760f9ca2cd30d211351",
     "entities": [
       {
         "tableName": "ProductDetail",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `description` TEXT NOT NULL, `status` TEXT NOT NULL, `orderId` INTEGER, `createdAt` TEXT NOT NULL, `soldOn` TEXT, `removedOn` TEXT, `purchase_amount` TEXT, `purchase_currency` TEXT, `sales_amount` TEXT, `sales_currency` TEXT, FOREIGN KEY(`orderId`) REFERENCES `OrderDetail`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `description` TEXT NOT NULL, `status` TEXT NOT NULL, `orderId` INTEGER, `createdAt` TEXT NOT NULL, `soldOn` TEXT, `removedOn` TEXT, `purchase_amount` TEXT, `purchase_currency` TEXT, `sales_amount` TEXT, `sales_currency` TEXT, FOREIGN KEY(`orderId`) REFERENCES `OrderDetail`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -97,7 +97,7 @@
         "foreignKeys": [
           {
             "table": "OrderDetail",
-            "onDelete": "CASCADE",
+            "onDelete": "SET NULL",
             "onUpdate": "NO ACTION",
             "columns": [
               "orderId"
@@ -201,7 +201,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e4d00d209273b0e7800e8119e8dccb71')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c091e0440a639760f9ca2cd30d211351')"
     ]
   }
 }

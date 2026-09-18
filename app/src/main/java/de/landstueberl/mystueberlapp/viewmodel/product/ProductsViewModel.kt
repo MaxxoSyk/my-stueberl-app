@@ -62,16 +62,33 @@ class ProductsViewModel(
     // opened screen shows no badge.
     val activeFilterCount: StateFlow<Int> = _filter
         .map { current ->
+            val default = ProductFilter()
             var count = 0
-            if (current.years != DEFAULT_FILTER.years) count++
-            if (current.statuses != DEFAULT_FILTER.statuses) count++
-            if (current.productSourceFilter != DEFAULT_FILTER.productSourceFilter) count++
+            if (current.years != default.years) count++
+            if (current.statuses != default.statuses) count++
+            if (current.productSourceFilter != default.productSourceFilter) count++
             count
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = 0
+        )
+
+    // ── Filter Narrowing ───────────────────────
+    // Whether the filter can hide rows at all — regardless of whether the user
+    // changed it. Used to pick the right empty-state message, since the default
+    // filter is already narrowing (current year, available, sales area).
+    val isFilterNarrowing: StateFlow<Boolean> = _filter
+        .map { current ->
+            current.years.isNotEmpty() ||
+                    current.statuses.size < ProductStatus.entries.size ||
+                    current.productSourceFilter != ProductSourceFilter.ALL
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = true
         )
 
     // ── Filter Bottom Sheet ────────────────────
@@ -204,8 +221,6 @@ class ProductsViewModel(
     companion object {
         private const val TAG = "ProductsViewModel"
         private const val STOP_TIMEOUT_MILLIS = 5_000L
-
-        private val DEFAULT_FILTER = ProductFilter()
 
         fun factory(repo: ProductRepository) = viewModelFactory {
             initializer<ProductsViewModel> { ProductsViewModel(repo) }

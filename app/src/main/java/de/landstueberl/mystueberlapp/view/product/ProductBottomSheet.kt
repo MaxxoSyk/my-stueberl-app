@@ -53,7 +53,6 @@ fun ProductBottomSheet(
     val scope = rememberCoroutineScope()
     val productStatus = product.details.status
     val details = product.details
-    //val status = details.status
     val isOrderProduct = details.orderId != null
 
     /** Animates the sheet away, then runs [action]. */
