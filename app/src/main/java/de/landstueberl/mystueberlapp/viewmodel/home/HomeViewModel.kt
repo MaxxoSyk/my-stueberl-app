@@ -36,7 +36,7 @@ class HomeViewModel(
             productRepository: ProductRepository,
             orderRepository: OrderRepository
         ) = viewModelFactory {
-            initializer {
+            initializer<HomeViewModel> {
                 HomeViewModel(
                     productRepo = productRepository,
                     orderRepo = orderRepository

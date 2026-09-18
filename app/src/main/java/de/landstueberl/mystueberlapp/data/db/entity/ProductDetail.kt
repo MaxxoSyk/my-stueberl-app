@@ -15,10 +15,13 @@ import java.time.LocalDate
             entity = OrderDetail::class,
             parentColumns = ["id"],
             childColumns = ["orderId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.SET_NULL
         )
     ],
-    indices = [Index("orderId")]
+    indices = [
+        Index("orderId"),
+        Index("status")
+    ]
 )
 data class ProductDetail(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,

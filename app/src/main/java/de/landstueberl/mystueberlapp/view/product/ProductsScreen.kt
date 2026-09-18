@@ -8,12 +8,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material3.AlertDialog
@@ -77,6 +74,7 @@ fun ProductsScreen(
     val isFilterSheetVisible by viewModel.isFilterSheetVisible.collectAsStateWithLifecycle()
     val activeFilterCount by viewModel.activeFilterCount.collectAsStateWithLifecycle()
     val isError by viewModel.isError.collectAsStateWithLifecycle()
+    val isFilterNarrowing by viewModel.isFilterNarrowing.collectAsStateWithLifecycle()
 
     val selectedProduct = remember(selectedProductId, products) {
         selectedProductId?.let { id -> products.firstOrNull { it.details.id == id } }
@@ -254,10 +252,11 @@ fun ProductsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (activeFilterCount > 0)
+                    text = if (isFilterNarrowing) {
                         stringResource(R.string.products_screen_empty_filtered)
-                    else
-                        stringResource(R.string.products_screen_empty),
+                    } else {
+                        stringResource(R.string.products_screen_empty)
+                    },
                     color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center
