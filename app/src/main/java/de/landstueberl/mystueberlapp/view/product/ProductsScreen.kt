@@ -275,8 +275,13 @@ fun ProductsScreen(
                     items = products,
                     key = { it.details.id }
                 ) { product ->
+                    val imageFile = remember(product) {
+                        product.imageList.firstOrNull()?.fileName?.let(viewModel::imageFile)
+                    }
+
                     ProductDisplayItem(
                         product = product,
+                        imageFile = imageFile,
                         isSelected = selectedProducts.contains(product.details.id),
                         isSelectionMode = isSelectionMode,
                         onTap = {

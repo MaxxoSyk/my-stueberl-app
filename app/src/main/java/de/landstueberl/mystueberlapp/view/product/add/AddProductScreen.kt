@@ -1,5 +1,9 @@
 package de.landstueberl.mystueberlapp.view.product.add
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +32,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +48,7 @@ import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.view.product.ImageSourceBottomSheet
 import de.landstueberl.mystueberlapp.view.product.ProductDescriptionField
 import de.landstueberl.mystueberlapp.view.product.ProductImagePlaceholder
 import de.landstueberl.mystueberlapp.view.product.ProductPriceField
@@ -77,6 +85,30 @@ fun AddProductScreen(
             snackbarHostState.showSnackbar(saveErrorMessage)
             viewModel.resetErrorState()
         }
+    }
+
+    val imageFileName by viewModel.imageFileName.collectAsStateWithLifecycle()
+    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+
+    var showImageSourceSheet by rememberSaveable { mutableStateOf(false) }
+
+    // Target URI the camera writes into; kept across the launch.
+    var cameraTargetUri by remember { mutableStateOf<Uri?>(null) }
+
+    // ── Gallery ────────────────────────────────
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) viewModel.onImageSelected(uri)
+    }
+
+    // ── Camera ─────────────────────────────────
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        val target = cameraTargetUri
+        if (success && target != null) viewModel.onImageSelected(target)
+        cameraTargetUri = null
     }
 
     Scaffold(
@@ -119,7 +151,9 @@ fun AddProductScreen(
         ) {
             // ── Image Placeholder ──────────────
             ProductImagePlaceholder(
-                onClick = { /* @todo Image picker */ }
+                imageFile = imageFileName?.let { viewModel.imageFile(it) },
+                isLoading = isImporting,
+                onClick = { showImageSourceSheet = true }
             )
 
             // ── Description ───────────────────
@@ -130,7 +164,7 @@ fun AddProductScreen(
 
             // ── Purchase Price ─────────────────
             ProductPriceField(
-                label = stringResource(R.string.add_product_screen_purchase_price),
+                label = stringResource(R.string.product_form_purchase_price),
                 value = purchasePrice,
                 onValueChange = viewModel::onPurchasePriceChange,
                 currency = currency.currencyCode,
@@ -142,7 +176,7 @@ fun AddProductScreen(
 
             // ── Sales Price ────────────────────
             ProductPriceField(
-                label = stringResource(R.string.add_product_screen_sales_price),
+                label = stringResource(R.string.product_form_sales_price),
                 value = salesPrice,
                 onValueChange = viewModel::onSalesPriceChange,
                 currency = currency.currencyCode,
@@ -177,12 +211,35 @@ fun AddProductScreen(
                     )
                 } else {
                     Text(
-                        text = stringResource(R.string.add_product_screen_save),
+                        text = stringResource(R.string.product_form_save),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
                 }
             }
         }
+    }
+
+    if (showImageSourceSheet) {
+        ImageSourceBottomSheet(
+            canRemove = imageFileName != null,
+            onTakePhoto = {
+                showImageSourceSheet = false
+                val target = viewModel.createCameraTarget()
+                cameraTargetUri = target.uri
+                cameraLauncher.launch(target.uri)
+            },
+            onPickFromGallery = {
+                showImageSourceSheet = false
+                galleryLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
+            onRemovePhoto = {
+                showImageSourceSheet = false
+                viewModel.onImageRemoved()
+            },
+            onDismiss = { showImageSourceSheet = false }
+        )
     }
 }

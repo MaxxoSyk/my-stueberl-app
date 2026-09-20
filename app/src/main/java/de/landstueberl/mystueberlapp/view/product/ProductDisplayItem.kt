@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,11 +34,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
@@ -46,6 +49,7 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import java.io.File
 import java.time.format.DateTimeFormatter
 
 private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy")
@@ -53,6 +57,7 @@ private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy")
 @Composable
 fun ProductDisplayItem(
     product: Product,
+    imageFile: File?,
     isSelected: Boolean,
     isSelectionMode: Boolean,
     onTap: () -> Unit,
@@ -113,12 +118,21 @@ fun ProductDisplayItem(
                         .background(SageGreenLight),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Image,
-                        contentDescription = stringResource(R.string.products_screen_no_image),
-                        tint = SageGreen,
-                        modifier = Modifier.size(32.dp)
-                    )
+                    if (imageFile != null) {
+                        AsyncImage(
+                            model = imageFile,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Image,
+                            contentDescription = stringResource(R.string.products_screen_no_image),
+                            tint = SageGreen,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))

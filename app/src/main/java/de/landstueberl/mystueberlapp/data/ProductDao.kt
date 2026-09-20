@@ -168,4 +168,7 @@ interface ProductDao {
         WHERE orderId = :orderId AND status = 'AVAILABLE'
     """)
     suspend fun detachProductsFromOrder(orderId: Int)
+
+    @Query("SELECT fileName FROM Image")
+    suspend fun getAllImageFileNames(): List<String>
 }

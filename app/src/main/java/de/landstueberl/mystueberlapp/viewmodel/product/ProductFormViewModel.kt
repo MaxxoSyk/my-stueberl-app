@@ -1,9 +1,11 @@
 package de.landstueberl.mystueberlapp.viewmodel.product
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.landstueberl.mystueberlapp.data.Money
+import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,18 +14,28 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.Currency
 import kotlin.coroutines.cancellation.CancellationException
 
 data class ProductFormValues(
     val description: String,
     val purchasePrice: Money?,
-    val salesPrice: Money?
+    val salesPrice: Money?,
+    val imageFileName: String?
 )
 
 abstract class ProductFormViewModel(
-    protected val repo: ProductRepository
+    protected val repo: ProductRepository,
+    private val imageStorage: ProductImageStorage
 ) : ViewModel() {
+
+    // ── Image ──────────────────────────────────
+    protected val _imageFileName = MutableStateFlow<String?>(null)
+    val imageFileName: StateFlow<String?> = _imageFileName.asStateFlow()
+
+    private val _isImporting = MutableStateFlow(false)
+    val isImporting: StateFlow<Boolean> = _isImporting.asStateFlow()
 
     // ── Form Fields ────────────────────────────
     protected val _description = MutableStateFlow("")
@@ -82,9 +94,46 @@ abstract class ProductFormViewModel(
         _currency.value = value
     }
 
+    fun createCameraTarget(): ProductImageStorage.CameraTarget =
+        imageStorage.createCameraTarget()
+
+    /** Resolves a stored file name to a file Coil can load. */
+    fun imageFile(fileName: String): File = imageStorage.fileFor(fileName)
+
+    /**
+     * Imports the image at [source] into internal storage and makes it the
+     * product's image, replacing any previous one.
+     */
+    fun onImageSelected(source: Uri) {
+        if (_isImporting.value) return
+
+        viewModelScope.launch {
+            _isImporting.value = true
+            try {
+                // The previous file is intentionally left on disk: it may still be
+                // referenced by the database until the user actually saves.
+                // Unreferenced files are removed by the orphan sweep at app start.
+                _imageFileName.value = imageStorage.importImage(source)
+                imageStorage.clearCameraTemp()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to import image from $source", e)
+                _isError.value = true
+            } finally {
+                _isImporting.value = false
+            }
+        }
+    }
+
+    fun onImageRemoved() {
+        // File deletion is deferred to the orphan sweep for the same reason.
+        _imageFileName.value = null
+    }
+
     // ── Save ───────────────────────────────────
     fun saveProduct() {
-        if (!canSave || _isSaving.value) return
+        if (!canSave || _isSaving.value || _isImporting.value) return
 
         viewModelScope.launch {
             _isSaving.value = true
@@ -93,7 +142,8 @@ abstract class ProductFormViewModel(
                     ProductFormValues(
                         description = _description.value.trim(),
                         purchasePrice = _purchasePrice.value.toMoneyOrNull(),
-                        salesPrice = _salesPrice.value.toMoneyOrNull()
+                        salesPrice = _salesPrice.value.toMoneyOrNull(),
+                        imageFileName = _imageFileName.value
                     )
                 )
                 _isSaved.value = true

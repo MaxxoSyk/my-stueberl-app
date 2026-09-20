@@ -1,5 +1,9 @@
 package de.landstueberl.mystueberlapp.view.product.edit
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +31,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +48,7 @@ import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.view.product.ImageSourceBottomSheet
 import de.landstueberl.mystueberlapp.view.product.ProductDescriptionField
 import de.landstueberl.mystueberlapp.view.product.ProductFormDivider
 import de.landstueberl.mystueberlapp.view.product.ProductImagePlaceholder
@@ -71,9 +79,28 @@ fun EditProductScreen(
     val isError by viewModel.isError.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val loadFailed by viewModel.loadFailed.collectAsStateWithLifecycle()
+    val imageFileName by viewModel.imageFileName.collectAsStateWithLifecycle()
+    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val saveErrorMessage = stringResource(R.string.product_form_save_failed)
+
+    var showImageSourceSheet by rememberSaveable { mutableStateOf(false) }
+    var cameraTargetUri by remember { mutableStateOf<Uri?>(null) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) viewModel.onImageSelected(uri)
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        val target = cameraTargetUri
+        if (success && target != null) viewModel.onImageSelected(target)
+        cameraTargetUri = null
+    }
 
     // ── Handle Save Success ────────────────────
     LaunchedEffect(isSaved) {
@@ -167,7 +194,9 @@ fun EditProductScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 ProductImagePlaceholder(
-                    onClick = { /* @todo Image picker */ }
+                    imageFile = imageFileName?.let { viewModel.imageFile(it) },
+                    isLoading = isImporting,
+                    onClick = { showImageSourceSheet = true }
                 )
 
                 ProductStatusBadge(status = status)
@@ -178,7 +207,7 @@ fun EditProductScreen(
                 )
 
                 ProductPriceField(
-                    label = stringResource(R.string.add_product_screen_purchase_price),
+                    label = stringResource(R.string.product_form_purchase_price),
                     value = purchasePrice,
                     onValueChange = viewModel::onPurchasePriceChange,
                     currency = currency.currencyCode,
@@ -189,7 +218,7 @@ fun EditProductScreen(
                 )
 
                 ProductPriceField(
-                    label = stringResource(R.string.add_product_screen_sales_price),
+                    label = stringResource(R.string.product_form_sales_price),
                     value = salesPrice,
                     onValueChange = viewModel::onSalesPriceChange,
                     currency = currency.currencyCode,
@@ -245,7 +274,7 @@ fun EditProductScreen(
                         )
                     } else {
                         Text(
-                            text = stringResource(R.string.add_product_screen_save),
+                            text = stringResource(R.string.product_form_save),
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
@@ -253,5 +282,28 @@ fun EditProductScreen(
                 }
             }
         }
+    }
+
+    if (showImageSourceSheet) {
+        ImageSourceBottomSheet(
+            canRemove = imageFileName != null,
+            onTakePhoto = {
+                showImageSourceSheet = false
+                val target = viewModel.createCameraTarget()
+                cameraTargetUri = target.uri
+                cameraLauncher.launch(target.uri)
+            },
+            onPickFromGallery = {
+                showImageSourceSheet = false
+                galleryLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                )
+            },
+            onRemovePhoto = {
+                showImageSourceSheet = false
+                viewModel.onImageRemoved()
+            },
+            onDismiss = { showImageSourceSheet = false }
+        )
     }
 }

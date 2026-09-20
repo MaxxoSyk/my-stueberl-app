@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.view.home.HomeScreen
@@ -25,7 +26,8 @@ private const val KEY_PRODUCT_UPDATED = "product_updated"
 fun NavGraph(
     navController: NavHostController,
     productRepository: ProductRepository,
-    orderRepository: OrderRepository
+    orderRepository: OrderRepository,
+    imageStorage: ProductImageStorage
 ) {
     NavHost(
         navController = navController,
@@ -56,7 +58,7 @@ fun NavGraph(
 
             ProductsScreen(
                 viewModel = viewModel(
-                    factory = ProductsViewModel.factory(productRepository)),
+                    factory = ProductsViewModel.factory(productRepository, imageStorage)),
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToAddProduct = { navController.navigate(Screen.AddProduct) },
                 onNavigateToEditProduct = { productId ->
@@ -76,7 +78,7 @@ fun NavGraph(
         composable<Screen.AddProduct> {
             AddProductScreen(
                 viewModel = viewModel(
-                    factory = AddProductViewModel.factory(productRepository)),
+                    factory = AddProductViewModel.factory(productRepository, imageStorage)),
                 onNavigateBack = { showSuccess ->
                     if (showSuccess) {
                         navController.previousBackStackEntry
@@ -91,7 +93,7 @@ fun NavGraph(
         composable<Screen.EditProduct> {
             EditProductScreen(
                 viewModel = viewModel(
-                    factory = EditProductViewModel.factory(productRepository)),
+                    factory = EditProductViewModel.factory(productRepository, imageStorage)),
                 onNavigateBack = { productUpdated ->
                     if (productUpdated) {
                         navController.previousBackStackEntry

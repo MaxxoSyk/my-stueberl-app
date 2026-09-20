@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "c091e0440a639760f9ca2cd30d211351",
+    "identityHash": "d715221a4321649fa107dfdce175cb41",
     "entities": [
       {
         "tableName": "ProductDetail",
@@ -110,7 +110,7 @@
       },
       {
         "tableName": "Image",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `productId` INTEGER NOT NULL, `filePath` TEXT NOT NULL, FOREIGN KEY(`productId`) REFERENCES `ProductDetail`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `productId` INTEGER NOT NULL, `fileName` TEXT NOT NULL, FOREIGN KEY(`productId`) REFERENCES `ProductDetail`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -125,8 +125,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "filePath",
-            "columnName": "filePath",
+            "fieldPath": "fileName",
+            "columnName": "fileName",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -146,6 +146,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_Image_productId` ON `${TABLE_NAME}` (`productId`)"
+          },
+          {
+            "name": "index_Image_fileName",
+            "unique": true,
+            "columnNames": [
+              "fileName"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_Image_fileName` ON `${TABLE_NAME}` (`fileName`)"
           }
         ],
         "foreignKeys": [
@@ -201,7 +210,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c091e0440a639760f9ca2cd30d211351')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd715221a4321649fa107dfdce175cb41')"
     ]
   }
 }

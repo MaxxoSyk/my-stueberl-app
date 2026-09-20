@@ -75,4 +75,6 @@ class ProductRepository(private val dao: ProductDao) {
     suspend fun detachProductsFromOrder(orderId: Int) {
         dao.detachProductsFromOrder(orderId)
     }
+
+    suspend fun getAllImageFileNames(): List<String> = dao.getAllImageFileNames()
 }

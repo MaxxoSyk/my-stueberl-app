@@ -22,7 +22,8 @@ class HomeActivity : ComponentActivity() {
                 NavGraph(
                     navController = navController,
                     productRepository = app.productRepository,
-                    orderRepository = app.orderRepository
+                    orderRepository = app.orderRepository,
+                    imageStorage = app.productImageStorage
                 )
             }
         }
