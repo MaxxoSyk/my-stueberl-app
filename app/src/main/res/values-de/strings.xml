@@ -78,12 +78,13 @@
     <string name="product_form_description">Beschreibung</string>
     <string name="product_form_description_placeholder">Werkstückbeschreibung eingeben</string>
     <string name="product_form_image_placeholder">Bild hinzufügen</string>
+    <string name="product_form_image">Werkstückbild</string>
+    <string name="product_form_save">Speichern</string>
+    <string name="product_form_sales_price">Verkaufspreis</string>
+    <string name="product_form_purchase_price">Einkaufspreis</string>
 
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Werkstück hinzufügen</string>
-    <string name="add_product_screen_purchase_price">Einkaufspreis</string>
-    <string name="add_product_screen_sales_price">Verkaufspreis</string>
-    <string name="add_product_screen_save">Speichern</string>
 
     <!-- Product Bottom Sheet -->
     <string name="product_bottom_sheet_mark_sold">Als verkauft markieren</string>
@@ -105,4 +106,9 @@
     <string name="product_status_badge_available">Verfügbar</string>
     <string name="product_status_badge_sold">Verkauft</string>
     <string name="product_status_badge_removed">Entfernt</string>
+
+    <string name="image_source_sheet_title">Werkstückbild</string>
+    <string name="image_source_sheet_camera">Foto aufnehmen</string>
+    <string name="image_source_sheet_gallery">Aus Galerie wählen</string>
+    <string name="image_source_sheet_remove">Foto entfernen</string>
 </resources>

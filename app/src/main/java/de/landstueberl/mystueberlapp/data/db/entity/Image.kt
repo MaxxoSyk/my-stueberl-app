@@ -14,10 +14,13 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("productId")]
+    indices = [
+        Index("productId"),
+        Index(value = ["fileName"], unique = true)
+    ]
 )
 data class Image(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val productId: Int,
-    val filePath: String
+    val fileName: String
 )

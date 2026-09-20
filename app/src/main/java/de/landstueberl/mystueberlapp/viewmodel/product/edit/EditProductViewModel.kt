@@ -9,6 +9,8 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.data.db.entity.Image
+import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormValues
@@ -22,8 +24,9 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class EditProductViewModel(
     repo: ProductRepository,
+    imageStorage: ProductImageStorage,
     savedStateHandle: SavedStateHandle
-) : ProductFormViewModel(repo) {
+) : ProductFormViewModel(repo, imageStorage) {
 
     private val productId: Int = savedStateHandle.toRoute<Screen.EditProduct>().productId
     private var loadedProduct: Product? = null
@@ -68,6 +71,8 @@ class EditProductViewModel(
                 _currency.value = productDetails.purchasePrice?.currency
                     ?: productDetails.salesPrice?.currency
                             ?: DEFAULT_CURRENCY
+                // Existing image, if any
+                _imageFileName.value = product.imageList.firstOrNull()?.fileName
 
                 // Edit-only read-only fields
                 _createdAt.value = productDetails.createdAt
@@ -98,7 +103,18 @@ class EditProductViewModel(
                 purchasePrice = values.purchasePrice,
                 salesPrice = values.salesPrice
             ),
-            imageList = existing.imageList
+            imageList = values.imageFileName?.let { fileName ->
+                // Reuse the existing row's id when the file hasn't changed,
+                // so upsert updates rather than inserting a duplicate.
+                val previous = existing.imageList.firstOrNull()
+                listOf(
+                    Image(
+                        id = if (previous?.fileName == fileName) previous.id else 0,
+                        productId = productId,
+                        fileName = fileName
+                    )
+                )
+            } ?: emptyList()
         )
 
         repo.upsertProduct(updated)
@@ -108,10 +124,14 @@ class EditProductViewModel(
     companion object {
         private const val TAG = "EditProductViewModel"
 
-        fun factory(repo: ProductRepository) = viewModelFactory {
+        fun factory(
+            repo: ProductRepository,
+            imageStorage: ProductImageStorage
+        ) = viewModelFactory {
             initializer<EditProductViewModel> {
                 EditProductViewModel(
                     repo = repo,
+                    imageStorage = imageStorage,
                     savedStateHandle = createSavedStateHandle()
                 )
             }

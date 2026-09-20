@@ -78,12 +78,13 @@
     <string name="product_form_description">Description</string>
     <string name="product_form_description_placeholder">Enter product description</string>
     <string name="product_form_image_placeholder">Add Image</string>
+    <string name="product_form_image">Product image</string>
+    <string name="product_form_save">Save</string>
+    <string name="product_form_sales_price">Sales Price</string>
+    <string name="product_form_purchase_price">Purchase Price</string>
 
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Add Product</string>
-    <string name="add_product_screen_purchase_price">Purchase Price</string>
-    <string name="add_product_screen_sales_price">Sales Price</string>
-    <string name="add_product_screen_save">Save</string>
 
     <!-- Product Bottom Sheet -->
     <string name="product_bottom_sheet_mark_sold">Mark as Sold</string>
@@ -105,4 +106,9 @@
     <string name="product_status_badge_available">Available</string>
     <string name="product_status_badge_sold">Sold</string>
     <string name="product_status_badge_removed">Removed</string>
+
+    <string name="image_source_sheet_title">Product image</string>
+    <string name="image_source_sheet_camera">Take photo</string>
+    <string name="image_source_sheet_gallery">Choose from gallery</string>
+    <string name="image_source_sheet_remove">Remove photo</string>
 </resources>

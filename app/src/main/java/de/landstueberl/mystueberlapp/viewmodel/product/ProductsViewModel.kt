@@ -11,6 +11,7 @@ import de.landstueberl.mystueberlapp.data.ProductSortOrder
 import de.landstueberl.mystueberlapp.data.ProductSourceFilter
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.comparator
+import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,11 +27,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
 import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProductsViewModel(
-    private val repo: ProductRepository
+    private val repo: ProductRepository,
+    private val imageStorage: ProductImageStorage
 ) : ViewModel() {
 
     // ── Filter State ───────────────────────────
@@ -90,6 +93,9 @@ class ProductsViewModel(
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             initialValue = true
         )
+
+    /** Resolves a stored file name to a file Coil can load. */
+    fun imageFile(fileName: String): File = imageStorage.fileFor(fileName)
 
     // ── Filter Bottom Sheet ────────────────────
     private val _isFilterSheetVisible = MutableStateFlow(false)
@@ -222,8 +228,11 @@ class ProductsViewModel(
         private const val TAG = "ProductsViewModel"
         private const val STOP_TIMEOUT_MILLIS = 5_000L
 
-        fun factory(repo: ProductRepository) = viewModelFactory {
-            initializer<ProductsViewModel> { ProductsViewModel(repo) }
+        fun factory(
+            repo: ProductRepository,
+            imageStorage: ProductImageStorage
+        ) = viewModelFactory {
+            initializer<ProductsViewModel> { ProductsViewModel(repo, imageStorage) }
         }
     }
 }
