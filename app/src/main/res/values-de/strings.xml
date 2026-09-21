@@ -6,6 +6,7 @@
     <!-- Common -->
     <string name="common_back">Zurück</string>
     <string name="common_cancel">Abbrechen</string>
+    <string name="common_close">Schließen</string>
 
     <!-- Tile Titles -->
     <string name="home_screen_tile_statistics">Statistiken</string>

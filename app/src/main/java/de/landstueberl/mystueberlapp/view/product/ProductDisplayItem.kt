@@ -2,6 +2,7 @@ package de.landstueberl.mystueberlapp.view.product
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -34,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +65,7 @@ fun ProductDisplayItem(
     isSelectionMode: Boolean,
     onTap: () -> Unit,
     onLongPress: () -> Unit,
+    onImageTap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val details = product.details
@@ -115,7 +119,17 @@ fun ProductDisplayItem(
                     modifier = Modifier
                         .size(72.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(SageGreenLight),
+                        .background(SageGreenLight)
+                        .then(
+                            if (imageFile != null && !isSelectionMode) {
+                                Modifier.combinedClickable(
+                                    onClick = onImageTap,
+                                    onLongClick = onLongPress
+                                )
+                            } else {
+                                Modifier
+                            }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     if (imageFile != null) {
@@ -125,6 +139,25 @@ fun ProductDisplayItem(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
+
+                        // Hint that the thumbnail opens a larger preview
+                        if (!isSelectionMode) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(3.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color.Black.copy(alpha = 0.45f))
+                                    .padding(2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ZoomOutMap,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                            }
+                        }
                     } else {
                         Icon(
                             imageVector = Icons.Default.Image,

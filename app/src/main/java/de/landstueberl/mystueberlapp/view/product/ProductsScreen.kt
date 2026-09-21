@@ -91,6 +91,8 @@ fun ProductsScreen(
     val errorMessage = stringResource(R.string.products_screen_action_failed)
     val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
 
+    var previewImageName by rememberSaveable { mutableStateOf<String?>(null) }
+
     // ── Show success message when product saved ──
     LaunchedEffect(productSaved) {
         if (productSaved) {
@@ -293,6 +295,9 @@ fun ProductsScreen(
                         },
                         onLongPress = {
                             viewModel.toggleSelection(product.details.id)
+                        },
+                        onImageTap = {
+                            previewImageName = product.imageList.firstOrNull()?.fileName
                         }
                     )
                 }
@@ -373,6 +378,13 @@ fun ProductsScreen(
             onReset = { viewModel.resetFilter() },
             onApply = { viewModel.hideFilterSheet() },
             onDismiss = { viewModel.hideFilterSheet() }
+        )
+    }
+
+    previewImageName?.let { fileName ->
+        ProductImagePreviewDialog(
+            imageFile = viewModel.imageFile(fileName),
+            onDismiss = { previewImageName = null }
         )
     }
 }
