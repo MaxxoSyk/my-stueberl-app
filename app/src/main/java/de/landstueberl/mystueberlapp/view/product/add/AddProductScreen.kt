@@ -38,9 +38,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,6 +76,9 @@ fun AddProductScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val saveErrorMessage = stringResource(R.string.product_form_save_failed)
+
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(isSaved) {
         if (isSaved) {
@@ -171,7 +178,9 @@ fun AddProductScreen(
                 availableCurrencies = viewModel.availableCurrencies.map { it.currencyCode },
                 onCurrencyChange = { code ->
                     viewModel.onCurrencyChange(Currency.getInstance(code))
-                }
+                },
+                imeAction = ImeAction.Next,
+                onImeAction = { focusManager.moveFocus(FocusDirection.Down) }
             )
 
             // ── Sales Price ────────────────────
@@ -183,6 +192,11 @@ fun AddProductScreen(
                 availableCurrencies = viewModel.availableCurrencies.map { it.currencyCode },
                 onCurrencyChange = { code ->
                     viewModel.onCurrencyChange(Currency.getInstance(code))
+                },
+                imeAction = ImeAction.Done,
+                onImeAction = {
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
                 }
             )
 
