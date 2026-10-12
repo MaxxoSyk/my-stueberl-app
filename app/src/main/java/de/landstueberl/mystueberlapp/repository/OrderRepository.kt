@@ -1,75 +1,124 @@
 package de.landstueberl.mystueberlapp.repository
 
-import androidx.room.Transaction
+import androidx.room.withTransaction
 import de.landstueberl.mystueberlapp.data.Order
 import de.landstueberl.mystueberlapp.data.OrderDao
+import de.landstueberl.mystueberlapp.data.OrderStatus
 import de.landstueberl.mystueberlapp.data.ProductDao
+import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
+import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
+import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 class OrderRepository(
+    private val db: StueberlDatabase,
     private val orderDao: OrderDao,
     private val productDao: ProductDao
 ) {
 
-    @Transaction
-    suspend fun upsertOrderFull(order: Order): Order {
-
+    /**
+     * Saves [order] together with its products and their images.
+     *
+     * Products that were previously part of the order but are absent from
+     * [order] are **detached**, not deleted — they may already have been made,
+     * and become sales-area stock instead.
+     */
+    suspend fun upsertOrderFull(order: Order): Order = db.withTransaction {
         val orderDetail = order.orderDetail
-        val products = order.productList
 
-        // 1. Upsert order itself
+        // 1. Upsert the order itself
         val generatedOrderId = orderDao.upsertOrderDetail(orderDetail).toInt()
         val orderId = if (orderDetail.id == 0) generatedOrderId else orderDetail.id
 
-        // 2. Get existing products in DB for this order
-        val existingProducts = orderDao.getProductsInOrder(orderId)
-        val existingProductIds = existingProducts.map { it.id }.toSet()
+        // 2. Which products does the order currently hold?
+        val existingProductIds = orderDao.getProductsInOrder(orderId)
+            .map { it.id }
+            .toSet()
 
-        // 3. Upsert all incoming products
+        // 3. Upsert incoming products and their images
         val incomingProductIds = mutableSetOf<Int>()
 
-        for (product in products) {
-
-            // 3a. Upsert ProductDetail
+        for (product in order.productList) {
             val detail = product.details.copy(orderId = orderId)
-            val newDetailId = productDao.upsertProductDetail(detail).toInt()
-            val finalProductId = if (detail.id == 0) newDetailId else detail.id
+            val generatedProductId = productDao.upsertProductDetail(detail).toInt()
+            val productId = if (detail.id == 0) generatedProductId else detail.id
 
-            incomingProductIds.add(finalProductId)
+            incomingProductIds += productId
 
-            // 3b. Sync images for each product
-            val existingImages = productDao.getImagesByProductId(finalProductId)
-            val existingImageIds = existingImages.map { it.id }.toSet()
-
-            // Upsert incoming images
-            val incomingImages = product.imageList.map { img ->
-                img.copy(
-                    id = img.id, // keep id if editing, 0 = insert
-                    productId = finalProductId
-                )
-            }
-
+            // 3a. Sync this product's images
+            val incomingImages = product.imageList.map { it.copy(productId = productId) }
             val incomingImageIds = incomingImages.map { it.id }.toSet()
 
-            // Delete removed images
-            val imagesToDelete =
-                existingImageIds.minus(incomingImageIds).toList()
+            val imagesToDelete = productDao.getImagesByProductId(productId)
+                .map { it.id }
+                .filter { it !in incomingImageIds }
 
             if (imagesToDelete.isNotEmpty()) {
                 productDao.deleteImagesByIds(imagesToDelete)
             }
 
-            // Upsert new + updated images
             productDao.upsertImages(incomingImages)
         }
 
-        // 4. Delete Products removed from the order
-        val productsToDelete = existingProductIds.minus(incomingProductIds).toList()
+        // 4. Products dropped from the order become sales-area stock
+        val productsToDetach = existingProductIds
+            .minus(incomingProductIds)
+            .toList()
 
-        if (productsToDelete.isNotEmpty()) {
-            orderDao.deleteProductsByIds(productsToDelete)
+        if (productsToDetach.isNotEmpty()) {
+            productDao.detachProductsByIds(productsToDetach)
         }
 
-        // 5. Return fresh full order
-        return orderDao.getOrder(orderId)
+        // 5. Return the order as persisted
+        orderDao.getOrder(orderId)
+            ?: error("Order $orderId vanished during save")
     }
+
+    // ── Status Transitions ─────────────────────
+    /** Resolves the order and marks all of its products sold, atomically. */
+    suspend fun resolveOrder(orderId: Int) = db.withTransaction {
+        val today = LocalDate.now()
+        orderDao.markOrderResolved(orderId, today)
+        productDao.markOrderProductsAsSold(orderId = orderId, date = today)
+    }
+
+    /**
+     * Cancels the order. Products already made are detached and become
+     * sales-area stock, keeping their prices.
+     */
+    suspend fun cancelOrder(orderId: Int) = db.withTransaction {
+        orderDao.markOrderCancelled(orderId, LocalDate.now())
+        productDao.detachProductsFromOrder(orderId)
+    }
+
+    /**
+     * Deletes the order outright. The foreign key is SET_NULL, so its products
+     * survive as sales-area stock.
+     */
+    suspend fun deleteOrder(orderId: Int) {
+        orderDao.deleteOrder(orderId)
+    }
+
+    fun getOrdersFlow(statuses: Set<OrderStatus>): Flow<List<Order>> =
+        orderDao.getOrdersFlow(statuses.map { it.name })
+
+    fun getOpenOrderCountFlow(): Flow<Int> =
+        orderDao.getOpenOrderCountFlow()
+
+    fun getNextDueOrderFlow(): Flow<OrderDetail?> =
+        orderDao.getNextDueOrderFlow()
+
+    suspend fun upsertOrderDetail(detail: OrderDetail): Int {
+        val rowId = orderDao.upsertOrderDetail(detail).toInt()
+        return if (detail.id == 0) rowId else detail.id
+    }
+
+    suspend fun getOrder(orderId: Int): Order? =
+        orderDao.getOrder(orderId)
+
+    fun getOrderFlow(orderId: Int): Flow<Order?> =
+        orderDao.getOrderFlow(orderId)
+
+    suspend fun detachProductsByIds(ids: List<Int>) =
+        productDao.detachProductsByIds(ids)
 }

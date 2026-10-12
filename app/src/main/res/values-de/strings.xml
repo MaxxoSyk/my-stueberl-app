@@ -7,6 +7,8 @@
     <string name="common_back">Zurück</string>
     <string name="common_cancel">Abbrechen</string>
     <string name="common_close">Schließen</string>
+    <string name="common_ok">OK</string>
+    <string name="common_more">Weitere Optionen</string>
 
     <!-- Tile Titles -->
     <string name="home_screen_tile_statistics">Statistiken</string>
@@ -112,4 +114,69 @@
     <string name="image_source_sheet_camera">Foto aufnehmen</string>
     <string name="image_source_sheet_gallery">Aus Galerie wählen</string>
     <string name="image_source_sheet_remove">Foto entfernen</string>
+
+    <string name="orders_screen_title">Bestellungen</string>
+    <string name="orders_screen_add">Neue Bestellung</string>
+    <string name="orders_screen_empty">Keine Bestellungen vorhanden.</string>
+    <string name="orders_screen_empty_filtered">Keine Bestellungen entsprechen den gewählten Filtern.</string>
+    <string name="orders_screen_success_update">Bestellung aktualisiert</string>
+    <string name="orders_screen_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="orders_screen_due_date">Fällig am %1$s</string>
+    <string name="orders_screen_created_at">Erstellt am %1$s</string>
+
+    <plurals name="orders_screen_product_count">
+        <item quantity="one">%1$d Werkstück</item>
+        <item quantity="other">%1$d Werkstücke</item>
+    </plurals>
+
+    <string name="order_status_open">Offen</string>
+    <string name="order_status_resolved">Erledigt</string>
+    <string name="order_status_cancelled">Storniert</string>
+
+    <string name="order_detail_title_new">Neue Bestellung</string>
+    <string name="order_detail_title_edit">Bestellung</string>
+    <string name="order_detail_customer_name">Kunde</string>
+    <string name="order_detail_due_date">Fälligkeitsdatum</string>
+    <string name="order_detail_due_date_placeholder">Datum wählen</string>
+    <string name="order_detail_pick_date">Datum wählen</string>
+    <string name="order_detail_note">Notiz</string>
+
+    <string name="order_detail_section_products">Werkstücke</string>
+    <string name="order_detail_section_details">Details</string>
+    <string name="order_detail_no_products">Noch keine Werkstücke.</string>
+    <string name="order_detail_add_product">Werkstück hinzufügen</string>
+    <string name="order_detail_add_product_hint">Bitte zuerst Kunde und Fälligkeitsdatum eingeben.</string>
+    <string name="order_detail_total">Gesamt</string>
+    <string name="order_detail_purchase_price_value">EK: %1$s %2$s</string>
+    <string name="order_detail_sales_price_value">VK: %1$s %2$s</string>
+
+    <string name="order_detail_created_at">Erstellt am</string>
+    <string name="order_detail_resolved_on">Erledigt am</string>
+    <string name="order_detail_cancelled_on">Storniert am</string>
+
+    <string name="order_detail_save">Speichern</string>
+    <string name="order_detail_resolve">Als erledigt markieren</string>
+    <string name="order_detail_resolve_short">Erledigt</string>
+    <string name="order_detail_cancel_order">Bestellung stornieren</string>
+    <string name="order_detail_delete">Bestellung löschen</string>
+    <string name="order_detail_remove_product">Aus Bestellung entfernen</string>
+
+    <string name="order_detail_load_failed">Bestellung konnte nicht geladen werden.</string>
+    <string name="order_detail_retry">Erneut versuchen</string>
+    <string name="order_detail_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+
+    <string name="order_detail_resolve_confirm_title">Bestellung als erledigt markieren?</string>
+    <plurals name="order_detail_resolve_confirm_message">
+        <item quantity="one">Das Werkstück dieser Bestellung wird als verkauft markiert.</item>
+        <item quantity="other">Alle %1$d Werkstücke dieser Bestellung werden als verkauft markiert.</item>
+    </plurals>
+
+    <string name="order_detail_cancel_confirm_title">Bestellung stornieren?</string>
+    <string name="order_detail_cancel_confirm_message">Bereits gefertigte Werkstücke werden zu Verkaufsraum-Bestand und behalten ihre Preise.</string>
+
+    <string name="order_detail_delete_confirm_title">Bestellung löschen?</string>
+    <string name="order_detail_delete_confirm_message">Die Bestellung wird gelöscht. Ihre Werkstücke werden zu Verkaufsraum-Bestand.</string>
+
+    <string name="order_detail_remove_product_confirm_title">Aus Bestellung entfernen?</string>
+    <string name="order_detail_remove_product_confirm_message">Das Werkstück wird zu Verkaufsraum-Bestand. Es wird nicht gelöscht.</string>
 </resources>

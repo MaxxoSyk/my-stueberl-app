@@ -169,6 +169,10 @@ interface ProductDao {
     """)
     suspend fun detachProductsFromOrder(orderId: Int)
 
+    /** Detaches specific products from whichever order they belong to. */
+    @Query("UPDATE ProductDetail SET orderId = NULL WHERE id IN (:ids)")
+    suspend fun detachProductsByIds(ids: List<Int>)
+
     @Query("SELECT fileName FROM Image")
     suspend fun getAllImageFileNames(): List<String>
 }

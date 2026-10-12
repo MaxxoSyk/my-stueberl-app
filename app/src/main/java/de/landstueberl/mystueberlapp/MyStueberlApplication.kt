@@ -32,6 +32,7 @@ class MyStueberlApplication : Application() {
 
     val orderRepository by lazy {
         OrderRepository(
+            db = database,
             orderDao = database.orderDao(),
             productDao = database.productDao()
         )
@@ -39,7 +40,7 @@ class MyStueberlApplication : Application() {
 
     val productImageStorage by lazy { ProductImageStorage(applicationContext) }
 
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()

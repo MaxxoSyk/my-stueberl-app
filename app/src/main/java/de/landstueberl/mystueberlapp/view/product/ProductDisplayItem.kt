@@ -2,7 +2,6 @@ package de.landstueberl.mystueberlapp.view.product
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,8 +53,10 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import java.io.File
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
-private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+private val DATE_FORMAT: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
 
 @Composable
 fun ProductDisplayItem(

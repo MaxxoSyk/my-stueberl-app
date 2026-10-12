@@ -7,6 +7,8 @@
     <string name="common_back">Back</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_close">Close</string>
+    <string name="common_ok">OK</string>
+    <string name="common_more">More options</string>
 
     <!-- Tile Titles -->
     <string name="home_screen_tile_statistics">Statistics</string>
@@ -112,4 +114,69 @@
     <string name="image_source_sheet_camera">Take photo</string>
     <string name="image_source_sheet_gallery">Choose from gallery</string>
     <string name="image_source_sheet_remove">Remove photo</string>
+
+    <string name="orders_screen_title">Orders</string>
+    <string name="orders_screen_add">New order</string>
+    <string name="orders_screen_empty">No orders yet.</string>
+    <string name="orders_screen_empty_filtered">No orders match the selected filters.</string>
+    <string name="orders_screen_success_update">Order updated</string>
+    <string name="orders_screen_action_failed">Action failed. Please try again.</string>
+    <string name="orders_screen_due_date">Due %1$s</string>
+    <string name="orders_screen_created_at">Created %1$s</string>
+
+    <plurals name="orders_screen_product_count">
+        <item quantity="one">%1$d product</item>
+        <item quantity="other">%1$d products</item>
+    </plurals>
+
+    <string name="order_status_open">Open</string>
+    <string name="order_status_resolved">Resolved</string>
+    <string name="order_status_cancelled">Cancelled</string>
+
+    <string name="order_detail_title_new">New order</string>
+    <string name="order_detail_title_edit">Order</string>
+    <string name="order_detail_customer_name">Customer</string>
+    <string name="order_detail_due_date">Due date</string>
+    <string name="order_detail_due_date_placeholder">Pick a date</string>
+    <string name="order_detail_pick_date">Pick date</string>
+    <string name="order_detail_note">Note</string>
+
+    <string name="order_detail_section_products">Products</string>
+    <string name="order_detail_section_details">Details</string>
+    <string name="order_detail_no_products">No products yet.</string>
+    <string name="order_detail_add_product">Add product</string>
+    <string name="order_detail_add_product_hint">Enter a customer and due date first.</string>
+    <string name="order_detail_total">Total</string>
+    <string name="order_detail_purchase_price_value">Cost: %1$s %2$s</string>
+    <string name="order_detail_sales_price_value">Price: %1$s %2$s</string>
+
+    <string name="order_detail_created_at">Created</string>
+    <string name="order_detail_resolved_on">Resolved</string>
+    <string name="order_detail_cancelled_on">Cancelled</string>
+
+    <string name="order_detail_save">Save</string>
+    <string name="order_detail_resolve">Mark as resolved</string>
+    <string name="order_detail_resolve_short">Resolve</string>
+    <string name="order_detail_cancel_order">Cancel order</string>
+    <string name="order_detail_delete">Delete order</string>
+    <string name="order_detail_remove_product">Remove from order</string>
+
+    <string name="order_detail_load_failed">The order could not be loaded.</string>
+    <string name="order_detail_retry">Try again</string>
+    <string name="order_detail_action_failed">Action failed. Please try again.</string>
+
+    <string name="order_detail_resolve_confirm_title">Mark order as resolved?</string>
+    <plurals name="order_detail_resolve_confirm_message">
+        <item quantity="one">The product in this order will be marked as sold.</item>
+        <item quantity="other">All %1$d products in this order will be marked as sold.</item>
+    </plurals>
+
+    <string name="order_detail_cancel_confirm_title">Cancel order?</string>
+    <string name="order_detail_cancel_confirm_message">Products already made will become sales area stock and keep their prices.</string>
+
+    <string name="order_detail_delete_confirm_title">Delete order?</string>
+    <string name="order_detail_delete_confirm_message">The order will be deleted. Its products become sales area stock.</string>
+
+    <string name="order_detail_remove_product_confirm_title">Remove from order?</string>
+    <string name="order_detail_remove_product_confirm_message">The product will become sales area stock. It is not deleted.</string>
 </resources>
