@@ -68,9 +68,7 @@ class EditProductViewModel(
                 _description.value = productDetails.description
                 _purchasePrice.value = productDetails.purchasePrice?.amount?.toPlainString() ?: ""
                 _salesPrice.value = productDetails.salesPrice?.amount?.toPlainString() ?: ""
-                _currency.value = productDetails.purchasePrice?.currency
-                    ?: productDetails.salesPrice?.currency
-                            ?: DEFAULT_CURRENCY
+
                 // Existing image, if any
                 _imageFileName.value = product.imageList.firstOrNull()?.fileName
 
