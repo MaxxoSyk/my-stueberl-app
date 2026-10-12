@@ -95,6 +95,7 @@
     <string name="product_bottom_sheet_reset">Reset to Available</string>
     <string name="product_bottom_sheet_edit">Edit Product</string>
     <string name="product_bottom_sheet_order_managed">Status is managed by the linked order.</string>
+    <string name="product_bottom_sheet_go_to_order">Go to order</string>
 
     <!-- Edit Product Screen -->
     <string name="edit_product_screen_title">Edit Product</string>

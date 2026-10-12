@@ -81,7 +81,10 @@ fun NavGraph(
                 productUpdated = productUpdated,
                 onProductUpdatedConsumed = {
                     backStackEntry.savedStateHandle[KEY_PRODUCT_UPDATED] = false
-                }
+                },
+                onNavigateToOrder = { orderId ->
+                    navController.navigate(Screen.OrderDetail(orderId))
+                },
             )
         }
 

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -46,6 +47,7 @@ fun ProductBottomSheet(
     onMarkAsSold: () -> Unit,
     onMarkAsRemoved: () -> Unit,
     onResetToAvailable: () -> Unit,
+    onGoToOrder: () -> Unit,
     onEdit: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -96,6 +98,13 @@ fun ProductBottomSheet(
                     fontSize = 13.sp,
                     color = TextSecondary,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                )
+
+                BottomSheetItem(
+                    icon = Icons.Default.Receipt,
+                    iconTint = AccentGold,
+                    label = stringResource(R.string.product_bottom_sheet_go_to_order),
+                    onClick = onGoToOrder
                 )
             } else {
                 when (productStatus) {
