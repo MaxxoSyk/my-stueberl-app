@@ -26,9 +26,10 @@
     <string name="home_screen_pending_order_products">Für offene Bestellungen</string>
 
     <!-- Orders Tile -->
-    <string name="orders_open">Offene Bestellungen</string>
-    <string name="orders_next">Nächste Bestellung</string>
-    <string name="orders_no_next">Keine anstehenden Bestellungen</string>
+    <string name="home_screen_orders_open">Offen</string>
+    <string name="home_screen_orders_next_due">Nächste fällig</string>
+    <string name="home_screen_orders_no_next">–</string>
+    <string name="home_screen_tile_orders_total">Bestellungen %1$d</string>
 
     <!-- Products Screen -->
     <string name="products_screen_title">Werkstücke</string>

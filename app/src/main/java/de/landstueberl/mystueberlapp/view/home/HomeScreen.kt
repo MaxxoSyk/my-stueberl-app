@@ -39,6 +39,10 @@ fun HomeScreen(
     val pendingOrderProductsCount by viewModel.pendingOrderProductsCount.collectAsStateWithLifecycle()
     val totalProductsCurrentYear by viewModel.totalProductsCurrentYear.collectAsStateWithLifecycle()
 
+    val openOrderCount by viewModel.openOrderCount.collectAsStateWithLifecycle()
+    val nextDueOrder by viewModel.nextDueOrder.collectAsStateWithLifecycle()
+    val totalOrdersCurrentYear by viewModel.totalOrdersCurrentYear.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,8 +93,9 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f)
                 )
                 OrdersTile(
-                    openOrders = 0,
-                    nextOrder = null,
+                    openOrders = openOrderCount,
+                    nextDueDate = nextDueOrder?.dueDate,
+                    totalOrdersCurrentYear = totalOrdersCurrentYear,
                     onClick = { onNavigateToOrders() },
                     modifier = Modifier.weight(1f)
                 )

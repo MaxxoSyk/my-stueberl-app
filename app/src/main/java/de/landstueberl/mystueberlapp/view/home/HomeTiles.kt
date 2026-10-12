@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.CardDefaults
@@ -37,6 +39,12 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+
+private val TILE_DATE_FORMAT: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
 
 @Composable
 private fun TileRow(
@@ -210,7 +218,8 @@ fun ProductsTile(
 @Composable
 fun OrdersTile(
     openOrders: Int,
-    nextOrder: String?,
+    nextDueDate: LocalDate?,
+    totalOrdersCurrentYear: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -223,13 +232,10 @@ fun OrdersTile(
         )
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             // ── Tile Header ──
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Receipt,
                     contentDescription = null,
@@ -250,16 +256,26 @@ fun OrdersTile(
 
             // ── Tile Content ──
             TileRow(
-                icon = Icons.Default.Receipt,
-                iconTint = SageGreen,
-                label = stringResource(R.string.orders_open),
+                icon = Icons.Default.Schedule,
+                iconTint = AccentGold,
+                label = stringResource(R.string.home_screen_orders_open),
                 value = openOrders.toString()
             )
             TileRow(
-                icon = Icons.Default.ShoppingCart,
-                iconTint = AccentGold,
-                label = stringResource(R.string.orders_next),
-                value = nextOrder ?: stringResource(R.string.orders_no_next)
+                icon = Icons.Default.Event,
+                iconTint = SageGreen,
+                label = stringResource(R.string.home_screen_orders_next_due),
+                value = nextDueDate?.format(TILE_DATE_FORMAT)
+                    ?: stringResource(R.string.home_screen_orders_no_next)
+            )
+            TileRow(
+                icon = Icons.Default.Receipt,
+                iconTint = SageGreenDark,
+                label = stringResource(
+                    R.string.home_screen_tile_orders_total,
+                    LocalDate.now().year
+                ),
+                value = totalOrdersCurrentYear.toString()
             )
         }
     }
