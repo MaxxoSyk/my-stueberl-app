@@ -11,28 +11,36 @@ import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.view.home.HomeScreen
+import de.landstueberl.mystueberlapp.view.order.OrderDetailScreen
+import de.landstueberl.mystueberlapp.view.order.OrdersScreen
 import de.landstueberl.mystueberlapp.view.product.ProductsScreen
 import de.landstueberl.mystueberlapp.view.product.add.AddProductScreen
 import de.landstueberl.mystueberlapp.view.product.edit.EditProductScreen
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
+import de.landstueberl.mystueberlapp.viewmodel.order.OrderDetailViewModel
+import de.landstueberl.mystueberlapp.viewmodel.order.OrdersViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.edit.EditProductViewModel
+import kotlinx.coroutines.CoroutineScope
 
 private const val KEY_PRODUCT_SAVED = "product_saved"
 private const val KEY_PRODUCT_UPDATED = "product_updated"
+private const val KEY_ORDER_SAVED = "order_saved"
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     productRepository: ProductRepository,
     orderRepository: OrderRepository,
-    imageStorage: ProductImageStorage
+    imageStorage: ProductImageStorage,
+    appScope: CoroutineScope
 ) {
     NavHost(
         navController = navController,
         startDestination = Screen.Home
     ) {
+        // ── Home ───────────────────────────────
         composable<Screen.Home> {
             HomeScreen(
                 viewModel = viewModel(
@@ -47,6 +55,7 @@ fun NavGraph(
             )
         }
 
+        // ── Products ───────────────────────────
         composable<Screen.Products> { backStackEntry ->
             val productSaved by backStackEntry.savedStateHandle
                 .getStateFlow(KEY_PRODUCT_SAVED, false)
@@ -58,9 +67,10 @@ fun NavGraph(
 
             ProductsScreen(
                 viewModel = viewModel(
-                    factory = ProductsViewModel.factory(productRepository, imageStorage)),
+                    factory = ProductsViewModel.factory(productRepository, imageStorage)
+                ),
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToAddProduct = { navController.navigate(Screen.AddProduct) },
+                onNavigateToAddProduct = { navController.navigate(Screen.AddProduct()) },
                 onNavigateToEditProduct = { productId ->
                     navController.navigate(Screen.EditProduct(productId))
                 },
@@ -78,9 +88,12 @@ fun NavGraph(
         composable<Screen.AddProduct> {
             AddProductScreen(
                 viewModel = viewModel(
-                    factory = AddProductViewModel.factory(productRepository, imageStorage)),
+                    factory = AddProductViewModel.factory(productRepository, imageStorage)
+                ),
                 onNavigateBack = { showSuccess ->
                     if (showSuccess) {
+                        // Signals whichever screen opened the form: the products
+                        // list, or an order detail screen.
                         navController.previousBackStackEntry
                             ?.savedStateHandle
                             ?.set(KEY_PRODUCT_SAVED, true)
@@ -93,7 +106,8 @@ fun NavGraph(
         composable<Screen.EditProduct> {
             EditProductScreen(
                 viewModel = viewModel(
-                    factory = EditProductViewModel.factory(productRepository, imageStorage)),
+                    factory = EditProductViewModel.factory(productRepository, imageStorage)
+                ),
                 onNavigateBack = { productUpdated ->
                     if (productUpdated) {
                         navController.previousBackStackEntry
@@ -104,5 +118,58 @@ fun NavGraph(
                 }
             )
         }
+
+        // ── Orders ─────────────────────────────
+        composable<Screen.Orders> { backStackEntry ->
+            val orderSaved by backStackEntry.savedStateHandle
+                .getStateFlow(KEY_ORDER_SAVED, false)
+                .collectAsStateWithLifecycle()
+
+            OrdersScreen(
+                viewModel = viewModel(
+                    factory = OrdersViewModel.factory(orderRepository)
+                ),
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToOrder = { orderId ->
+                    navController.navigate(Screen.OrderDetail(orderId))
+                },
+                onNavigateToNewOrder = {
+                    navController.navigate(Screen.OrderDetail())
+                },
+                orderSaved = orderSaved,
+                onOrderSavedConsumed = {
+                    backStackEntry.savedStateHandle[KEY_ORDER_SAVED] = false
+                }
+            )
+        }
+
+        composable<Screen.OrderDetail> {
+            OrderDetailScreen(
+                viewModel = viewModel(
+                    factory = OrderDetailViewModel.factory(
+                        repo = orderRepository,
+                        imageStorage = imageStorage,
+                        appScope = appScope
+                    )
+                ),
+                onNavigateBack = { orderSaved ->
+                    if (orderSaved) {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(KEY_ORDER_SAVED, true)
+                    }
+                    navController.popBackStack()
+                },
+                onNavigateToAddProduct = { orderId ->
+                    navController.navigate(Screen.AddProduct(orderId = orderId))
+                },
+                onNavigateToEditProduct = { productId ->
+                    navController.navigate(Screen.EditProduct(productId))
+                }
+            )
+        }
+
+        // ── Statistics ─────────────────────────
+        // @todo not implemented — navigating here currently fails
     }
 }

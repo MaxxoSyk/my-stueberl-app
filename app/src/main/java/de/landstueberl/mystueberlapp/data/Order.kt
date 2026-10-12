@@ -12,5 +12,5 @@ data class Order(
         parentColumn = "id",
         entityColumn = "orderId"
     )
-    val productList: List<OrderedProduct>
+    val productList: List<Product>
 )
