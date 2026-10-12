@@ -61,6 +61,7 @@ fun ProductsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToAddProduct: () -> Unit,
     onNavigateToEditProduct: (Int) -> Unit,
+    onNavigateToOrder: (Int) -> Unit,
     productSaved: Boolean = false,
     onProductSavedConsumed: () -> Unit = {},
     productUpdated: Boolean = false,
@@ -362,6 +363,10 @@ fun ProductsScreen(
             onEdit = {
                 viewModel.dismissBottomSheet()
                 onNavigateToEditProduct(product.details.id)
+            },
+            onGoToOrder = {
+                viewModel.dismissBottomSheet()
+                product.details.orderId?.let(onNavigateToOrder)
             },
             onDismiss = { viewModel.dismissBottomSheet() }
         )
