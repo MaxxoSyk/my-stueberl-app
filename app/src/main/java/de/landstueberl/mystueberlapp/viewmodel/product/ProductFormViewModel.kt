@@ -47,9 +47,6 @@ abstract class ProductFormViewModel(
     protected val _salesPrice = MutableStateFlow("")
     val salesPrice: StateFlow<String> = _salesPrice.asStateFlow()
 
-    protected val _currency = MutableStateFlow(DEFAULT_CURRENCY)
-    val currency: StateFlow<Currency> = _currency.asStateFlow()
-
     // ── UI State ───────────────────────────────
     protected val _isSaved = MutableStateFlow(false)
     val isSaved: StateFlow<Boolean> = _isSaved.asStateFlow()
@@ -59,9 +56,6 @@ abstract class ProductFormViewModel(
 
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
-
-    // ── Available Currencies ───────────────────
-    val availableCurrencies: List<Currency> = AVAILABLE_CURRENCIES
 
     // ── Validation ─────────────────────────────
     /** Observable, for enabling the Save button. */
@@ -88,10 +82,6 @@ abstract class ProductFormViewModel(
         if (value.isEmpty() || value.matches(PRICE_PATTERN)) {
             _salesPrice.value = value
         }
-    }
-
-    fun onCurrencyChange(value: Currency) {
-        _currency.value = value
     }
 
     fun createCameraTarget(): ProductImageStorage.CameraTarget =
@@ -167,7 +157,7 @@ abstract class ProductFormViewModel(
     private fun String.toMoneyOrNull(): Money? =
         takeIf { it.isNotBlank() }
             ?.toBigDecimalOrNull()
-            ?.let { Money(it, _currency.value) }
+            ?.let { Money(amount = it, currency = CURRENCY) }
 
     // ── Reset ──────────────────────────────────
     fun resetSavedState() {
@@ -183,10 +173,6 @@ abstract class ProductFormViewModel(
 
         private val PRICE_PATTERN = Regex("^\\d*\\.?\\d*$")
 
-        val DEFAULT_CURRENCY: Currency = Currency.getInstance("EUR")
-
-        val AVAILABLE_CURRENCIES: List<Currency> = listOf(
-            Currency.getInstance("EUR")
-        )
+        val CURRENCY: Currency = Currency.getInstance("EUR")
     }
 }

@@ -19,14 +19,11 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -35,10 +32,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +51,7 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormViewModel
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -170,102 +164,48 @@ fun ProductDescriptionField(
     )
 }
 
+private val CURRENCY_SYMBOL: String = ProductFormViewModel.CURRENCY.symbol
+
 // ── Shared Price Input Field ───────────────────────────────────────────
 @Composable
 fun ProductPriceField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    currency: String,
-    availableCurrencies: List<String>,
-    onCurrencyChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     imeAction: ImeAction = ImeAction.Next,
     onImeAction: () -> Unit = {}
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Row(
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // ── Price TextField ──
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { Text(label) },
-            modifier = Modifier.weight(1f),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Decimal,
-                imeAction = imeAction
-            ),
-            keyboardActions = KeyboardActions(
-                onNext = { onImeAction() },
-                onDone = { onImeAction() }
-            ),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = SageGreen,
-                unfocusedBorderColor = TextSecondary,
-                focusedLabelColor = SageGreen,
-                unfocusedLabelColor = TextSecondary,
-                cursorColor = SageGreen
-            ),
-            singleLine = true
-        )
-
-        // ── Currency Dropdown ──
-        Box {
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(
-                        width = 1.dp,
-                        color = TextSecondary,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .clickable { expanded = true }
-                    .padding(horizontal = 12.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = currency,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null,
-                    tint = TextSecondary
-                )
-            }
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                availableCurrencies.forEach { code ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = code,
-                                color = if (code == currency)
-                                    SageGreenDark
-                                else
-                                    MaterialTheme.colorScheme.onSurface
-                            )
-                        },
-                        onClick = {
-                            onCurrencyChange(code)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-    }
+        suffix = {
+            Text(
+                text = CURRENCY_SYMBOL,
+                fontWeight = FontWeight.SemiBold,
+                color = TextSecondary
+            )
+        },
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal,
+            imeAction = imeAction
+        ),
+        keyboardActions = KeyboardActions(
+            onNext = { onImeAction() },
+            onDone = { onImeAction() }
+        ),
+        shape = RoundedCornerShape(12.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = SageGreen,
+            unfocusedBorderColor = TextSecondary,
+            focusedLabelColor = SageGreen,
+            unfocusedLabelColor = TextSecondary,
+            cursorColor = SageGreen
+        ),
+        singleLine = true
+    )
 }
 
 // ── Read Only Date Field ───────────────────────────────────────────────

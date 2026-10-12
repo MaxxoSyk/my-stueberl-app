@@ -60,7 +60,6 @@ import de.landstueberl.mystueberlapp.view.product.ProductPriceField
 import de.landstueberl.mystueberlapp.view.product.ProductReadOnlyDateField
 import de.landstueberl.mystueberlapp.view.product.ProductStatusBadge
 import de.landstueberl.mystueberlapp.viewmodel.product.edit.EditProductViewModel
-import java.util.Currency
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,7 +71,6 @@ fun EditProductScreen(
     val description by viewModel.description.collectAsStateWithLifecycle()
     val purchasePrice by viewModel.purchasePrice.collectAsStateWithLifecycle()
     val salesPrice by viewModel.salesPrice.collectAsStateWithLifecycle()
-    val currency by viewModel.currency.collectAsStateWithLifecycle()
     val createdAt by viewModel.createdAt.collectAsStateWithLifecycle()
     val soldOn by viewModel.soldOn.collectAsStateWithLifecycle()
     val removedOn by viewModel.removedOn.collectAsStateWithLifecycle()
@@ -217,11 +215,6 @@ fun EditProductScreen(
                     label = stringResource(R.string.product_form_purchase_price),
                     value = purchasePrice,
                     onValueChange = viewModel::onPurchasePriceChange,
-                    currency = currency.currencyCode,
-                    availableCurrencies = viewModel.availableCurrencies.map { it.currencyCode },
-                    onCurrencyChange = { code ->
-                        viewModel.onCurrencyChange(Currency.getInstance(code))
-                    },
                     imeAction = ImeAction.Next,
                     onImeAction = { focusManager.moveFocus(FocusDirection.Down) }
                 )
@@ -230,11 +223,6 @@ fun EditProductScreen(
                     label = stringResource(R.string.product_form_sales_price),
                     value = salesPrice,
                     onValueChange = viewModel::onSalesPriceChange,
-                    currency = currency.currencyCode,
-                    availableCurrencies = viewModel.availableCurrencies.map { it.currencyCode },
-                    onCurrencyChange = { code ->
-                        viewModel.onCurrencyChange(Currency.getInstance(code))
-                    },
                     imeAction = ImeAction.Done,
                     onImeAction = {
                         focusManager.clearFocus()
