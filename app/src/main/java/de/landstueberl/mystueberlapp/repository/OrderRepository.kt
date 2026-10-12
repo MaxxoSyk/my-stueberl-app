@@ -108,6 +108,9 @@ class OrderRepository(
     fun getNextDueOrderFlow(): Flow<OrderDetail?> =
         orderDao.getNextDueOrderFlow()
 
+    fun getTotalOrdersForYearFlow(): Flow<Int> =
+        orderDao.getTotalOrdersForYearFlow(year = LocalDate.now().year.toString())
+
     suspend fun upsertOrderDetail(detail: OrderDetail): Int {
         val rowId = orderDao.upsertOrderDetail(detail).toInt()
         return if (detail.id == 0) rowId else detail.id
