@@ -97,6 +97,9 @@
     <string name="product_bottom_sheet_edit">Edit Product</string>
     <string name="product_bottom_sheet_order_managed">Status is managed by the linked order.</string>
     <string name="product_bottom_sheet_go_to_order">Go to order</string>
+    <string name="product_bottom_sheet_sold_date_title">Sale date</string>
+    <string name="product_bottom_sheet_sold_date_hint">The product was added on %1$s.</string>
+    <string name="product_bottom_sheet_mark_sold_confirm">Mark as sold</string>
 
     <!-- Edit Product Screen -->
     <string name="edit_product_screen_title">Edit Product</string>

@@ -177,8 +177,8 @@ class ProductsViewModel(
     }
 
     // ── Product Status ─────────────────────────
-    fun markAsSold(productId: Int) = launchCatching {
-        repo.markProductAsSold(productId)
+    fun markAsSold(productId: Int, soldOn: LocalDate) = launchCatching {
+        repo.markProductAsSold(productId, soldOn)
     }
 
     fun markAsRemoved(productId: Int) = launchCatching {

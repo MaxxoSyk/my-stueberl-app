@@ -348,8 +348,8 @@ fun ProductsScreen(
     selectedProduct?.let { product ->
         ProductBottomSheet(
             product = product,
-            onMarkAsSold = {
-                viewModel.markAsSold(product.details.id)
+            onMarkAsSold = { soldOn ->
+                viewModel.markAsSold(product.details.id, soldOn)
                 viewModel.dismissBottomSheet()
             },
             onMarkAsRemoved = {
