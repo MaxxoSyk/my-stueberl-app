@@ -18,8 +18,8 @@ class ProductRepository(private val dao: ProductDao) {
     }
 
     // ── Sales-area products only ───────────────
-    suspend fun markProductAsSold(productId: Int) {
-        dao.markAsSold(id = productId, date = LocalDate.now())
+    suspend fun markProductAsSold(productId: Int, soldOn: LocalDate) {
+        dao.markAsSold(id = productId, date = soldOn)
     }
 
     suspend fun markProductAsRemoved(productId: Int) {

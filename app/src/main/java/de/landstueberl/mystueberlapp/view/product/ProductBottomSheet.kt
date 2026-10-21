@@ -14,15 +14,24 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,12 +48,37 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+private val HINT_DATE_FORMAT: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+
+/**
+ * A product can only have been sold between the day it was added and today.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+private class SaleDateRange(private val createdAt: LocalDate) : SelectableDates {
+
+    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+        val date = Instant.ofEpochMilli(utcTimeMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+        return !date.isBefore(createdAt) && !date.isAfter(LocalDate.now())
+    }
+
+    override fun isSelectableYear(year: Int): Boolean =
+        year in createdAt.year..LocalDate.now().year
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductBottomSheet(
     product: Product,
-    onMarkAsSold: () -> Unit,
+    onMarkAsSold: (LocalDate) -> Unit,
     onMarkAsRemoved: () -> Unit,
     onResetToAvailable: () -> Unit,
     onGoToOrder: () -> Unit,
@@ -53,6 +87,7 @@ fun ProductBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+    var showSoldDatePicker by remember { mutableStateOf(false) }
     val productStatus = product.details.status
     val details = product.details
     val isOrderProduct = details.orderId != null
@@ -113,7 +148,7 @@ fun ProductBottomSheet(
                             icon = Icons.Default.CheckCircle,
                             iconTint = SageGreen,
                             label = stringResource(R.string.product_bottom_sheet_mark_sold),
-                            onClick = { dismissThen(onMarkAsSold) }
+                            onClick = { showSoldDatePicker = true }
                         )
                         BottomSheetItem(
                             icon = Icons.Default.Delete,
@@ -140,6 +175,70 @@ fun ProductBottomSheet(
                 label = stringResource(R.string.product_bottom_sheet_edit),
                 onClick = onEdit
             )
+        }
+    }
+
+    if (showSoldDatePicker) {
+        val today = LocalDate.now()
+        val createdAt = details.createdAt
+
+        // A product added today can only have been sold today.
+        val initialDate = if (createdAt.isAfter(today)) createdAt else today
+
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = initialDate
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli(),
+            yearRange = createdAt.year..today.year,
+            selectableDates = remember(createdAt) { SaleDateRange(createdAt) }
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showSoldDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    enabled = datePickerState.selectedDateMillis != null,
+                    onClick = {
+                        val soldOn = datePickerState.selectedDateMillis
+                            ?.let { millis ->
+                                Instant.ofEpochMilli(millis)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                            }
+                            ?: today
+
+                        showSoldDatePicker = false
+                        dismissThen { onMarkAsSold(soldOn) }
+                    }
+                ) {
+                    Text(stringResource(R.string.product_bottom_sheet_mark_sold_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSoldDatePicker = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.product_bottom_sheet_sold_date_title),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(start = 24.dp, top = 16.dp)
+                )
+                Text(
+                    text = stringResource(
+                        R.string.product_bottom_sheet_sold_date_hint,
+                        createdAt.format(HINT_DATE_FORMAT)
+                    ),
+                    fontSize = 12.sp,
+                    color = TextSecondary,
+                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp)
+                )
+                DatePicker(state = datePickerState)
+            }
         }
     }
 }
