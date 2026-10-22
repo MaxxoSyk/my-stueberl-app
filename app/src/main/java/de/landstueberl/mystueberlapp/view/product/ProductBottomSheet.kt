@@ -5,16 +5,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -46,6 +52,7 @@ import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
+import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -58,20 +65,23 @@ private val HINT_DATE_FORMAT: DateTimeFormatter =
     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
 
 /**
- * A product can only have been sold between the day it was added and today.
+ * A product's status can only have changed between the day it was added
+ * and today.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-private class SaleDateRange(private val createdAt: LocalDate) : SelectableDates {
+private class ProductDateRange(private val createdAt: LocalDate) : SelectableDates {
 
     override fun isSelectableDate(utcTimeMillis: Long): Boolean {
         val date = Instant.ofEpochMilli(utcTimeMillis)
             .atZone(ZoneId.systemDefault())
             .toLocalDate()
-        return !date.isBefore(createdAt) && !date.isAfter(LocalDate.now())
+        return !date.isBefore(createdAt) && !date.isAfter(today())
     }
 
     override fun isSelectableYear(year: Int): Boolean =
-        year in createdAt.year..LocalDate.now().year
+        year in createdAt.year..today().year
+
+    private fun today(): LocalDate = LocalDate.now()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,7 +89,7 @@ private class SaleDateRange(private val createdAt: LocalDate) : SelectableDates 
 fun ProductBottomSheet(
     product: Product,
     onMarkAsSold: (LocalDate) -> Unit,
-    onMarkAsRemoved: () -> Unit,
+    onMarkAsRemoved: (LocalDate) -> Unit,
     onResetToAvailable: () -> Unit,
     onGoToOrder: () -> Unit,
     onEdit: () -> Unit,
@@ -88,6 +98,7 @@ fun ProductBottomSheet(
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
     var showSoldDatePicker by remember { mutableStateOf(false) }
+    var showRemovedDatePicker by remember { mutableStateOf(false) }
     val productStatus = product.details.status
     val details = product.details
     val isOrderProduct = details.orderId != null
@@ -154,7 +165,7 @@ fun ProductBottomSheet(
                             icon = Icons.Default.Delete,
                             iconTint = MaterialTheme.colorScheme.error,
                             label = stringResource(R.string.product_bottom_sheet_mark_removed),
-                            onClick = { dismissThen(onMarkAsRemoved) }
+                            onClick = { showRemovedDatePicker = true }
                         )
                     }
                     ProductStatus.SOLD, ProductStatus.REMOVED -> {
@@ -179,67 +190,30 @@ fun ProductBottomSheet(
     }
 
     if (showSoldDatePicker) {
-        val today = LocalDate.now()
-        val createdAt = details.createdAt
-
-        // A product added today can only have been sold today.
-        val initialDate = if (createdAt.isAfter(today)) createdAt else today
-
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = initialDate
-                .atStartOfDay(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli(),
-            yearRange = createdAt.year..today.year,
-            selectableDates = remember(createdAt) { SaleDateRange(createdAt) }
-        )
-
-        DatePickerDialog(
-            onDismissRequest = { showSoldDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    enabled = datePickerState.selectedDateMillis != null,
-                    onClick = {
-                        val soldOn = datePickerState.selectedDateMillis
-                            ?.let { millis ->
-                                Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                            }
-                            ?: today
-
-                        showSoldDatePicker = false
-                        dismissThen { onMarkAsSold(soldOn) }
-                    }
-                ) {
-                    Text(stringResource(R.string.product_bottom_sheet_mark_sold_confirm))
-                }
+        ProductStatusDateDialog(
+            createdAt = details.createdAt,
+            title = stringResource(R.string.product_bottom_sheet_sold_date_title),
+            confirmLabel = stringResource(R.string.product_bottom_sheet_mark_sold_confirm),
+            onConfirm = { soldOn ->
+                showSoldDatePicker = false
+                dismissThen { onMarkAsSold(soldOn) }
             },
-            dismissButton = {
-                TextButton(onClick = { showSoldDatePicker = false }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            }
-        ) {
-            Column {
-                Text(
-                    text = stringResource(R.string.product_bottom_sheet_sold_date_title),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(start = 24.dp, top = 16.dp)
-                )
-                Text(
-                    text = stringResource(
-                        R.string.product_bottom_sheet_sold_date_hint,
-                        createdAt.format(HINT_DATE_FORMAT)
-                    ),
-                    fontSize = 12.sp,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 4.dp)
-                )
-                DatePicker(state = datePickerState)
-            }
-        }
+            onDismiss = { showSoldDatePicker = false }
+        )
+    }
+
+    if (showRemovedDatePicker) {
+        ProductStatusDateDialog(
+            createdAt = details.createdAt,
+            title = stringResource(R.string.product_bottom_sheet_removed_date_title),
+            confirmLabel = stringResource(R.string.product_bottom_sheet_mark_removed_confirm),
+            isDestructive = true,
+            onConfirm = { removedOn ->
+                showRemovedDatePicker = false
+                dismissThen { onMarkAsRemoved(removedOn) }
+            },
+            onDismiss = { showRemovedDatePicker = false }
+        )
     }
 }
 
@@ -270,5 +244,152 @@ private fun BottomSheetItem(
             fontSize = 15.sp,
             color = MaterialTheme.colorScheme.onSurface
         )
+    }
+}
+
+// ── Shared Status Date Picker ──────────────────────────────────────────
+/**
+ * Asks for the date on which a product changed status. Confirming performs the
+ * action, so the common "it happened today" case is a single extra tap.
+ *
+ * Selectable range is [createdAt]…today: a product's status cannot have changed
+ * before it existed, nor in the future.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProductStatusDateDialog(
+    createdAt: LocalDate,
+    title: String,
+    confirmLabel: String,
+    onConfirm: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+    isDestructive: Boolean = false
+) {
+    val today = LocalDate.now()
+    val initialDate = if (createdAt.isAfter(today)) createdAt else today
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli(),
+        yearRange = createdAt.year..today.year,
+        selectableDates = remember(createdAt) { ProductDateRange(createdAt) }
+    )
+
+    val accentColor = if (isDestructive) {
+        MaterialTheme.colorScheme.error
+    } else {
+        SageGreen
+    }
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        colors = DatePickerDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        confirmButton = {
+            Button(
+                onClick = {
+                    val selected = datePickerState.selectedDateMillis
+                        ?.let { millis ->
+                            Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
+                        ?: today
+
+                    onConfirm(selected)
+                },
+                enabled = datePickerState.selectedDateMillis != null,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = accentColor,
+                    contentColor = Color.White,
+                    disabledContainerColor = SageGreenLight,
+                    disabledContentColor = TextSecondary
+                )
+            ) {
+                Text(
+                    text = confirmLabel,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = TextSecondary
+                )
+            ) {
+                Text(stringResource(R.string.common_cancel))
+            }
+        }
+    ) {
+        Column {
+            // ── Header ──
+            Column(
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 20.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = stringResource(
+                        R.string.product_bottom_sheet_date_hint,
+                        createdAt.format(HINT_DATE_FORMAT)
+                    ),
+                    fontSize = 12.sp,
+                    color = TextSecondary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                color = SageGreen.copy(alpha = 0.3f)
+            )
+
+            // ── Picker ──
+            DatePicker(
+                state = datePickerState,
+                title = null,
+                headline = null,
+                showModeToggle = false,
+                colors = DatePickerDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    selectedDayContainerColor = accentColor,
+                    selectedDayContentColor = Color.White,
+                    todayDateBorderColor = accentColor,
+                    todayContentColor = accentColor,
+                    dayContentColor = MaterialTheme.colorScheme.onSurface,
+                    disabledDayContentColor = TextSecondary.copy(alpha = 0.3f),
+                    weekdayContentColor = TextSecondary,
+                    subheadContentColor = TextSecondary,
+                    navigationContentColor = SageGreenDark,
+                    yearContentColor = MaterialTheme.colorScheme.onSurface,
+                    selectedYearContainerColor = accentColor,
+                    selectedYearContentColor = Color.White,
+                    currentYearContentColor = accentColor
+                )
+            )
+        }
     }
 }

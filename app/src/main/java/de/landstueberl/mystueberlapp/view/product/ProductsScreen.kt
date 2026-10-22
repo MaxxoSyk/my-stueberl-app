@@ -352,8 +352,8 @@ fun ProductsScreen(
                 viewModel.markAsSold(product.details.id, soldOn)
                 viewModel.dismissBottomSheet()
             },
-            onMarkAsRemoved = {
-                viewModel.markAsRemoved(product.details.id)
+            onMarkAsRemoved = { removedOn ->
+                viewModel.markAsRemoved(product.details.id, removedOn)
                 viewModel.dismissBottomSheet()
             },
             onResetToAvailable = {

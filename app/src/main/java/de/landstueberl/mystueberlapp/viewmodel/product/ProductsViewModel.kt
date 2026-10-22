@@ -181,8 +181,8 @@ class ProductsViewModel(
         repo.markProductAsSold(productId, soldOn)
     }
 
-    fun markAsRemoved(productId: Int) = launchCatching {
-        repo.markProductAsRemoved(productId)
+    fun markAsRemoved(productId: Int, removedOn: LocalDate) = launchCatching {
+        repo.markProductAsRemoved(productId, removedOn)
     }
 
     fun resetToAvailable(productId: Int) = launchCatching {
