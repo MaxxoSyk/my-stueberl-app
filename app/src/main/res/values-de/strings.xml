@@ -98,8 +98,10 @@
     <string name="product_bottom_sheet_order_managed">Status wird über die zugehörige Bestellung verwaltet.</string>
     <string name="product_bottom_sheet_go_to_order">Zur Bestellung</string>
     <string name="product_bottom_sheet_sold_date_title">Verkaufsdatum</string>
-    <string name="product_bottom_sheet_sold_date_hint">Das Produkt wurde am %1$s angelegt.</string>
+    <string name="product_bottom_sheet_date_hint">Das Werkstück wurde am %1$s angelegt.</string>
     <string name="product_bottom_sheet_mark_sold_confirm">Als verkauft markieren</string>
+    <string name="product_bottom_sheet_removed_date_title">Entnahmedatum</string>
+    <string name="product_bottom_sheet_mark_removed_confirm">Als entfernt markieren</string>
 
     <!-- Edit Product Screen -->
     <string name="edit_product_screen_title">Werkstück bearbeiten</string>

@@ -22,8 +22,8 @@ class ProductRepository(private val dao: ProductDao) {
         dao.markAsSold(id = productId, date = soldOn)
     }
 
-    suspend fun markProductAsRemoved(productId: Int) {
-        dao.markAsRemoved(id = productId, date = LocalDate.now())
+    suspend fun markProductAsRemoved(productId: Int, removedOn: LocalDate) {
+        dao.markAsRemoved(id = productId, date = removedOn)
     }
 
     suspend fun resetProductToAvailable(productId: Int) {
