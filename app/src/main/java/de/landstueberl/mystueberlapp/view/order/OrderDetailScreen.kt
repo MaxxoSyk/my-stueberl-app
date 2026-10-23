@@ -64,7 +64,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.OrderStatus
@@ -157,8 +156,7 @@ fun OrderDetailScreen(
                                 R.string.order_detail_title_edit
                             }
                         ),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.headlineLarge,
                         color = Color.White
                     )
                 },
@@ -232,7 +230,7 @@ fun OrderDetailScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(48.dp),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(10.dp),
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     contentColor = SageGreenDark
                                 )
@@ -256,7 +254,7 @@ fun OrderDetailScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = SageGreen,
                                 contentColor = Color.White,
@@ -309,7 +307,7 @@ fun OrderDetailScreen(
                 )
                 Button(
                     onClick = { viewModel.retry() },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SageGreen,
                         contentColor = Color.White
@@ -347,7 +345,7 @@ fun OrderDetailScreen(
                         capitalization = KeyboardCapitalization.Words,
                         imeAction = ImeAction.Next
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = SageGreen,
                         unfocusedBorderColor = TextSecondary,
@@ -383,7 +381,7 @@ fun OrderDetailScreen(
                             )
                         }
                     },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = SageGreen,
                         unfocusedBorderColor = TextSecondary,
@@ -405,7 +403,7 @@ fun OrderDetailScreen(
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences
                     ),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = SageGreen,
                         unfocusedBorderColor = TextSecondary,
@@ -424,7 +422,7 @@ fun OrderDetailScreen(
                 if (products.isEmpty()) {
                     Text(
                         text = stringResource(R.string.order_detail_no_products),
-                        fontSize = 14.sp,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = TextSecondary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
@@ -453,15 +451,13 @@ fun OrderDetailScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.order_detail_total),
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Spacer(modifier = Modifier.weight(1f))
                             Text(
                                 text = "${total.amount} ${total.currency.symbol}",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleLarge,
                                 color = AccentGold
                             )
                         }
@@ -478,7 +474,7 @@ fun OrderDetailScreen(
                         },
                         enabled = isSaveEnabled && !isSaving,
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = SageGreenDark
                         )
@@ -495,7 +491,7 @@ fun OrderDetailScreen(
                     if (!isSaveEnabled) {
                         Text(
                             text = stringResource(R.string.order_detail_add_product_hint),
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()

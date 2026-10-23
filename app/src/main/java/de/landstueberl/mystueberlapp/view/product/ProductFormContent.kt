@@ -43,7 +43,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.ProductStatus
@@ -68,12 +67,12 @@ fun ProductImagePlaceholder(
     Box(
         modifier = modifier
             .size(120.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(SageGreenLight)
             .border(
                 width = 2.dp,
                 color = SageGreen,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(10.dp)
             )
             .clickable(enabled = !isLoading) { onClick() },
         contentAlignment = Alignment.Center
@@ -120,7 +119,7 @@ fun ProductImagePlaceholder(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.product_form_image_placeholder),
-                    fontSize = 11.sp,
+                    style = MaterialTheme.typography.labelSmall,
                     color = SageGreenDark
                 )
             }
@@ -153,7 +152,7 @@ fun ProductDescriptionField(
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.Sentences
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = SageGreen,
             unfocusedBorderColor = TextSecondary,
@@ -196,7 +195,7 @@ fun ProductPriceField(
             onNext = { onImeAction() },
             onDone = { onImeAction() }
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = SageGreen,
             unfocusedBorderColor = TextSecondary,
@@ -222,25 +221,20 @@ fun ProductReadOnlyDateField(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = label,
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.bodySmall,
             color = TextSecondary,
             modifier = Modifier.padding(bottom = 4.dp)
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .border(
-                    width = 1.dp,
-                    color = TextSecondary.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                .clip(RoundedCornerShape(10.dp))
+                .background(SageGreenLight.copy(alpha = 0.35f))
                 .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             Text(
                 text = formattedDate,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyLarge,
                 color = TextSecondary
             )
         }
@@ -263,7 +257,7 @@ fun ProductFormDivider(
         )
         Text(
             text = label,
-            fontSize = 11.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = TextSecondary,
             modifier = Modifier.padding(horizontal = 8.dp)
         )
@@ -317,8 +311,7 @@ fun ProductStatusBadge(
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = label,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.labelMedium,
                 color = tint
             )
         }

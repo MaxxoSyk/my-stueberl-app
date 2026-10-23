@@ -14,6 +14,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -22,12 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.ProductSourceFilter
 import de.landstueberl.mystueberlapp.data.ProductFilter
+import de.landstueberl.mystueberlapp.data.ProductSourceFilter
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
@@ -52,7 +51,7 @@ fun FilterBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -64,8 +63,7 @@ fun FilterBottomSheet(
             // ── Title ──────────────────────────
             Text(
                 text = stringResource(R.string.products_filter_sheet_title),
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                style = MaterialTheme.typography.titleLarge
             )
 
             HorizontalDivider(color = SageGreen.copy(alpha = 0.3f))
@@ -180,7 +178,7 @@ fun FilterBottomSheet(
                 OutlinedButton(
                     onClick = onReset,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = SageGreenDark
                     )
@@ -192,7 +190,7 @@ fun FilterBottomSheet(
                 Button(
                     onClick = onApply,
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SageGreen,
                         contentColor = Color.White
@@ -216,8 +214,7 @@ private fun FilterSection(
     ) {
         Text(
             text = title,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.titleSmall,
             color = TextSecondary
         )
         content()

@@ -29,10 +29,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
@@ -66,7 +64,7 @@ private fun TileRow(
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = label,
-            fontSize = 13.sp,
+            style = MaterialTheme.typography.bodyMedium,
             color = TextSecondary,
             modifier = Modifier.weight(1f),
             maxLines = 2,
@@ -74,8 +72,7 @@ private fun TileRow(
         )
         Text(
             text = value,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
@@ -95,7 +92,7 @@ fun StatisticsTile(
     ElevatedCard(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -116,8 +113,7 @@ fun StatisticsTile(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.home_screen_tile_statistics),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
 
@@ -160,7 +156,7 @@ fun ProductsTile(
     ElevatedCard(
         onClick = onClick,
         modifier = modifier.fillMaxHeight(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -179,8 +175,7 @@ fun ProductsTile(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.home_screen_tile_products),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
 
@@ -226,7 +221,7 @@ fun OrdersTile(
     ElevatedCard(
         onClick = onClick,
         modifier = modifier.fillMaxHeight(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -245,8 +240,7 @@ fun OrdersTile(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.home_screen_tile_orders),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    style = MaterialTheme.typography.titleMedium
                 )
             }
 

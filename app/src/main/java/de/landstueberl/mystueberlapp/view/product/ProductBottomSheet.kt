@@ -45,7 +45,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
@@ -124,8 +123,7 @@ fun ProductBottomSheet(
             // ── Product Title ──────────────────
             Text(
                 text = product.details.description,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
                     horizontal = 24.dp,
                     vertical = 8.dp
@@ -141,7 +139,7 @@ fun ProductBottomSheet(
                 // Status is controlled by the order, not here.
                 Text(
                     text = stringResource(R.string.product_bottom_sheet_order_managed),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary,
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 )
@@ -241,7 +239,7 @@ private fun BottomSheetItem(
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
-            fontSize = 15.sp,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
     }
@@ -303,7 +301,7 @@ private fun ProductStatusDateDialog(
                     onConfirm(selected)
                 },
                 enabled = datePickerState.selectedDateMillis != null,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = accentColor,
                     contentColor = Color.White,
@@ -343,8 +341,7 @@ private fun ProductStatusDateDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = title,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -356,7 +353,7 @@ private fun ProductStatusDateDialog(
                         R.string.product_bottom_sheet_date_hint,
                         createdAt.format(HINT_DATE_FORMAT)
                     ),
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
             }

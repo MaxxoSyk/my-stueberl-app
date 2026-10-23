@@ -26,9 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
@@ -66,8 +64,7 @@ fun ImageSourceBottomSheet(
         ) {
             Text(
                 text = stringResource(R.string.image_source_sheet_title),
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
             )
 
@@ -125,7 +122,7 @@ private fun ImageSourceItem(
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = label,
-            fontSize = 15.sp,
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
     }

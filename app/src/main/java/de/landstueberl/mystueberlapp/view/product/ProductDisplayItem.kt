@@ -38,10 +38,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
@@ -82,13 +80,13 @@ fun ProductDisplayItem(
             )
             .then(
                 if (isSelected) Modifier.border(
-                    width = 3.dp,
+                    width = 2.dp,
                     color = SageGreenDark,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(14.dp)
                 ) else Modifier
             ),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -179,8 +177,7 @@ fun ProductDisplayItem(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = details.description,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp,
+                            style = MaterialTheme.typography.titleSmall,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -199,13 +196,13 @@ fun ProductDisplayItem(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(R.string.products_screen_purchase_price),
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary,
                                 modifier = Modifier.width(56.dp)
                             )
                             Text(
                                 text = "${price.amount} ${price.currency.symbol}",
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
                         }
@@ -215,14 +212,13 @@ fun ProductDisplayItem(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(R.string.products_screen_sales_price),
-                                fontSize = 12.sp,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary,
                                 modifier = Modifier.width(56.dp)
                             )
                             Text(
                                 text = "${price.amount} ${price.currency.symbol}",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.labelMedium,
                                 color = AccentGold
                             )
                         }
@@ -255,83 +251,73 @@ fun ProductDisplayItem(
             }
 
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 4.dp),
+                modifier = Modifier.padding(vertical = 6.dp),
                 color = SageGreen.copy(alpha = 0.2f)
             )
 
             // ── Bottom Date Row ────────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(SageGreen.copy(alpha = 0.07f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // ── Created At ───────
+                // ── Created At ───────
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = TextSecondary.copy(alpha = 0.7f),
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.products_screen_created_at,
+                            details.createdAt.format(DATE_FORMAT)
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary.copy(alpha = 0.7f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // ── Sold / Removed Date ───────
+                val statusDate = when (status) {
+                    ProductStatus.SOLD -> details.soldOn
+                    ProductStatus.REMOVED -> details.removedOn
+                    ProductStatus.AVAILABLE -> null
+                }
+
+                if (statusDate != null) {
+                    val isSold = status == ProductStatus.SOLD
+                    val statusColor = if (isSold) {
+                        SageGreen.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                    }
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.CalendarToday,
+                            imageVector = if (isSold) {
+                                Icons.Default.CheckCircle
+                            } else {
+                                Icons.Default.Cancel },
                             contentDescription = null,
-                            tint = TextSecondary.copy(alpha = 0.7f),
-                            modifier = Modifier.size(9.dp)
+                            tint = statusColor,
+                            modifier = Modifier.size(12.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = stringResource(
-                                R.string.products_screen_created_at,
-                                details.createdAt.format(DATE_FORMAT)
-                            ),
-                            fontSize = 9.sp,
-                            color = TextSecondary.copy(alpha = 0.7f)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // ── Sold / Removed Date ───────
-                    val statusDate = when (status) {
-                        ProductStatus.SOLD -> details.soldOn
-                        ProductStatus.REMOVED -> details.removedOn
-                        ProductStatus.AVAILABLE -> null
-                    }
-
-                    if (statusDate != null) {
-                        val isSold = status == ProductStatus.SOLD
-                        val statusColor = if (isSold) {
-                            SageGreen.copy(alpha = 0.7f)
-                        } else {
-                            MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                        }
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (isSold) {
-                                    Icons.Default.CheckCircle
+                                if (isSold) {
+                                    R.string.products_screen_sold_on
                                 } else {
-                                    Icons.Default.Cancel
-                                },
-                                contentDescription = null,
-                                tint = statusColor,
-                                modifier = Modifier.size(9.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = stringResource(
-                                    if (isSold) {
-                                        R.string.products_screen_sold_on
-                                    } else {
-                                        R.string.products_screen_removed_on
-                                    },
-                                    statusDate.format(DATE_FORMAT)
-                                ),
-                                fontSize = 9.sp,
-                                color = statusColor
-                            )
-                        }
+                                    R.string.products_screen_removed_on },
+                                statusDate.format(DATE_FORMAT)
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = statusColor
+                        )
                     }
                 }
             }
@@ -362,8 +348,7 @@ private fun OrderBadge(
             Spacer(modifier = Modifier.width(3.dp))
             Text(
                 text = stringResource(R.string.products_screen_order_badge),
-                fontSize = 10.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.labelSmall,
                 color = AccentGold
             )
         }
