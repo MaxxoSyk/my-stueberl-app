@@ -29,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -69,6 +70,7 @@ import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.OrderStatus
 import de.landstueberl.mystueberlapp.data.orderTotal
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
+import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
@@ -347,6 +349,9 @@ fun OrderDetailScreen(
                     ),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = FloralWhite,
+                        unfocusedContainerColor = FloralWhite,
+                        disabledContainerColor = FloralWhite,
                         focusedBorderColor = SageGreen,
                         unfocusedBorderColor = TextSecondary,
                         focusedLabelColor = SageGreen,
@@ -383,6 +388,9 @@ fun OrderDetailScreen(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = FloralWhite,
+                        unfocusedContainerColor = FloralWhite,
+                        disabledContainerColor = FloralWhite,
                         focusedBorderColor = SageGreen,
                         unfocusedBorderColor = TextSecondary,
                         focusedLabelColor = SageGreen,
@@ -405,6 +413,9 @@ fun OrderDetailScreen(
                     ),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = FloralWhite,
+                        unfocusedContainerColor = FloralWhite,
+                        disabledContainerColor = FloralWhite,
                         focusedBorderColor = SageGreen,
                         unfocusedBorderColor = TextSecondary,
                         focusedLabelColor = SageGreen,
@@ -542,8 +553,12 @@ fun OrderDetailScreen(
 
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
+            shape = RoundedCornerShape(20.dp),
+            colors = DatePickerDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
                             viewModel.onDueDateChange(
@@ -553,9 +568,20 @@ fun OrderDetailScreen(
                             )
                         }
                         showDatePicker = false
-                    }
+                    },
+                    enabled = datePickerState.selectedDateMillis != null,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = SageGreen,
+                        contentColor = Color.White,
+                        disabledContainerColor = SageGreenLight,
+                        disabledContentColor = TextSecondary
+                    )
                 ) {
-                    Text(stringResource(R.string.common_ok))
+                    Text(
+                        text = stringResource(R.string.common_ok),
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             },
             dismissButton = {
@@ -564,7 +590,28 @@ fun OrderDetailScreen(
                 }
             }
         ) {
-            DatePicker(state = datePickerState)
+            DatePicker(
+                state = datePickerState,
+                title = null,
+                headline = null,
+                showModeToggle = false,
+                colors = DatePickerDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    selectedDayContainerColor = SageGreen,
+                    selectedDayContentColor = Color.White,
+                    todayDateBorderColor = SageGreen,
+                    todayContentColor = SageGreen,
+                    dayContentColor = MaterialTheme.colorScheme.onSurface,
+                    disabledDayContentColor = TextSecondary.copy(alpha = 0.3f),
+                    weekdayContentColor = TextSecondary,
+                    subheadContentColor = TextSecondary,
+                    navigationContentColor = SageGreenDark,
+                    yearContentColor = MaterialTheme.colorScheme.onSurface,
+                    selectedYearContainerColor = SageGreen,
+                    selectedYearContentColor = Color.White,
+                    currentYearContentColor = SageGreen
+                )
+            )
         }
     }
 

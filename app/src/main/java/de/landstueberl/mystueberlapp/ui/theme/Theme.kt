@@ -17,9 +17,9 @@ private val LightColorScheme = lightColorScheme(
     secondaryContainer = SageGreenLight,
     onSecondaryContainer = SageGreenDark,
     tertiary = AccentGold,
-    background = FloralWhite,
+    background = WarmBeige,
     onBackground = TextPrimary,
-    surface = WarmBeigeCard,
+    surface = FloralWhite,
     onSurface = TextPrimary,
 )
 
