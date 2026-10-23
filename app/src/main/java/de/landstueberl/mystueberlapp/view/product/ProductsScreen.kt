@@ -42,10 +42,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.ProductSortOrder
@@ -145,8 +143,7 @@ fun ProductsScreen(
                             stringResource(R.string.products_screen_selected, selectedProducts.size)
                         else
                             stringResource(R.string.products_screen_title),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.headlineLarge,
                         color = Color.White
                     )
                 },
@@ -208,7 +205,7 @@ fun ProductsScreen(
                                             Text(
                                                 text = activeFilterCount.toString(),
                                                 color = Color.White,
-                                                fontSize = 10.sp
+                                                style = MaterialTheme.typography.labelSmall
                                             )
                                         }
                                     }
@@ -261,7 +258,7 @@ fun ProductsScreen(
                         stringResource(R.string.products_screen_empty)
                     },
                     color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 16.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center
                 )
             }

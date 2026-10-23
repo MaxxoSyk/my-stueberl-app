@@ -1,9 +1,7 @@
 package de.landstueberl.mystueberlapp.view.order
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,14 +28,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Order
 import de.landstueberl.mystueberlapp.data.OrderStatus
@@ -66,8 +61,8 @@ fun OrderDisplayItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -91,8 +86,7 @@ fun OrderDisplayItem(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = detail.customerName,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 15.sp,
+                    style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -118,7 +112,7 @@ fun OrderDisplayItem(
                         R.string.orders_screen_due_date,
                         detail.dueDate.format(DATE_FORMAT)
                     ),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary
                 )
             }
@@ -128,7 +122,7 @@ fun OrderDisplayItem(
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = detail.note,
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -136,7 +130,7 @@ fun OrderDisplayItem(
             }
 
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
+                modifier = Modifier.padding(vertical = 6.dp),
                 color = SageGreen.copy(alpha = 0.2f)
             )
 
@@ -158,7 +152,7 @@ fun OrderDisplayItem(
                         productCount,
                         productCount
                     ),
-                    fontSize = 13.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary
                 )
 
@@ -167,8 +161,7 @@ fun OrderDisplayItem(
                 if (total != null) {
                     Text(
                         text = "${total.amount} ${total.currency.symbol}",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
                         color = AccentGold
                     )
                 }
@@ -176,30 +169,22 @@ fun OrderDisplayItem(
 
             // ── Created At ─────────────────────
             Spacer(modifier = Modifier.height(6.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(SageGreen.copy(alpha = 0.07f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        tint = TextSecondary.copy(alpha = 0.7f),
-                        modifier = Modifier.size(11.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = stringResource(
-                            R.string.orders_screen_created_at,
-                            detail.createdAt.format(DATE_FORMAT)
-                        ),
-                        fontSize = 11.sp,
-                        color = TextSecondary.copy(alpha = 0.7f)
-                    )
-                }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CalendarToday,
+                    contentDescription = null,
+                    tint = TextSecondary.copy(alpha = 0.7f),
+                    modifier = Modifier.size(11.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = stringResource(
+                        R.string.orders_screen_created_at,
+                        detail.createdAt.format(DATE_FORMAT)
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextSecondary.copy(alpha = 0.7f)
+                )
             }
         }
     }
@@ -242,8 +227,7 @@ fun OrderStatusBadge(
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = stringResource(status.labelRes),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.labelMedium,
                 color = tint
             )
         }

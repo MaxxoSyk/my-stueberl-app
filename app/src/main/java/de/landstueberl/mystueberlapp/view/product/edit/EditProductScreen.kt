@@ -42,10 +42,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.ProductStatus
@@ -138,8 +136,7 @@ fun EditProductScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.edit_product_screen_title),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.headlineLarge,
                         color = Color.White
                     )
                 },
@@ -179,7 +176,7 @@ fun EditProductScreen(
                 )
                 Button(
                     onClick = { viewModel.retry() },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SageGreen,
                         contentColor = Color.White
@@ -260,7 +257,7 @@ fun EditProductScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SageGreen,
                         contentColor = Color.White,
@@ -277,8 +274,7 @@ fun EditProductScreen(
                     } else {
                         Text(
                             text = stringResource(R.string.product_form_save),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }

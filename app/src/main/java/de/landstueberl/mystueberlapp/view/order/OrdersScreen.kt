@@ -34,10 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.OrderStatus
@@ -94,8 +92,7 @@ fun OrdersScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.orders_screen_title),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 24.sp,
+                        style = MaterialTheme.typography.headlineLarge,
                         color = Color.White
                     )
                 },
@@ -159,7 +156,7 @@ fun OrdersScreen(
                             stringResource(R.string.orders_screen_empty)
                         },
                         color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 16.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
                 }

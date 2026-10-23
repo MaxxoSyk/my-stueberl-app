@@ -28,10 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
@@ -56,8 +54,8 @@ fun OrderProductItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         )
@@ -99,8 +97,7 @@ fun OrderProductItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = details.description,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.titleSmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface
@@ -115,7 +112,7 @@ fun OrderProductItem(
                             price.amount.toPlainString(),
                             price.currency.symbol
                         ),
-                        fontSize = 12.sp,
+                        style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
                 }
@@ -127,8 +124,7 @@ fun OrderProductItem(
                             price.amount.toPlainString(),
                             price.currency.symbol
                         ),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.labelMedium,
                         color = AccentGold
                     )
                 }
