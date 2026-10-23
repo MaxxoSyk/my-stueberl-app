@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
@@ -154,6 +155,9 @@ fun ProductDescriptionField(
         ),
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = FloralWhite,
+            unfocusedContainerColor = FloralWhite,
+            disabledContainerColor = FloralWhite,
             focusedBorderColor = SageGreen,
             unfocusedBorderColor = TextSecondary,
             focusedLabelColor = SageGreen,
@@ -197,6 +201,9 @@ fun ProductPriceField(
         ),
         shape = RoundedCornerShape(10.dp),
         colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = FloralWhite,
+            unfocusedContainerColor = FloralWhite,
+            disabledContainerColor = FloralWhite,
             focusedBorderColor = SageGreen,
             unfocusedBorderColor = TextSecondary,
             focusedLabelColor = SageGreen,
