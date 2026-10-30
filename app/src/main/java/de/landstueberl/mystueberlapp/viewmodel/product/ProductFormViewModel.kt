@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
+import java.math.RoundingMode
 import java.util.Currency
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -154,9 +155,21 @@ abstract class ProductFormViewModel(
      */
     protected abstract suspend fun persist(values: ProductFormValues)
 
+    /**
+     * Parses user input into [Money], or null when the field is empty or
+     * unparseable.
+     *
+     * The amount is normalised to two decimal places so that stored values are
+     * directly comparable: BigDecimal.equals is scale-sensitive, and without
+     * this `3.5` and `3.50` would be treated as different prices.
+     *
+     * [RoundingMode.HALF_UP] matches the everyday expectation that 0.005 rounds
+     * up to 0.01.
+     */
     private fun String.toMoneyOrNull(): Money? =
         takeIf { it.isNotBlank() }
             ?.toBigDecimalOrNull()
+            ?.setScale(PRICE_SCALE, RoundingMode.HALF_UP)
             ?.let { Money(amount = it, currency = CURRENCY) }
 
     // ── Reset ──────────────────────────────────
@@ -170,9 +183,12 @@ abstract class ProductFormViewModel(
 
     companion object {
         private const val TAG = "ProductFormViewModel"
+        private val PRICE_PATTERN = Regex("^\\d*([.]\\d{0,2})?$")
 
-        private val PRICE_PATTERN = Regex("^\\d*\\.?\\d*$")
+        /** Monetary amounts are stored with two decimal places. */
+        private const val PRICE_SCALE = 2
 
+        /** The shop trades exclusively in euros. */
         val CURRENCY: Currency = Currency.getInstance("EUR")
     }
 }

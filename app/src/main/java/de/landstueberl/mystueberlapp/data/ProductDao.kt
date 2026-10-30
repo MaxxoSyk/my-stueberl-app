@@ -175,4 +175,47 @@ interface ProductDao {
 
     @Query("SELECT fileName FROM Image")
     suspend fun getAllImageFileNames(): List<String>
+
+    /** The highest batch id in use, or null when no batches exist yet. */
+    @Query("SELECT MAX(batchId) FROM ProductDetail")
+    suspend fun getMaxBatchId(): Int?
+
+    /**
+     * Inserts [quantity] copies of [detail], all sharing a new batch id and —
+     * if given — the same [imageFileName].
+     *
+     * The image file itself is shared, not copied: several Image rows may
+     * reference one file, and the orphan sweep keeps a file alive while any
+     * row still points at it.
+     *
+     * @return the batch id the products were created under
+     */
+    @Transaction
+    suspend fun insertProductBatch(
+        detail: ProductDetail,
+        quantity: Int,
+        imageFileName: String?
+    ): Int {
+        require(quantity >= 1) { "quantity must be at least 1, was $quantity" }
+
+        val batchId = (getMaxBatchId() ?: 0) + 1
+
+        repeat(quantity) {
+            val productId = upsertProductDetail(
+                detail.copy(id = 0, batchId = batchId)
+            ).toInt()
+
+            if (imageFileName != null) {
+                upsertImage(
+                    Image(
+                        id = 0,
+                        productId = productId,
+                        fileName = imageFileName
+                    )
+                )
+            }
+        }
+
+        return batchId
+    }
 }

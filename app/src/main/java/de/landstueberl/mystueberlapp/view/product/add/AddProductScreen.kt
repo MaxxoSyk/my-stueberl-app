@@ -54,6 +54,7 @@ import de.landstueberl.mystueberlapp.view.product.ImageSourceBottomSheet
 import de.landstueberl.mystueberlapp.view.product.ProductDescriptionField
 import de.landstueberl.mystueberlapp.view.product.ProductImagePlaceholder
 import de.landstueberl.mystueberlapp.view.product.ProductPriceField
+import de.landstueberl.mystueberlapp.view.product.ProductQuantityField
 import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,6 +70,7 @@ fun AddProductScreen(
     val isError by viewModel.isError.collectAsStateWithLifecycle()
     val isSaveEnabled by viewModel.isSaveEnabled.collectAsStateWithLifecycle()
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
+    val quantity by viewModel.quantity.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val saveErrorMessage = stringResource(R.string.product_form_save_failed)
@@ -185,6 +187,17 @@ fun AddProductScreen(
                 }
             )
 
+            // ── Quantity Stepper ────────────────────
+            if (!viewModel.isForOrder) {
+                ProductQuantityField(
+                    quantity = quantity,
+                    onIncrement = viewModel::incrementQuantity,
+                    onDecrement = viewModel::decrementQuantity,
+                    minQuantity = AddProductViewModel.MIN_QUANTITY,
+                    maxQuantity = AddProductViewModel.MAX_QUANTITY
+                )
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             // ── Save Button ────────────────────
@@ -210,8 +223,12 @@ fun AddProductScreen(
                     )
                 } else {
                     Text(
-                        text = stringResource(R.string.product_form_save),
-                        style = MaterialTheme.typography.titleMedium
+                        text = if (!viewModel.isForOrder && quantity > 1) {
+                            stringResource(R.string.product_form_save_multiple, quantity)
+                        } else {
+                            stringResource(R.string.product_form_save)
+                        },
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
             }

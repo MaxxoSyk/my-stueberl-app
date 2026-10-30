@@ -16,7 +16,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
         ProductDetail::class,
         Image::class,
         OrderDetail::class],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(

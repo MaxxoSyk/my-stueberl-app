@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.OrderStatus
+import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.orderTotal
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
@@ -467,7 +468,7 @@ fun OrderDetailScreen(
                             )
                             Spacer(modifier = Modifier.weight(1f))
                             Text(
-                                text = "${total.amount} ${total.currency.symbol}",
+                                text = total.format(),
                                 style = MaterialTheme.typography.titleLarge,
                                 color = AccentGold
                             )
