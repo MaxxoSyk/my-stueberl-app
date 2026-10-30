@@ -58,6 +58,11 @@
     </plurals>
     <string name="products_screen_order_badge">Bestellung</string>
     <string name="products_screen_sort">Sortieren</string>
+    <string name="products_screen_batch_count">×%1$d</string>
+    <string name="products_screen_batch_price_each">%1$s pro Stück</string>
+    <string name="products_screen_batch_expand">Einzelwerkstücke anzeigen</string>
+    <string name="products_screen_batch_collapse">Einzelwerkstücke verbergen</string>
+
     <string name="products_sort_oldest">Älteste zuerst</string>
     <string name="products_sort_newest">Neueste zuerst</string>
     <string name="products_sort_activity">Letzte Änderung</string>
@@ -86,6 +91,11 @@
     <string name="product_form_save">Speichern</string>
     <string name="product_form_sales_price">Verkaufspreis</string>
     <string name="product_form_purchase_price">Einkaufspreis</string>
+    <string name="product_form_quantity">Anzahl</string>
+    <string name="product_form_quantity_hint">Erstellt identische Werkstücke</string>
+    <string name="product_form_quantity_decrease">Anzahl verringern</string>
+    <string name="product_form_quantity_increase">Anzahl erhöhen</string>
+    <string name="product_form_save_multiple">%1$d Werkstücke speichern</string>
 
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Werkstück hinzufügen</string>

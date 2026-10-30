@@ -4,6 +4,7 @@ import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.ProductFilter
 import de.landstueberl.mystueberlapp.data.ProductSourceFilter
+import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -77,4 +78,18 @@ class ProductRepository(private val dao: ProductDao) {
     }
 
     suspend fun getAllImageFileNames(): List<String> = dao.getAllImageFileNames()
+
+    /**
+     * Creates [quantity] identical products as one batch.
+     * @return the generated batch id
+     */
+    suspend fun insertProductBatch(
+        detail: ProductDetail,
+        quantity: Int,
+        imageFileName: String?
+    ): Int = dao.insertProductBatch(
+        detail = detail,
+        quantity = quantity,
+        imageFileName = imageFileName
+    )
 }

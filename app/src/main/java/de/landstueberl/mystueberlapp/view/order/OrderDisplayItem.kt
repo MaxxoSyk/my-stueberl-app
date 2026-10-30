@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Order
 import de.landstueberl.mystueberlapp.data.OrderStatus
+import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.labelRes
 import de.landstueberl.mystueberlapp.data.total
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
@@ -160,7 +161,7 @@ fun OrderDisplayItem(
 
                 if (total != null) {
                     Text(
-                        text = "${total.amount} ${total.currency.symbol}",
+                        text = total.format(),
                         style = MaterialTheme.typography.titleMedium,
                         color = AccentGold
                     )

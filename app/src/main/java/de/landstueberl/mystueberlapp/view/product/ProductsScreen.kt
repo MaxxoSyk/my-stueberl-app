@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -46,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.ProductSortOrder
 import de.landstueberl.mystueberlapp.data.labelRes
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
@@ -74,6 +76,10 @@ fun ProductsScreen(
     val activeFilterCount by viewModel.activeFilterCount.collectAsStateWithLifecycle()
     val isError by viewModel.isError.collectAsStateWithLifecycle()
     val isFilterNarrowing by viewModel.isFilterNarrowing.collectAsStateWithLifecycle()
+    val listItems by viewModel.listItems.collectAsStateWithLifecycle()
+
+    // Collapses when leaving the screen — plain remember, not rememberSaveable.
+    val expandedBatchIds = remember { mutableStateSetOf<Int>() }
 
     val selectedProduct = remember(selectedProductId, products) {
         selectedProductId?.let { id -> products.firstOrNull { it.details.id == id } }
@@ -272,32 +278,71 @@ fun ProductsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(
-                    items = products,
-                    key = { it.details.id }
-                ) { product ->
-                    val imageFile = remember(product) {
-                        product.imageList.firstOrNull()?.fileName?.let(viewModel::imageFile)
-                    }
-
-                    ProductDisplayItem(
-                        product = product,
-                        imageFile = imageFile,
-                        isSelected = selectedProducts.contains(product.details.id),
-                        isSelectionMode = isSelectionMode,
-                        onTap = {
-                            if (isSelectionMode) {
-                                viewModel.toggleSelection(product.details.id)
-                            } else {
-                                viewModel.onProductTap(product)
-                            }
-                        },
-                        onLongPress = {
-                            viewModel.toggleSelection(product.details.id)
-                        },
-                        onImageTap = {
-                            previewImageName = product.imageList.firstOrNull()?.fileName
+                    items = listItems,
+                    key = { it.key }
+                ) { item ->
+                    when (item) {
+                        is ProductListItem.Single -> {
+                            val product = item.product
+                            ProductDisplayItem(
+                                product = product,
+                                imageFile = remember(product) {
+                                    product.imageList.firstOrNull()
+                                        ?.fileName
+                                        ?.let(viewModel::imageFile)
+                                },
+                                isSelected = selectedProducts.contains(product.details.id),
+                                isSelectionMode = isSelectionMode,
+                                onTap = {
+                                    if (isSelectionMode) {
+                                        viewModel.toggleSelection(product.details.id)
+                                    } else {
+                                        viewModel.onProductTap(product)
+                                    }
+                                },
+                                onLongPress = {
+                                    viewModel.toggleSelection(product.details.id)
+                                },
+                                onImageTap = {
+                                    previewImageName =
+                                        product.imageList.firstOrNull()?.fileName
+                                }
+                            )
                         }
-                    )
+
+                        is ProductListItem.Batch -> {
+                            ProductBatchItem(
+                                batch = item,
+                                imageFileOf = { product ->
+                                    product.imageList.firstOrNull()
+                                        ?.fileName
+                                        ?.let(viewModel::imageFile)
+                                },
+                                isExpanded = expandedBatchIds.contains(item.batchId),
+                                selectedProducts = selectedProducts,
+                                isSelectionMode = isSelectionMode,
+                                onToggleExpanded = {
+                                    if (!expandedBatchIds.add(item.batchId)) {
+                                        expandedBatchIds.remove(item.batchId)
+                                    }
+                                },
+                                onProductTap = { product ->
+                                    if (isSelectionMode) {
+                                        viewModel.toggleSelection(product.details.id)
+                                    } else {
+                                        viewModel.onProductTap(product)
+                                    }
+                                },
+                                onProductLongPress = { product ->
+                                    viewModel.toggleSelection(product.details.id)
+                                },
+                                onImageTap = { product ->
+                                    previewImageName =
+                                        product.imageList.firstOrNull()?.fileName
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }

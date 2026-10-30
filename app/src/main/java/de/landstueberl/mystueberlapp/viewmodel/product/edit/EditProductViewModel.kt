@@ -11,6 +11,7 @@ import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.sameValueAs
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormValues
@@ -94,12 +95,28 @@ class EditProductViewModel(
 
     override suspend fun persist(values: ProductFormValues) {
         val existing = loadedProduct ?: repo.getProductById(productId)
+        val existingDetails = existing.details
+
+        val descriptionChanged = existingDetails.description != values.description
+        val purchasePriceChanged = !existingDetails.purchasePrice.sameValueAs(values.purchasePrice)
+        val salesPriceChanged = !existingDetails.salesPrice.sameValueAs(values.salesPrice)
+        val imageChanged =
+            existing.imageList.firstOrNull()?.fileName != values.imageFileName
+
+        val hasChanges = descriptionChanged ||
+                purchasePriceChanged ||
+                salesPriceChanged ||
+                imageChanged
 
         val updated = Product(
-            details = existing.details.copy(
+            details = existingDetails.copy(
                 description = values.description,
                 purchasePrice = values.purchasePrice,
-                salesPrice = values.salesPrice
+                salesPrice = values.salesPrice,
+                // Once a product differs from its batch it is no longer
+                // interchangeable, so it leaves the group. Saving without
+                // changing anything keeps it grouped.
+                batchId = if (hasChanges) null else existingDetails.batchId
             ),
             imageList = values.imageFileName?.let { fileName ->
                 // Reuse the existing row's id when the file hasn't changed,

@@ -58,6 +58,11 @@
     </plurals>
     <string name="products_screen_order_badge">Order</string>
     <string name="products_screen_sort">Sort</string>
+    <string name="products_screen_batch_count">×%1$d</string>
+    <string name="products_screen_batch_price_each">%1$s each</string>
+    <string name="products_screen_batch_expand">Show individual products</string>
+    <string name="products_screen_batch_collapse">Hide individual products</string>
+
     <string name="products_sort_oldest">Oldest first</string>
     <string name="products_sort_newest">Newest first</string>
     <string name="products_sort_activity">Recent activity</string>
@@ -86,6 +91,11 @@
     <string name="product_form_save">Save</string>
     <string name="product_form_sales_price">Sales Price</string>
     <string name="product_form_purchase_price">Purchase Price</string>
+    <string name="product_form_quantity">Quantity</string>
+    <string name="product_form_quantity_hint">Creates identical products</string>
+    <string name="product_form_quantity_decrease">Decrease quantity</string>
+    <string name="product_form_quantity_increase">Increase quantity</string>
+    <string name="product_form_save_multiple">Save %1$d products</string>
 
     <!-- Add Product Screen -->
     <string name="add_product_screen_title">Add Product</string>

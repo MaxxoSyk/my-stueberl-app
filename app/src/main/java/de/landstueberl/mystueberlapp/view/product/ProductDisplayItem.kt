@@ -44,6 +44,7 @@ import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
@@ -201,7 +202,7 @@ fun ProductDisplayItem(
                                 modifier = Modifier.width(56.dp)
                             )
                             Text(
-                                text = "${price.amount} ${price.currency.symbol}",
+                                text = price.format(),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
@@ -217,7 +218,7 @@ fun ProductDisplayItem(
                                 modifier = Modifier.width(56.dp)
                             )
                             Text(
-                                text = "${price.amount} ${price.currency.symbol}",
+                                text = price.format(),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = AccentGold
                             )

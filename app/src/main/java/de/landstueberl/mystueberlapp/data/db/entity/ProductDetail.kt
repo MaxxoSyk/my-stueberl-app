@@ -20,7 +20,8 @@ import java.time.LocalDate
     ],
     indices = [
         Index("orderId"),
-        Index("status")
+        Index("status"),
+        Index("batchId")
     ]
 )
 data class ProductDetail(
@@ -30,6 +31,7 @@ data class ProductDetail(
     @Embedded(prefix = "sales_") val salesPrice: Money?,
     val status: ProductStatus = ProductStatus.AVAILABLE,
     val orderId: Int? = null,
+    val batchId: Int? = null,
     val createdAt: LocalDate = LocalDate.now(),
     val soldOn: LocalDate? = null,
     val removedOn: LocalDate? = null

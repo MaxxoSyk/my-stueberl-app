@@ -15,8 +15,7 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
-        Index("productId"),
-        Index(value = ["fileName"], unique = true)
+        Index("productId")
     ]
 )
 data class Image(
