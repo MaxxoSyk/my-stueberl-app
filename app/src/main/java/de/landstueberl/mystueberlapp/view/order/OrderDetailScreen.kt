@@ -76,11 +76,12 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.util.toLocalDateFromPicker
+import de.landstueberl.mystueberlapp.util.toPickerMillis
 import de.landstueberl.mystueberlapp.view.product.ProductFormDivider
 import de.landstueberl.mystueberlapp.view.product.ProductReadOnlyDateField
 import de.landstueberl.mystueberlapp.viewmodel.order.OrderDetailViewModel
-import java.time.Instant
-import java.time.ZoneId
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
@@ -543,13 +544,8 @@ fun OrderDetailScreen(
 
     // ── Date Picker ────────────────────────────
     if (showDatePicker) {
-        val initialMillis = dueDate
-            ?.atStartOfDay(ZoneId.systemDefault())
-            ?.toInstant()
-            ?.toEpochMilli()
-
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = initialMillis
+            initialSelectedDateMillis = (dueDate ?: LocalDate.now()).toPickerMillis()
         )
 
         DatePickerDialog(
@@ -561,13 +557,9 @@ fun OrderDetailScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            viewModel.onDueDateChange(
-                                Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                            )
-                        }
+                        datePickerState.selectedDateMillis
+                            ?.toLocalDateFromPicker()
+                            ?.let(viewModel::onDueDateChange)
                         showDatePicker = false
                     },
                     enabled = datePickerState.selectedDateMillis != null,
@@ -581,7 +573,7 @@ fun OrderDetailScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.common_ok),
-                        fontWeight = FontWeight.SemiBold
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
             },
