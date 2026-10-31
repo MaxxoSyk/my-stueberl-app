@@ -43,7 +43,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
@@ -53,10 +52,10 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.util.toLocalDateFromPicker
+import de.landstueberl.mystueberlapp.util.toPickerMillis
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -71,16 +70,12 @@ private val HINT_DATE_FORMAT: DateTimeFormatter =
 private class ProductDateRange(private val createdAt: LocalDate) : SelectableDates {
 
     override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-        val date = Instant.ofEpochMilli(utcTimeMillis)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-        return !date.isBefore(createdAt) && !date.isAfter(today())
+        val date = utcTimeMillis.toLocalDateFromPicker()
+        return !date.isBefore(createdAt) && !date.isAfter(LocalDate.now())
     }
 
     override fun isSelectableYear(year: Int): Boolean =
-        year in createdAt.year..today().year
-
-    private fun today(): LocalDate = LocalDate.now()
+        year in createdAt.year..LocalDate.now().year
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,7 +93,6 @@ fun ProductBottomSheet(
     val scope = rememberCoroutineScope()
     var showSoldDatePicker by remember { mutableStateOf(false) }
     var showRemovedDatePicker by remember { mutableStateOf(false) }
-    val productStatus = product.details.status
     val details = product.details
     val isOrderProduct = details.orderId != null
 
@@ -122,7 +116,7 @@ fun ProductBottomSheet(
         ) {
             // ── Product Title ──────────────────
             Text(
-                text = product.details.description,
+                text = details.description,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(
                     horizontal = 24.dp,
@@ -151,7 +145,7 @@ fun ProductBottomSheet(
                     onClick = onGoToOrder
                 )
             } else {
-                when (productStatus) {
+                when (details.status) {
                     ProductStatus.AVAILABLE -> {
                         BottomSheetItem(
                             icon = Icons.Default.CheckCircle,
@@ -267,10 +261,7 @@ private fun ProductStatusDateDialog(
     val initialDate = if (createdAt.isAfter(today)) createdAt else today
 
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli(),
+        initialSelectedDateMillis = initialDate.toPickerMillis(),
         yearRange = createdAt.year..today.year,
         selectableDates = remember(createdAt) { ProductDateRange(createdAt) }
     )
@@ -291,12 +282,8 @@ private fun ProductStatusDateDialog(
             Button(
                 onClick = {
                     val selected = datePickerState.selectedDateMillis
-                        ?.let { millis ->
-                            Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                        }
-                        ?: today
+                        ?.toLocalDateFromPicker()
+                        ?: initialDate
 
                     onConfirm(selected)
                 },
@@ -311,7 +298,7 @@ private fun ProductStatusDateDialog(
             ) {
                 Text(
                     text = confirmLabel,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         },
