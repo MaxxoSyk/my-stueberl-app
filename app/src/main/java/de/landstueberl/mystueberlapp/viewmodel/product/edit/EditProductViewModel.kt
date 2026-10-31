@@ -93,34 +93,44 @@ class EditProductViewModel(
         loadProduct()
     }
 
+    /**
+     * True when saving would detach this product from its batch — i.e. it is
+     * batched and the form differs from what was loaded.
+     */
+    fun willLeaveBatch(): Boolean {
+        val existing = loadedProduct ?: return false
+        if (existing.details.batchId == null) return false
+        return hasChanges(existing, currentFormValues())
+    }
+
+    /**
+     * Whether the form differs from [existing] in a way that makes the product
+     * no longer interchangeable with its batch.
+     *
+     * The image is deliberately excluded: batch members share one photo, and
+     * replacing it for a single item doesn't make that item a different product.
+     */
+    private fun hasChanges(existing: Product, values: ProductFormValues): Boolean {
+        val details = existing.details
+        return details.description != values.description ||
+                !details.purchasePrice.sameValueAs(values.purchasePrice) ||
+                !details.salesPrice.sameValueAs(values.salesPrice)
+    }
+
     override suspend fun persist(values: ProductFormValues) {
         val existing = loadedProduct ?: repo.getProductById(productId)
-        val existingDetails = existing.details
-
-        val descriptionChanged = existingDetails.description != values.description
-        val purchasePriceChanged = !existingDetails.purchasePrice.sameValueAs(values.purchasePrice)
-        val salesPriceChanged = !existingDetails.salesPrice.sameValueAs(values.salesPrice)
-        val imageChanged =
-            existing.imageList.firstOrNull()?.fileName != values.imageFileName
-
-        val hasChanges = descriptionChanged ||
-                purchasePriceChanged ||
-                salesPriceChanged ||
-                imageChanged
+        val changed = hasChanges(existing, values)
 
         val updated = Product(
-            details = existingDetails.copy(
+            details = existing.details.copy(
                 description = values.description,
                 purchasePrice = values.purchasePrice,
                 salesPrice = values.salesPrice,
                 // Once a product differs from its batch it is no longer
-                // interchangeable, so it leaves the group. Saving without
-                // changing anything keeps it grouped.
-                batchId = if (hasChanges) null else existingDetails.batchId
+                // interchangeable, so it leaves the group.
+                batchId = if (changed) null else existing.details.batchId
             ),
             imageList = values.imageFileName?.let { fileName ->
-                // Reuse the existing row's id when the file hasn't changed,
-                // so upsert updates rather than inserting a duplicate.
                 val previous = existing.imageList.firstOrNull()
                 listOf(
                     Image(
