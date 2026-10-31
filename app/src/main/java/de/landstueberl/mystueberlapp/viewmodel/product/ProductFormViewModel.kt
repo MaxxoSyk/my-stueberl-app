@@ -68,6 +68,14 @@ abstract class ProductFormViewModel(
     private val canSave: Boolean
         get() = _description.value.isNotBlank()
 
+    /** The current form contents, trimmed and parsed. */
+    protected fun currentFormValues(): ProductFormValues = ProductFormValues(
+        description = _description.value.trim(),
+        purchasePrice = _purchasePrice.value.toMoneyOrNull(),
+        salesPrice = _salesPrice.value.toMoneyOrNull(),
+        imageFileName = _imageFileName.value
+    )
+
     // ── Field Updates ──────────────────────────
     fun onDescriptionChange(value: String) {
         _description.value = value
@@ -129,14 +137,7 @@ abstract class ProductFormViewModel(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                persist(
-                    ProductFormValues(
-                        description = _description.value.trim(),
-                        purchasePrice = _purchasePrice.value.toMoneyOrNull(),
-                        salesPrice = _salesPrice.value.toMoneyOrNull(),
-                        imageFileName = _imageFileName.value
-                    )
-                )
+                persist(currentFormValues())
                 _isSaved.value = true
             } catch (e: CancellationException) {
                 throw e

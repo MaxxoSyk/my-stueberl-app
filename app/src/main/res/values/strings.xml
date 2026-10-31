@@ -122,6 +122,10 @@
     <string name="edit_product_screen_retry">Try again</string>
     <string name="edit_product_screen_section_details">Details</string>
 
+    <string name="edit_product_leave_batch_title">Remove from group?</string>
+    <string name="edit_product_leave_batch_message">This product was created as part of a group of identical products. Because you changed it, it will be listed on its own from now on.</string>
+    <string name="edit_product_leave_batch_confirm">Save anyway</string>
+
     <!-- Product Status Badge -->
     <string name="product_status_badge_available">Available</string>
     <string name="product_status_badge_sold">Sold</string>
