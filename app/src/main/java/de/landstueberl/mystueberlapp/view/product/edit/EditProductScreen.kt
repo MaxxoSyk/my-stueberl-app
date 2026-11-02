@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -27,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -50,9 +48,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
-import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.view.product.CostCalculatorDialog
 import de.landstueberl.mystueberlapp.view.product.ImageSourceBottomSheet
 import de.landstueberl.mystueberlapp.view.product.ProductDescriptionField
@@ -326,28 +324,15 @@ fun EditProductScreen(
     }
 
     if (showLeaveBatchConfirmation) {
-        AlertDialog(
-            onDismissRequest = { showLeaveBatchConfirmation = false },
-            title = { Text(stringResource(R.string.edit_product_leave_batch_title)) },
-            text = { Text(stringResource(R.string.edit_product_leave_batch_message)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLeaveBatchConfirmation = false
-                        viewModel.saveProduct()
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.edit_product_leave_batch_confirm),
-                        color = SageGreenDark
-                    )
-                }
+        StueberlConfirmationDialog(
+            title = stringResource(R.string.edit_product_leave_batch_title),
+            message = stringResource(R.string.edit_product_leave_batch_message),
+            confirmLabel = stringResource(R.string.edit_product_leave_batch_confirm),
+            onConfirm = {
+                showLeaveBatchConfirmation = false
+                viewModel.saveProduct()
             },
-            dismissButton = {
-                TextButton(onClick = { showLeaveBatchConfirmation = false }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            }
+            onDismiss = { showLeaveBatchConfirmation = false }
         )
     }
 

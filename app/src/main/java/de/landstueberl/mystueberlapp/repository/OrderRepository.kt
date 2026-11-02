@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import de.landstueberl.mystueberlapp.data.Order
 import de.landstueberl.mystueberlapp.data.OrderDao
 import de.landstueberl.mystueberlapp.data.OrderStatus
+import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
@@ -124,4 +125,16 @@ class OrderRepository(
 
     suspend fun detachProductsByIds(ids: List<Int>) =
         productDao.detachProductsByIds(ids)
+
+    /** Sales-area products available to be attached to an order. */
+    fun getAttachableProductsFlow(): Flow<List<Product>> =
+        productDao.getAttachableProductsFlow()
+
+    /**
+     * Attaches products to [orderId]. The DAO re-checks that each is still
+     * available and unattached, so a stale selection is skipped rather than
+     * applied incorrectly.
+     */
+    suspend fun attachProductsToOrder(productIds: List<Int>, orderId: Int) =
+        productDao.attachProductsToOrder(productIds, orderId)
 }

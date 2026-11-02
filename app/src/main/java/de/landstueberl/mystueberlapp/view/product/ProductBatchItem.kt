@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -56,7 +57,8 @@ fun ProductBatchItem(
     onProductTap: (Product) -> Unit,
     onProductLongPress: (Product) -> Unit,
     onImageTap: (Product) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onHeaderLongPress: (() -> Unit)? = null
 ) {
     val representative = batch.representative
     val details = representative.details
@@ -71,7 +73,16 @@ fun ProductBatchItem(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onToggleExpanded() },
+                .then(
+                    if (onHeaderLongPress != null) {
+                        Modifier.combinedClickable(
+                            onClick = onToggleExpanded,
+                            onLongClick = onHeaderLongPress
+                        )
+                    } else {
+                        Modifier.clickable { onToggleExpanded() }
+                    }
+                ),
             shape = RoundedCornerShape(14.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             colors = CardDefaults.cardColors(

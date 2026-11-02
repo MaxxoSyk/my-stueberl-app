@@ -19,11 +19,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -78,6 +78,7 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import de.landstueberl.mystueberlapp.util.toLocalDateFromPicker
 import de.landstueberl.mystueberlapp.util.toPickerMillis
+import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.view.product.ProductFormDivider
 import de.landstueberl.mystueberlapp.view.product.ProductReadOnlyDateField
 import de.landstueberl.mystueberlapp.viewmodel.order.OrderDetailViewModel
@@ -112,6 +113,8 @@ fun OrderDetailScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val loadFailed by viewModel.loadFailed.collectAsStateWithLifecycle()
     val isError by viewModel.isError.collectAsStateWithLifecycle()
+    val attachableItems by viewModel.attachableItems.collectAsStateWithLifecycle()
+    val selectedForAttach by viewModel.selectedForAttach.collectAsStateWithLifecycle()
 
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
     var showResolveConfirmation by rememberSaveable { mutableStateOf(false) }
@@ -119,6 +122,7 @@ fun OrderDetailScreen(
     var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
     var productToRemove by rememberSaveable { mutableStateOf<Int?>(null) }
     var showOverflowMenu by remember { mutableStateOf(false) }
+    var showAttachProductDialog by rememberSaveable { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val errorMessage = stringResource(R.string.order_detail_action_failed)
@@ -479,26 +483,60 @@ fun OrderDetailScreen(
 
                 // ── Add Product ────────────────
                 if (isEditable) {
-                    OutlinedButton(
-                        onClick = {
-                            viewModel.prepareForAddProduct { orderId ->
-                                onNavigateToAddProduct(orderId)
-                            }
-                        },
-                        enabled = isSaveEnabled && !isSaving,
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = SageGreenDark
-                        )
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.order_detail_add_product))
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.prepareForAddProduct { orderId ->
+                                    onNavigateToAddProduct(orderId)
+                                }
+                            },
+                            enabled = isSaveEnabled && !isSaving,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = SageGreenDark
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.order_detail_add_new_product),
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.clearAttachSelection()
+                                showAttachProductDialog = true
+                            },
+                            enabled = isSaveEnabled && !isSaving,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = SageGreenDark
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.order_detail_add_existing_product),
+                                style = MaterialTheme.typography.labelMedium,
+                                maxLines = 1
+                            )
+                        }
                     }
 
                     if (!isSaveEnabled) {
@@ -610,7 +648,7 @@ fun OrderDetailScreen(
 
     // ── Confirmations ──────────────────────────
     if (showResolveConfirmation) {
-        OrderConfirmationDialog(
+        StueberlConfirmationDialog(
             title = stringResource(R.string.order_detail_resolve_confirm_title),
             message = pluralStringResource(
                 R.plurals.order_detail_resolve_confirm_message,
@@ -627,7 +665,7 @@ fun OrderDetailScreen(
     }
 
     if (showCancelConfirmation) {
-        OrderConfirmationDialog(
+        StueberlConfirmationDialog(
             title = stringResource(R.string.order_detail_cancel_confirm_title),
             message = stringResource(R.string.order_detail_cancel_confirm_message),
             confirmLabel = stringResource(R.string.order_detail_cancel_order),
@@ -641,7 +679,7 @@ fun OrderDetailScreen(
     }
 
     if (showDeleteConfirmation) {
-        OrderConfirmationDialog(
+        StueberlConfirmationDialog(
             title = stringResource(R.string.order_detail_delete_confirm_title),
             message = stringResource(R.string.order_detail_delete_confirm_message),
             confirmLabel = stringResource(R.string.order_detail_delete),
@@ -655,7 +693,7 @@ fun OrderDetailScreen(
     }
 
     productToRemove?.let { productId ->
-        OrderConfirmationDialog(
+        StueberlConfirmationDialog(
             title = stringResource(R.string.order_detail_remove_product_confirm_title),
             message = stringResource(R.string.order_detail_remove_product_confirm_message),
             confirmLabel = stringResource(R.string.order_detail_remove_product),
@@ -666,38 +704,25 @@ fun OrderDetailScreen(
             onDismiss = { productToRemove = null }
         )
     }
-}
 
-// ── Confirmation Dialog ────────────────────────────────────────────────
-@Composable
-private fun OrderConfirmationDialog(
-    title: String,
-    message: String,
-    confirmLabel: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    isDestructive: Boolean = false
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text(message) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = confirmLabel,
-                    color = if (isDestructive) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        SageGreenDark
-                    }
-                )
+    if (showAttachProductDialog) {
+        AttachProductDialog(
+            items = attachableItems,
+            selectedIds = selectedForAttach,
+            imageFileOf = { product ->
+                product.imageList.firstOrNull()?.fileName?.let(viewModel::imageFile)
+            },
+            onToggleProduct = viewModel::toggleAttachSelection,
+            onToggleBatch = viewModel::toggleBatchAttachSelection,
+            onConfirm = {
+                viewModel.attachSelectedProducts {
+                    showAttachProductDialog = false
+                }
+            },
+            onDismiss = {
+                viewModel.clearAttachSelection()
+                showAttachProductDialog = false
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.common_cancel))
-            }
-        }
-    )
+        )
+    }
 }

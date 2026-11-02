@@ -187,6 +187,35 @@ interface ProductDao {
     @Query("UPDATE ProductDetail SET orderId = NULL WHERE id IN (:ids)")
     suspend fun detachProductsByIds(ids: List<Int>)
 
+    /**
+     * Sales-area products available to be attached to an order.
+     *
+     * Guarded to AVAILABLE and unattached: a sold or removed product cannot be
+     * promised to a customer, and one already in an order must not be stolen
+     * from it.
+     */
+    @Transaction
+    @Query("""
+        SELECT * FROM ProductDetail
+        WHERE status = 'AVAILABLE' AND orderId IS NULL
+        ORDER BY createdAt DESC, id ASC
+    """)
+    fun getAttachableProductsFlow(): Flow<List<Product>>
+
+    /**
+     * Attaches products to [orderId]. Re-checks the guard in SQL so a product
+     * that changed state while the picker was open is silently skipped rather
+     * than attached incorrectly.
+     */
+    @Query("""
+        UPDATE ProductDetail
+        SET orderId = :orderId
+        WHERE id IN (:productIds)
+          AND status = 'AVAILABLE'
+          AND orderId IS NULL
+    """)
+    suspend fun attachProductsToOrder(productIds: List<Int>, orderId: Int)
+
     @Query("SELECT fileName FROM Image")
     suspend fun getAllImageFileNames(): List<String>
 

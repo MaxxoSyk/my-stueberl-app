@@ -11,7 +11,9 @@ import androidx.navigation.toRoute
 import de.landstueberl.mystueberlapp.data.Order
 import de.landstueberl.mystueberlapp.data.OrderStatus
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
+import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.OrderRepository
@@ -138,6 +140,68 @@ class OrderDetailViewModel(
     ) { orderStatus, productList ->
         orderStatus == OrderStatus.OPEN && productList.isNotEmpty()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
+
+    // ── Attachable Products ────────────────────
+    /**
+     * Sales-area products that could be added to this order, grouped into
+     * batches the same way the products list is.
+     */
+    val attachableItems: StateFlow<List<ProductListItem>> = repo
+        .getAttachableProductsFlow()
+        .map { it.groupByBatch() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+
+    /** Product ids ticked in the picker. */
+    private val _selectedForAttach = MutableStateFlow<Set<Int>>(emptySet())
+    val selectedForAttach: StateFlow<Set<Int>> = _selectedForAttach.asStateFlow()
+
+    fun toggleAttachSelection(productId: Int) {
+        val current = _selectedForAttach.value.toMutableSet()
+        if (!current.remove(productId)) current.add(productId)
+        _selectedForAttach.value = current
+    }
+
+    /** Ticks or unticks every member of a batch at once. */
+    fun toggleBatchAttachSelection(productIds: List<Int>) {
+        val current = _selectedForAttach.value
+        val allSelected = productIds.all { it in current }
+
+        _selectedForAttach.value = if (allSelected) {
+            current - productIds.toSet()
+        } else {
+            current + productIds.toSet()
+        }
+    }
+
+    fun clearAttachSelection() {
+        _selectedForAttach.value = emptySet()
+    }
+
+    /**
+     * Attaches the selected products, persisting the order first if it only
+     * exists as a draft — same reasoning as [prepareForAddProduct].
+     */
+    fun attachSelectedProducts(onAttached: () -> Unit) {
+        val ids = _selectedForAttach.value.toList()
+        if (ids.isEmpty() || !canSave || _isSaving.value) return
+
+        viewModelScope.launch {
+            _isSaving.value = true
+            try {
+                val orderId = persist()
+                repo.attachProductsToOrder(ids, orderId)
+                clearAttachSelection()
+                onAttached()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to attach products to order", e)
+                _isError.value = true
+            } finally {
+                _isSaving.value = false
+            }
+        }
+    }
 
     init {
         if (!isNewOrder) loadOrder()

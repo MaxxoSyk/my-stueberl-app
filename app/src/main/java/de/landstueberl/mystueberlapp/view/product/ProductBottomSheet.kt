@@ -66,7 +66,6 @@ private val HINT_DATE_FORMAT: DateTimeFormatter =
  * A product's status can only have changed between the day it was added
  * and today.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 private class ProductDateRange(private val createdAt: LocalDate) : SelectableDates {
 
     override fun isSelectableDate(utcTimeMillis: Long): Boolean {
@@ -247,7 +246,6 @@ private fun BottomSheetItem(
  * Selectable range is [createdAt]…today: a product's status cannot have changed
  * before it existed, nor in the future.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProductStatusDateDialog(
     createdAt: LocalDate,
