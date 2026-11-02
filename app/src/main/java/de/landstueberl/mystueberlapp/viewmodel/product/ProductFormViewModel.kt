@@ -5,6 +5,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import de.landstueberl.mystueberlapp.data.Money
+import de.landstueberl.mystueberlapp.data.PriceInput
+import de.landstueberl.mystueberlapp.data.calculatedTotal
+import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +26,8 @@ data class ProductFormValues(
     val description: String,
     val purchasePrice: Money?,
     val salesPrice: Money?,
-    val imageFileName: String?
+    val imageFileName: String?,
+    val materials: List<ProductMaterialDetail>
 )
 
 abstract class ProductFormViewModel(
@@ -48,6 +52,27 @@ abstract class ProductFormViewModel(
     protected val _salesPrice = MutableStateFlow("")
     val salesPrice: StateFlow<String> = _salesPrice.asStateFlow()
 
+    // ── Cost Calculation ───────────────────────
+    /** The committed material list; empty means the price was entered by hand. */
+    protected val _materials = MutableStateFlow<List<ProductMaterialDetail>>(emptyList())
+
+    /**
+     * Working copy while the calculator is open. Changes are applied to
+     * [_materials] only on confirm, so dismissing discards them.
+     */
+    private val _materialDraft = MutableStateFlow<List<ProductMaterialDetail>>(emptyList())
+    val materialDraft: StateFlow<List<ProductMaterialDetail>> = _materialDraft.asStateFlow()
+
+    /** True when the purchase price comes from a calculation and is read-only. */
+    val isPurchasePriceCalculated: StateFlow<Boolean> = _materials
+        .map { it.isNotEmpty() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
+
+    // ── Material Name Suggestions ──────────────
+    private val _materialNameSuggestions = MutableStateFlow<List<String>>(emptyList())
+    val materialNameSuggestions: StateFlow<List<String>> =
+        _materialNameSuggestions.asStateFlow()
+
     // ── UI State ───────────────────────────────
     protected val _isSaved = MutableStateFlow(false)
     val isSaved: StateFlow<Boolean> = _isSaved.asStateFlow()
@@ -62,7 +87,7 @@ abstract class ProductFormViewModel(
     /** Observable, for enabling the Save button. */
     val isSaveEnabled: StateFlow<Boolean> = _description
         .map { it.isNotBlank() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
 
     /** Non-observable, for guarding [saveProduct]. Always current. */
     private val canSave: Boolean
@@ -73,7 +98,8 @@ abstract class ProductFormViewModel(
         description = _description.value.trim(),
         purchasePrice = _purchasePrice.value.toMoneyOrNull(),
         salesPrice = _salesPrice.value.toMoneyOrNull(),
-        imageFileName = _imageFileName.value
+        imageFileName = _imageFileName.value,
+        materials = _materials.value
     )
 
     // ── Field Updates ──────────────────────────
@@ -82,13 +108,13 @@ abstract class ProductFormViewModel(
     }
 
     fun onPurchasePriceChange(value: String) {
-        if (value.isEmpty() || value.matches(PRICE_PATTERN)) {
+        if (PriceInput.isValid(value)) {
             _purchasePrice.value = value
         }
     }
 
     fun onSalesPriceChange(value: String) {
-        if (value.isEmpty() || value.matches(PRICE_PATTERN)) {
+        if (PriceInput.isValid(value)) {
             _salesPrice.value = value
         }
     }
@@ -168,10 +194,78 @@ abstract class ProductFormViewModel(
      * up to 0.01.
      */
     private fun String.toMoneyOrNull(): Money? =
-        takeIf { it.isNotBlank() }
-            ?.toBigDecimalOrNull()
-            ?.setScale(PRICE_SCALE, RoundingMode.HALF_UP)
-            ?.let { Money(amount = it, currency = CURRENCY) }
+        PriceInput.parseAmount(this)?.let { Money(amount = it, currency = CURRENCY) }
+
+    /**
+     * Loads **all** previously used material names in one go, rather than
+     * querying per keystroke.
+     *
+     * A single shop accumulates tens of distinct materials, not thousands, so
+     * filtering in memory is cheaper than a debounced query per character and
+     * avoids a coroutine on every edit. Revisit if the list ever grows large
+     * enough to notice.
+     */
+    private fun loadMaterialNameSuggestions() {
+        viewModelScope.launch {
+            try {
+                _materialNameSuggestions.value = repo.getAllMaterialNames()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Autocomplete is a convenience; failing silently is acceptable.
+                Log.e(TAG, "Failed to load material names", e)
+            }
+        }
+    }
+
+    fun startMaterialDraft() {
+        _materialDraft.value = _materials.value
+        loadMaterialNameSuggestions()
+    }
+
+    /**
+     * Commits the draft and writes the resulting total into the purchase price
+     * field. An empty draft clears the calculation and empties the price,
+     * leaving it editable again.
+     */
+    fun confirmMaterialDraft() {
+        val draft = _materialDraft.value
+        _materials.value = draft
+        _purchasePrice.value = draft.calculatedTotal()
+            ?.amount
+            ?.toPlainString()
+            ?: ""
+    }
+
+    /** Discards the draft without touching the committed list. */
+    fun cancelMaterialDraft() {
+        _materialDraft.value = emptyList()
+    }
+
+    // ── Draft Editing ──────────────────────────
+    // Rows are addressed by index: several new rows share id = 0 until saved,
+    // so the id is not a usable key here.
+
+    fun addDraftPosition(position: ProductMaterialDetail) {
+        _materialDraft.value = _materialDraft.value + position
+    }
+
+    fun updateDraftPosition(index: Int, position: ProductMaterialDetail) {
+        val current = _materialDraft.value
+        if (index !in current.indices) return
+        _materialDraft.value = current.toMutableList().apply { set(index, position) }
+    }
+
+    fun removeDraftPosition(index: Int) {
+        val current = _materialDraft.value
+        if (index !in current.indices) return
+        _materialDraft.value = current.toMutableList().apply { removeAt(index) }
+    }
+
+    /** Empties the draft; confirming then clears the calculation entirely. */
+    fun clearDraft() {
+        _materialDraft.value = emptyList()
+    }
 
     // ── Reset ──────────────────────────────────
     fun resetSavedState() {
@@ -184,10 +278,9 @@ abstract class ProductFormViewModel(
 
     companion object {
         private const val TAG = "ProductFormViewModel"
-        private val PRICE_PATTERN = Regex("^\\d*([.]\\d{0,2})?$")
 
-        /** Monetary amounts are stored with two decimal places. */
-        private const val PRICE_SCALE = 2
+        /** How long a shared flow stays active after its last collector. */
+        private const val STOP_TIMEOUT_MILLIS = 5_000L
 
         /** The shop trades exclusively in euros. */
         val CURRENCY: Currency = Currency.getInstance("EUR")

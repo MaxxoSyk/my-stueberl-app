@@ -5,14 +5,18 @@ import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.ProductFilter
 import de.landstueberl.mystueberlapp.data.ProductSourceFilter
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
+import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 class ProductRepository(private val dao: ProductDao) {
 
-    suspend fun upsertProduct(product: Product): Product {
-        return dao.upsertProductWithImages(product.details, product.imageList)
-    }
+    suspend fun upsertProduct(product: Product): Product =
+        dao.upsertProductFull(
+            detail = product.details,
+            images = product.imageList,
+            materials = product.materialList
+        )
 
     suspend fun deleteProductsByIds(ids: List<Int>) {
         dao.deleteProductsByIds(ids)
@@ -86,10 +90,14 @@ class ProductRepository(private val dao: ProductDao) {
     suspend fun insertProductBatch(
         detail: ProductDetail,
         quantity: Int,
-        imageFileName: String?
+        imageFileName: String?,
+        materials: List<ProductMaterialDetail>
     ): Int = dao.insertProductBatch(
         detail = detail,
         quantity = quantity,
-        imageFileName = imageFileName
+        imageFileName = imageFileName,
+        materials = materials
     )
+
+    suspend fun getAllMaterialNames(): List<String> = dao.getAllMaterialNames()
 }

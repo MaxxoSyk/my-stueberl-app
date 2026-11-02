@@ -6,6 +6,7 @@ import androidx.room.Transaction
 import androidx.room.Upsert
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
+import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -37,33 +38,46 @@ interface ProductDao {
     suspend fun deleteProductsByIds(ids: List<Int>)
 
     @Transaction
-    suspend fun upsertProductWithImages(detail: ProductDetail, images: List<Image>): Product {
+    suspend fun upsertProductFull(
+        detail: ProductDetail,
+        images: List<Image>,
+        materials: List<ProductMaterialDetail>
+    ): Product {
         // 1. Upsert ProductDetail
         val generatedId = upsertProductDetail(detail).toInt()
         val finalProductId = if (detail.id == 0) generatedId else detail.id
 
-        // 2. Fetch existing images from DB
-        val existingImages = getImagesByProductId(finalProductId)
+        // 2. Sync images
+        val incomingImages = images.map { it.copy(productId = finalProductId) }
+        val incomingImageIds = incomingImages.map { it.id }.toSet()
 
-        // 3. Ensure FK is correct on incoming images
-        val updatedImages = images.map { img ->
-            img.copy(productId = finalProductId)
-        }
-
-        // 4. Delete images that are no longer present
-        val incomingIds = updatedImages.map { it.id }.toSet()
-        val toDelete = existingImages
-            .filter { it.id !in incomingIds }
+        val imagesToDelete = getImagesByProductId(finalProductId)
             .map { it.id }
+            .filter { it !in incomingImageIds }
 
-        if (toDelete.isNotEmpty()) {
-            deleteImagesByIds(toDelete)
+        if (imagesToDelete.isNotEmpty()) {
+            deleteImagesByIds(imagesToDelete)
+        }
+        upsertImages(incomingImages)
+
+        // 3. Sync materials — same diff-and-delete approach
+        val incomingMaterials = materials.mapIndexed { index, material ->
+            material.copy(productId = finalProductId, position = index)
+        }
+        val incomingMaterialIds = incomingMaterials.map { it.id }.toSet()
+
+        val materialsToDelete = getMaterialsByProductId(finalProductId)
+            .map { it.id }
+            .filter { it !in incomingMaterialIds }
+
+        if (materialsToDelete.isNotEmpty()) {
+            deleteMaterialsByIds(materialsToDelete)
+        }
+        if (incomingMaterials.isNotEmpty()) {
+            upsertMaterials(incomingMaterials)
         }
 
-        // 5. Upsert new & updated images
-        upsertImages(updatedImages)
-
-        // 6. Return fresh product from DB
+        // 4. Return fresh product from DB
         return getProductById(finalProductId)
     }
 
@@ -194,7 +208,8 @@ interface ProductDao {
     suspend fun insertProductBatch(
         detail: ProductDetail,
         quantity: Int,
-        imageFileName: String?
+        imageFileName: String?,
+        materials: List<ProductMaterialDetail>
     ): Int {
         require(quantity >= 1) { "quantity must be at least 1, was $quantity" }
 
@@ -207,15 +222,45 @@ interface ProductDao {
 
             if (imageFileName != null) {
                 upsertImage(
-                    Image(
-                        id = 0,
-                        productId = productId,
-                        fileName = imageFileName
-                    )
+                    Image(id = 0, productId = productId, fileName = imageFileName)
+                )
+            }
+
+            // Each member gets its own copies, so editing one member's
+            // calculation leaves the others untouched.
+            if (materials.isNotEmpty()) {
+                upsertMaterials(
+                    materials.mapIndexed { index, material ->
+                        material.copy(id = 0, productId = productId, position = index)
+                    }
                 )
             }
         }
 
         return batchId
     }
+
+    // ── Materials ──────────────────────────────
+    @Upsert
+    suspend fun upsertMaterials(materials: List<ProductMaterialDetail>)
+
+    @Query("SELECT * FROM ProductMaterialDetail WHERE productId = :productId ORDER BY position ASC")
+    suspend fun getMaterialsByProductId(productId: Int): List<ProductMaterialDetail>
+
+    @Query("DELETE FROM ProductMaterialDetail WHERE id IN (:ids)")
+    suspend fun deleteMaterialsByIds(ids: List<Int>)
+
+    @Query("DELETE FROM ProductMaterialDetail WHERE productId = :productId")
+    suspend fun deleteMaterialsByProductId(productId: Int)
+
+    /**
+     * Every material name used so far, most frequently used first — so common
+     * materials surface at the top of the calculator's suggestions.
+     */
+    @Query("""
+        SELECT name FROM ProductMaterialDetail
+        GROUP BY name COLLATE NOCASE
+        ORDER BY COUNT(*) DESC, name COLLATE NOCASE ASC
+    """)
+    suspend fun getAllMaterialNames(): List<String>
 }

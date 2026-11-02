@@ -21,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
@@ -42,7 +43,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -61,6 +61,7 @@ import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+
 
 // ── Shared Product Image ───────────────────────────────────────────────
 @Composable
@@ -182,41 +183,67 @@ fun ProductPriceField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     imeAction: ImeAction = ImeAction.Next,
-    onImeAction: () -> Unit = {}
+    onImeAction: () -> Unit = {},
+    readOnly: Boolean = false,
+    onCalculateClick: (() -> Unit)? = null
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
+    Row(
         modifier = modifier.fillMaxWidth(),
-        suffix = {
-            Text(
-                text = CURRENCY_SYMBOL,
-                fontWeight = FontWeight.SemiBold,
-                color = TextSecondary
-            )
-        },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal,
-            imeAction = imeAction
-        ),
-        keyboardActions = KeyboardActions(
-            onNext = { onImeAction() },
-            onDone = { onImeAction() }
-        ),
-        shape = RoundedCornerShape(10.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = FloralWhite,
-            unfocusedContainerColor = FloralWhite,
-            disabledContainerColor = FloralWhite,
-            focusedBorderColor = SageGreen,
-            unfocusedBorderColor = TextSecondary,
-            focusedLabelColor = SageGreen,
-            unfocusedLabelColor = TextSecondary,
-            cursorColor = SageGreen
-        ),
-        singleLine = true
-    )
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            modifier = Modifier.weight(1f),
+            readOnly = readOnly,
+            suffix = {
+                Text(
+                    text = CURRENCY_SYMBOL,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = TextSecondary
+                )
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = imeAction
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { onImeAction() },
+                onDone = { onImeAction() }
+            ),
+            shape = RoundedCornerShape(10.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = FloralWhite,
+                unfocusedContainerColor = FloralWhite,
+                disabledContainerColor = FloralWhite,
+                focusedBorderColor = SageGreen,
+                unfocusedBorderColor = TextSecondary,
+                focusedLabelColor = SageGreen,
+                unfocusedLabelColor = TextSecondary,
+                cursorColor = SageGreen
+            ),
+            singleLine = true
+        )
+
+        if (onCalculateClick != null) {
+            IconButton(
+                onClick = onCalculateClick,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(SageGreenLight.copy(alpha = 0.5f))
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Calculate,
+                    contentDescription = stringResource(R.string.product_form_calculate_cost),
+                    tint = SageGreenDark,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+    }
 }
 
 // ── Read Only Date Field ───────────────────────────────────────────────

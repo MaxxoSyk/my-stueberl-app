@@ -69,6 +69,7 @@ class EditProductViewModel(
                 _description.value = productDetails.description
                 _purchasePrice.value = productDetails.purchasePrice?.amount?.toPlainString() ?: ""
                 _salesPrice.value = productDetails.salesPrice?.amount?.toPlainString() ?: ""
+                _materials.value = product.materialList
 
                 // Existing image, if any
                 _imageFileName.value = product.imageList.firstOrNull()?.fileName
@@ -114,7 +115,8 @@ class EditProductViewModel(
         val details = existing.details
         return details.description != values.description ||
                 !details.purchasePrice.sameValueAs(values.purchasePrice) ||
-                !details.salesPrice.sameValueAs(values.salesPrice)
+                !details.salesPrice.sameValueAs(values.salesPrice) ||
+                existing.materialList != values.materials
     }
 
     override suspend fun persist(values: ProductFormValues) {
@@ -139,7 +141,8 @@ class EditProductViewModel(
                         fileName = fileName
                     )
                 )
-            } ?: emptyList()
+            } ?: emptyList(),
+            materialList = values.materials
         )
 
         repo.upsertProduct(updated)

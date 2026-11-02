@@ -10,13 +10,16 @@ import de.landstueberl.mystueberlapp.data.converter.MoneyConverters
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
+import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 
 @Database(
     entities = [
         ProductDetail::class,
         Image::class,
-        OrderDetail::class],
-    version = 7,
+        OrderDetail::class,
+        ProductMaterialDetail::class
+    ],
+    version = 9,
     exportSchema = true
 )
 @TypeConverters(
