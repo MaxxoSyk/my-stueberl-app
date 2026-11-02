@@ -167,7 +167,8 @@
     <string name="order_detail_section_products">Werkstücke</string>
     <string name="order_detail_section_details">Details</string>
     <string name="order_detail_no_products">Noch keine Werkstücke.</string>
-    <string name="order_detail_add_product">Werkstück hinzufügen</string>
+    <string name="order_detail_add_new_product">Neu</string>
+    <string name="order_detail_add_existing_product">Vorhanden</string>
     <string name="order_detail_add_product_hint">Bitte zuerst Kunde und Fälligkeitsdatum eingeben.</string>
     <string name="order_detail_total">Gesamt</string>
     <string name="order_detail_purchase_price_value">EK: %1$s %2$s</string>
@@ -195,13 +196,22 @@
     </plurals>
 
     <string name="order_detail_cancel_confirm_title">Bestellung stornieren?</string>
-    <string name="order_detail_cancel_confirm_message">Bereits gefertigte Werkstücke werden zu Verkaufsraum-Bestand und behalten ihre Preise.</string>
+    <string name="order_detail_cancel_confirm_message">Bereits gefertigte Werkstücke werden zu Stüberl-Bestand und behalten ihre Preise.</string>
 
     <string name="order_detail_delete_confirm_title">Bestellung löschen?</string>
-    <string name="order_detail_delete_confirm_message">Die Bestellung wird gelöscht. Ihre Werkstücke werden zu Verkaufsraum-Bestand.</string>
+    <string name="order_detail_delete_confirm_message">Die Bestellung wird gelöscht. Ihre Werkstücke werden zu Stüberl-Bestand.</string>
 
     <string name="order_detail_remove_product_confirm_title">Aus Bestellung entfernen?</string>
-    <string name="order_detail_remove_product_confirm_message">Das Werkstück wird zu Verkaufsraum-Bestand. Es wird nicht gelöscht.</string>
+    <string name="order_detail_remove_product_confirm_message">Das Werkstück wird zu Stüberl-Bestand. Es wird nicht gelöscht.</string>
+
+    <string name="attach_product_title">Werkstücke hinzufügen</string>
+    <string name="attach_product_empty">Keine verfügbaren Werkstücke. Alles im Stüberl ist verkauft, entfernt oder bereits Teil einer Bestellung.</string>
+    <string name="attach_product_confirm_none">Werkstücke auswählen</string>
+
+    <plurals name="attach_product_confirm">
+        <item quantity="one">1 Produkt hinzufügen</item>
+        <item quantity="other">%1$d Produkte hinzufügen</item>
+    </plurals>
 
     <string name="material_adjustment_label">Preisanpassung</string>
 

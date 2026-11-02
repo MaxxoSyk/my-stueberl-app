@@ -167,7 +167,8 @@
     <string name="order_detail_section_products">Products</string>
     <string name="order_detail_section_details">Details</string>
     <string name="order_detail_no_products">No products yet.</string>
-    <string name="order_detail_add_product">Add product</string>
+    <string name="order_detail_add_new_product">New</string>
+    <string name="order_detail_add_existing_product">Existing</string>
     <string name="order_detail_add_product_hint">Enter a customer and due date first.</string>
     <string name="order_detail_total">Total</string>
     <string name="order_detail_purchase_price_value">Cost: %1$s %2$s</string>
@@ -202,6 +203,15 @@
 
     <string name="order_detail_remove_product_confirm_title">Remove from order?</string>
     <string name="order_detail_remove_product_confirm_message">The product will become sales area stock. It is not deleted.</string>
+
+    <string name="attach_product_title">Add products</string>
+    <string name="attach_product_empty">No available products. Everything in the sales area is either sold, removed, or already part of an order.</string>
+    <string name="attach_product_confirm_none">Select products</string>
+
+    <plurals name="attach_product_confirm">
+        <item quantity="one">Add 1 product</item>
+        <item quantity="other">Add %1$d products</item>
+    </plurals>
 
     <string name="material_adjustment_label">Price adjustment</string>
 

@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.outlined.FilterAlt
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
@@ -27,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -52,6 +50,7 @@ import de.landstueberl.mystueberlapp.data.ProductSortOrder
 import de.landstueberl.mystueberlapp.data.labelRes
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
+import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -351,38 +350,20 @@ fun ProductsScreen(
     // ── Delete Confirmation ────────────────────
     if (showDeleteConfirmation) {
         val count = selectedProducts.size
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmation = false },
-            title = {
-                Text(stringResource(R.string.products_screen_delete_confirm_title))
+        StueberlConfirmationDialog(
+            title = stringResource(R.string.products_screen_delete_confirm_title),
+            message = pluralStringResource(
+                R.plurals.products_screen_delete_confirm_message,
+                count,
+                count
+            ),
+            confirmLabel = stringResource(R.string.products_screen_delete),
+            isDestructive = true,
+            onConfirm = {
+                showDeleteConfirmation = false
+                viewModel.deleteSelectedProducts()
             },
-            text = {
-                Text(
-                    pluralStringResource(
-                        R.plurals.products_screen_delete_confirm_message,
-                        count,
-                        count
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteConfirmation = false
-                        viewModel.deleteSelectedProducts()
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.products_screen_delete),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirmation = false }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            }
+            onDismiss = { showDeleteConfirmation = false }
         )
     }
 
