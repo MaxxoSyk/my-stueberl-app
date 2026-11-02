@@ -53,6 +53,7 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.view.product.CostCalculatorDialog
 import de.landstueberl.mystueberlapp.view.product.ImageSourceBottomSheet
 import de.landstueberl.mystueberlapp.view.product.ProductDescriptionField
 import de.landstueberl.mystueberlapp.view.product.ProductFormDivider
@@ -84,6 +85,9 @@ fun EditProductScreen(
     val loadFailed by viewModel.loadFailed.collectAsStateWithLifecycle()
     val imageFileName by viewModel.imageFileName.collectAsStateWithLifecycle()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+    val isPurchasePriceCalculated by viewModel.isPurchasePriceCalculated.collectAsStateWithLifecycle()
+    val materialDraft by viewModel.materialDraft.collectAsStateWithLifecycle()
+    val materialNameSuggestions by viewModel.materialNameSuggestions.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val saveErrorMessage = stringResource(R.string.product_form_save_failed)
@@ -94,6 +98,7 @@ fun EditProductScreen(
     var showImageSourceSheet by rememberSaveable { mutableStateOf(false) }
     var cameraTargetUri by remember { mutableStateOf<Uri?>(null) }
     var showLeaveBatchConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showCostCalculator by rememberSaveable { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -216,8 +221,13 @@ fun EditProductScreen(
                     label = stringResource(R.string.product_form_purchase_price),
                     value = purchasePrice,
                     onValueChange = viewModel::onPurchasePriceChange,
+                    readOnly = isPurchasePriceCalculated,
                     imeAction = ImeAction.Next,
-                    onImeAction = { focusManager.moveFocus(FocusDirection.Down) }
+                    onImeAction = { focusManager.moveFocus(FocusDirection.Down) },
+                    onCalculateClick = {
+                        viewModel.startMaterialDraft()
+                        showCostCalculator = true
+                    }
                 )
 
                 ProductPriceField(
@@ -337,6 +347,25 @@ fun EditProductScreen(
                 TextButton(onClick = { showLeaveBatchConfirmation = false }) {
                     Text(stringResource(R.string.common_cancel))
                 }
+            }
+        )
+    }
+
+    if (showCostCalculator) {
+        CostCalculatorDialog(
+            positions = materialDraft,
+            nameSuggestions = materialNameSuggestions,
+            onAdd = viewModel::addDraftPosition,
+            onUpdate = viewModel::updateDraftPosition,
+            onRemove = viewModel::removeDraftPosition,
+            onClear = viewModel::clearDraft,
+            onConfirm = {
+                viewModel.confirmMaterialDraft()
+                showCostCalculator = false
+            },
+            onDismiss = {
+                viewModel.cancelMaterialDraft()
+                showCostCalculator = false
             }
         )
     }

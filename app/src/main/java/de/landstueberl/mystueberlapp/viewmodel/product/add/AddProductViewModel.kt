@@ -57,7 +57,8 @@ class AddProductViewModel(
             repo.insertProductBatch(
                 detail = detail,
                 quantity = count,
-                imageFileName = values.imageFileName
+                imageFileName = values.imageFileName,
+                materials = values.materials
             )
         } else {
             // Single products stay out of the batch path: no batchId, and the
@@ -67,7 +68,8 @@ class AddProductViewModel(
                     details = detail,
                     imageList = values.imageFileName
                         ?.let { listOf(Image(productId = 0, fileName = it)) }
-                        ?: emptyList()
+                        ?: emptyList(),
+                    materialList = values.materials
                 )
             )
         }

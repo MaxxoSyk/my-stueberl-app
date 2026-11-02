@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
@@ -206,6 +207,17 @@ fun ProductDisplayItem(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextSecondary
                             )
+                            if (product.materialList.isNotEmpty()) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Calculate,
+                                    contentDescription = stringResource(
+                                        R.string.products_screen_price_calculated
+                                    ),
+                                    tint = TextSecondary.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(11.dp)
+                                )
+                            }
                         }
                     }
 
