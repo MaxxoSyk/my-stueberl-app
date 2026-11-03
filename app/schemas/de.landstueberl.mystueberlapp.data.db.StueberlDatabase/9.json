@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 9,
-    "identityHash": "81f5281371717d8059709e2ba4bbf491",
+    "identityHash": "a0c0912ced5ce4380fcb7432b323d1c0",
     "entities": [
       {
         "tableName": "ProductDetail",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `description` TEXT NOT NULL, `status` TEXT NOT NULL, `orderId` INTEGER, `batchId` INTEGER, `createdAt` TEXT NOT NULL, `soldOn` TEXT, `removedOn` TEXT, `purchase_amount` TEXT, `purchase_currency` TEXT, `sales_amount` TEXT, `sales_currency` TEXT, FOREIGN KEY(`orderId`) REFERENCES `OrderDetail`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `description` TEXT NOT NULL, `status` TEXT NOT NULL, `orderId` INTEGER, `batchId` INTEGER, `createdAt` TEXT NOT NULL, `soldOn` TEXT, `removedOn` TEXT, `purchase_amount` INTEGER, `purchase_currency` TEXT, `sales_amount` INTEGER, `sales_currency` TEXT, FOREIGN KEY(`orderId`) REFERENCES `OrderDetail`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -55,7 +55,7 @@
           {
             "fieldPath": "purchasePrice.amount",
             "columnName": "purchase_amount",
-            "affinity": "TEXT"
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "purchasePrice.currency",
@@ -65,7 +65,7 @@
           {
             "fieldPath": "salesPrice.amount",
             "columnName": "sales_amount",
-            "affinity": "TEXT"
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "salesPrice.currency",
@@ -256,7 +256,7 @@
       },
       {
         "tableName": "ProductMaterialDetail",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `productId` INTEGER NOT NULL, `name` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `position` INTEGER NOT NULL, `unit_amount` TEXT NOT NULL, `unit_currency` TEXT NOT NULL, FOREIGN KEY(`productId`) REFERENCES `ProductDetail`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `productId` INTEGER NOT NULL, `name` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `position` INTEGER NOT NULL, `unit_amount` INTEGER NOT NULL, `unit_currency` TEXT NOT NULL, FOREIGN KEY(`productId`) REFERENCES `ProductDetail`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -291,7 +291,7 @@
           {
             "fieldPath": "unitPrice.amount",
             "columnName": "unit_amount",
-            "affinity": "TEXT",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -335,7 +335,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '81f5281371717d8059709e2ba4bbf491')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a0c0912ced5ce4380fcb7432b323d1c0')"
     ]
   }
 }
