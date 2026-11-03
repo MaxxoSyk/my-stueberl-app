@@ -11,7 +11,6 @@ import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
-import de.landstueberl.mystueberlapp.data.sameValueAs
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormValues
@@ -114,8 +113,8 @@ class EditProductViewModel(
     private fun hasChanges(existing: Product, values: ProductFormValues): Boolean {
         val details = existing.details
         return details.description != values.description ||
-                !details.purchasePrice.sameValueAs(values.purchasePrice) ||
-                !details.salesPrice.sameValueAs(values.salesPrice) ||
+                details.purchasePrice != values.purchasePrice ||
+                details.salesPrice != values.salesPrice ||
                 existing.materialList != values.materials
     }
 
