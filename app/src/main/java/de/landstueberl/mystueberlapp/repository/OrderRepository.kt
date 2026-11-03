@@ -8,6 +8,7 @@ import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
+import de.landstueberl.mystueberlapp.data.yearRangeOf
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -16,64 +17,6 @@ class OrderRepository(
     private val orderDao: OrderDao,
     private val productDao: ProductDao
 ) {
-
-    /**
-     * Saves [order] together with its products and their images.
-     *
-     * Products that were previously part of the order but are absent from
-     * [order] are **detached**, not deleted — they may already have been made,
-     * and become sales-area stock instead.
-     */
-    suspend fun upsertOrderFull(order: Order): Order = db.withTransaction {
-        val orderDetail = order.orderDetail
-
-        // 1. Upsert the order itself
-        val generatedOrderId = orderDao.upsertOrderDetail(orderDetail).toInt()
-        val orderId = if (orderDetail.id == 0) generatedOrderId else orderDetail.id
-
-        // 2. Which products does the order currently hold?
-        val existingProductIds = orderDao.getProductsInOrder(orderId)
-            .map { it.id }
-            .toSet()
-
-        // 3. Upsert incoming products and their images
-        val incomingProductIds = mutableSetOf<Int>()
-
-        for (product in order.productList) {
-            val detail = product.details.copy(orderId = orderId)
-            val generatedProductId = productDao.upsertProductDetail(detail).toInt()
-            val productId = if (detail.id == 0) generatedProductId else detail.id
-
-            incomingProductIds += productId
-
-            // 3a. Sync this product's images
-            val incomingImages = product.imageList.map { it.copy(productId = productId) }
-            val incomingImageIds = incomingImages.map { it.id }.toSet()
-
-            val imagesToDelete = productDao.getImagesByProductId(productId)
-                .map { it.id }
-                .filter { it !in incomingImageIds }
-
-            if (imagesToDelete.isNotEmpty()) {
-                productDao.deleteImagesByIds(imagesToDelete)
-            }
-
-            productDao.upsertImages(incomingImages)
-        }
-
-        // 4. Products dropped from the order become sales-area stock
-        val productsToDetach = existingProductIds
-            .minus(incomingProductIds)
-            .toList()
-
-        if (productsToDetach.isNotEmpty()) {
-            productDao.detachProductsByIds(productsToDetach)
-        }
-
-        // 5. Return the order as persisted
-        orderDao.getOrder(orderId)
-            ?: error("Order $orderId vanished during save")
-    }
 
     // ── Status Transitions ─────────────────────
     /** Resolves the order and marks all of its products sold, atomically. */
@@ -109,8 +52,10 @@ class OrderRepository(
     fun getNextDueOrderFlow(): Flow<OrderDetail?> =
         orderDao.getNextDueOrderFlow()
 
-    fun getTotalOrdersForYearFlow(): Flow<Int> =
-        orderDao.getTotalOrdersForYearFlow(year = LocalDate.now().year.toString())
+    fun getTotalOrdersForYearFlow(): Flow<Int> {
+        val range = yearRangeOf(LocalDate.now().year)
+        return orderDao.getTotalOrdersForRangeFlow(range.from, range.to)
+    }
 
     suspend fun upsertOrderDetail(detail: OrderDetail): Int {
         val rowId = orderDao.upsertOrderDetail(detail).toInt()

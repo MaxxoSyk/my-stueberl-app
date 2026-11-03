@@ -99,25 +99,17 @@ interface ProductDao {
                 (:includeOrdered = 1 AND orderId IS NOT NULL)
                 OR (:includeNotOrdered = 1 AND orderId IS NULL)
             )
-            AND (
-                :noYearFilter = 1
-                OR strftime('%Y', createdAt) IN (:years)
-            )
         ORDER BY createdAt ASC, id ASC
     """)
     fun getFilteredProductsFlow(
         statuses: List<String>,
         includeOrdered: Boolean,
-        includeNotOrdered: Boolean,
-        noYearFilter: Boolean,
-        years: List<String>
+        includeNotOrdered: Boolean
     ): Flow<List<Product>>
 
-    @Query("""
-        SELECT DISTINCT strftime('%Y', createdAt) FROM ProductDetail
-        ORDER BY createdAt DESC
-    """)
-    fun getAvailableYearsFlow(): Flow<List<String>>
+    /** Creation dates of all products, for deriving which years have data. */
+    @Query("SELECT DISTINCT createdAt FROM ProductDetail ORDER BY createdAt DESC")
+    fun getProductCreationDatesFlow(): Flow<List<LocalDate>>
 
     // ── Home Screen Counts ─────────────────────
     /** Sales-area stock that is still available. Excludes order products by design. */
@@ -134,12 +126,16 @@ interface ProductDao {
     """)
     fun getPendingOrderProductsCountFlow(): Flow<Int>
 
-    /** Everything created in [year], both sales-area and order products. */
+    /**
+     * Everything created within [from]..[to], both sources.
+     *
+     * Dates are epoch days, so this is a numeric range comparison.
+     */
     @Query("""
         SELECT COUNT(*) FROM ProductDetail
-        WHERE strftime('%Y', createdAt) = :year
+        WHERE createdAt >= :from AND createdAt <= :to
     """)
-    fun getTotalProductsForYearFlow(year: String): Flow<Int>
+    fun getTotalProductsForRangeFlow(from: LocalDate, to: LocalDate): Flow<Int>
 
     // ── Status Transitions (sales-area products) ──
     @Query("""

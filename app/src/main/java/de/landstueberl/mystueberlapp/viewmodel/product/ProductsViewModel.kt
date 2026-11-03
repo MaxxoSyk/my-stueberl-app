@@ -52,10 +52,8 @@ class ProductsViewModel(
         _sortOrder.value = order
     }
 
-    // ── Available Years ────────────────────────
     val availableYears: StateFlow<List<Int>> = repo
         .getAvailableYearsFlow()
-        .map { years -> years.mapNotNull { it.toIntOrNull() } }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
