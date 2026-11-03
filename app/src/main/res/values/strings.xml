@@ -230,4 +230,10 @@
     <string name="cost_calculator_total">Total</string>
     <string name="cost_calculator_apply">Apply</string>
     <string name="cost_calculator_clear">Clear all positions</string>
+
+    <string name="statistics_screen_title">Statistics</string>
+    <string name="statistics_period_today">Today</string>
+    <string name="statistics_period_week">Week</string>
+    <string name="statistics_period_month">Month</string>
+    <string name="statistics_period_year">Year</string>
 </resources>
