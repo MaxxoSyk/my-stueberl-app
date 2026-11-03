@@ -6,7 +6,9 @@ import de.landstueberl.mystueberlapp.data.ProductFilter
 import de.landstueberl.mystueberlapp.data.ProductSourceFilter
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
+import de.landstueberl.mystueberlapp.data.yearRangeOf
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 
 class ProductRepository(private val dao: ProductDao) {
@@ -42,12 +44,15 @@ class ProductRepository(private val dao: ProductDao) {
     fun getPendingOrderProductsCountFlow(): Flow<Int> =
         dao.getPendingOrderProductsCountFlow()
 
-    fun getTotalProductsForYearFlow(): Flow<Int> =
-        dao.getTotalProductsForYearFlow(year = LocalDate.now().year.toString())
-
-    fun getAvailableYearsFlow(): Flow<List<String>> {
-        return dao.getAvailableYearsFlow()
+    fun getTotalProductsForYearFlow(): Flow<Int> {
+        val range = yearRangeOf(LocalDate.now().year)
+        return dao.getTotalProductsForRangeFlow(range.from, range.to)
     }
+
+    /** Years in which products were created, newest first. */
+    fun getAvailableYearsFlow(): Flow<List<Int>> =
+        dao.getProductCreationDatesFlow()
+            .map { dates -> dates.map { it.year }.distinct() }
 
     suspend fun getProductById(productId: Int): Product {
         return dao.getProductById(productId)
@@ -59,26 +64,21 @@ class ProductRepository(private val dao: ProductDao) {
                 filter.productSourceFilter == ProductSourceFilter.FROM_ORDER
         val includeNotOrdered = filter.productSourceFilter == ProductSourceFilter.ALL ||
                 filter.productSourceFilter == ProductSourceFilter.FROM_SALES_AREA
-        val noYearFilter = filter.years.isEmpty()
-        val years = filter.years.map { it.toString() }
-            .ifEmpty { listOf("") }
 
         return dao.getFilteredProductsFlow(
             statuses = statuses,
             includeOrdered = includeFromOrder,
-            includeNotOrdered = includeNotOrdered,
-            noYearFilter = noYearFilter,
-            years = years
-        )
-    }
-
-    // ── Order-driven transitions ───────────────
-    suspend fun markOrderProductsAsSold(orderId: Int) {
-        dao.markOrderProductsAsSold(orderId = orderId, date = LocalDate.now())
-    }
-
-    suspend fun detachProductsFromOrder(orderId: Int) {
-        dao.detachProductsFromOrder(orderId)
+            includeNotOrdered = includeNotOrdered
+        ).map { products ->
+            // The year filter moved out of SQL: with epoch days there is no
+            // strftime equivalent, and an arbitrary set of years doesn't reduce
+            // to a single range.
+            if (filter.years.isEmpty()) {
+                products
+            } else {
+                products.filter { it.details.createdAt.year in filter.years }
+            }
+        }
     }
 
     suspend fun getAllImageFileNames(): List<String> = dao.getAllImageFileNames()

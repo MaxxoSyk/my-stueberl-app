@@ -41,9 +41,6 @@ interface OrderDao {
     """)
     fun getOrdersFlow(statuses: List<String>): Flow<List<Order>>
 
-    @Query("SELECT * FROM ProductDetail WHERE orderId = :orderId")
-    suspend fun getProductsInOrder(orderId: Int): List<ProductDetail>
-
     // ── Home Screen ────────────────────────────
     @Query("SELECT COUNT(*) FROM OrderDetail WHERE status = 'OPEN'")
     fun getOpenOrderCountFlow(): Flow<Int>
@@ -59,9 +56,9 @@ interface OrderDao {
 
     @Query("""
         SELECT COUNT(*) FROM OrderDetail
-        WHERE strftime('%Y', createdAt) = :year
+        WHERE createdAt >= :from AND createdAt <= :to
     """)
-    fun getTotalOrdersForYearFlow(year: String): Flow<Int>
+    fun getTotalOrdersForRangeFlow(from: LocalDate, to: LocalDate): Flow<Int>
 
     // ── Status Transitions ─────────────────────
     @Query("""

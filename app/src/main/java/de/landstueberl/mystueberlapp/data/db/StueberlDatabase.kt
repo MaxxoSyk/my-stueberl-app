@@ -19,7 +19,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
         OrderDetail::class,
         ProductMaterialDetail::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
 @TypeConverters(
