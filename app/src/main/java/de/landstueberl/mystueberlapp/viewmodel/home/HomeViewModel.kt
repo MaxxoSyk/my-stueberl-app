@@ -4,17 +4,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import de.landstueberl.mystueberlapp.data.StatisticsTileFigures
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
+import de.landstueberl.mystueberlapp.repository.StatisticsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 class HomeViewModel(
     private val productRepo: ProductRepository,
-    private val orderRepo: OrderRepository
-): ViewModel() {
+    private val orderRepo: OrderRepository,
+    private val statisticsRepo: StatisticsRepository
+) : ViewModel() {
     /** Sales-area products still available. */
     val availableSalesAreaCount: StateFlow<Int> = productRepo
         .getAvailableSalesAreaCountFlow()
@@ -46,17 +49,24 @@ class HomeViewModel(
         .getTotalOrdersForYearFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
 
+    // ── Statistics ─────────────────────────────
+    val statisticsTileFigures: StateFlow<StatisticsTileFigures?> = statisticsRepo
+        .getTileFiguresFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+
     companion object {
         private const val STOP_TIMEOUT_MILLIS = 5_000L
 
         fun factory(
             productRepository: ProductRepository,
-            orderRepository: OrderRepository
+            orderRepository: OrderRepository,
+            statisticsRepository: StatisticsRepository
         ) = viewModelFactory {
             initializer<HomeViewModel> {
                 HomeViewModel(
                     productRepo = productRepository,
-                    orderRepo = orderRepository
+                    orderRepo = orderRepository,
+                    statisticsRepo = statisticsRepository
                 )
             }
         }

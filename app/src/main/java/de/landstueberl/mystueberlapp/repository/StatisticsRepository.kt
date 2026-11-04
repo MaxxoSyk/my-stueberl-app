@@ -6,7 +6,10 @@ import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.OverallFigures
 import de.landstueberl.mystueberlapp.data.PeriodFigures
 import de.landstueberl.mystueberlapp.data.StatisticsDao
+import de.landstueberl.mystueberlapp.data.StatisticsPeriod
+import de.landstueberl.mystueberlapp.data.StatisticsTileFigures
 import de.landstueberl.mystueberlapp.data.YearStatistics
+import de.landstueberl.mystueberlapp.data.rangeOf
 import de.landstueberl.mystueberlapp.data.yearRangeOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -56,6 +59,23 @@ class StatisticsRepository(
                 highestProfitThisYear = yearStats.highestProfitCents.toMoney(),
                 freeProductsThisYear = freeCount,
                 removedProductsThisYear = removedCount
+            )
+        }
+    }
+
+    /** The three figures shown on the home screen tile. */
+    fun getTileFiguresFlow(): Flow<StatisticsTileFigures> {
+        val today = StatisticsPeriod.TODAY.rangeOf()
+        val year = yearRangeOf(LocalDate.now().year)
+
+        return combine(
+            dao.getPeriodStatisticsFlow(today.from, today.to),
+            dao.getYearStatisticsFlow(year.from, year.to)
+        ) { todayStats, yearStats ->
+            StatisticsTileFigures(
+                revenueToday = todayStats.revenueTotalCents.toMoney(),
+                soldToday = todayStats.soldCount,
+                revenueThisYear = yearStats.revenueCents.toMoney()
             )
         }
     }

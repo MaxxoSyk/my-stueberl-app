@@ -50,7 +50,8 @@ fun NavGraph(
                 viewModel = viewModel(
                     factory = HomeViewModel.factory(
                         productRepository = productRepository,
-                        orderRepository = orderRepository
+                        orderRepository = orderRepository,
+                        statisticsRepository = statisticsRepository
                     )
                 ),
                 onNavigateToProducts = { navController.navigate(Screen.Products) },
