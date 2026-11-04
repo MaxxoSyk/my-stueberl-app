@@ -100,4 +100,7 @@ class ProductRepository(private val dao: ProductDao) {
     )
 
     suspend fun getAllMaterialNames(): List<String> = dao.getAllMaterialNames()
+
+    fun getProductWithBatchFlow(productId: Int): Flow<List<Product>> =
+        dao.getProductWithBatchFlow(productId)
 }

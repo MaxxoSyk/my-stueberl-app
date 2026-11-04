@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -272,6 +274,46 @@ fun OrdersTile(
                     LocalDate.now().year
                 ),
                 value = totalOrdersCurrentYear.toString()
+            )
+        }
+    }
+}
+
+// ── Gallery Tile ───────────────────────────────────────────────────────
+@Composable
+fun GalleryTile(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.PhotoLibrary,
+                contentDescription = null,
+                tint = SageGreenDark,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.home_screen_tile_gallery),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = TextSecondary.copy(alpha = 0.5f),
+                modifier = Modifier.size(20.dp)
             )
         }
     }

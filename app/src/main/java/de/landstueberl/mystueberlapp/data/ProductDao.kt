@@ -288,4 +288,20 @@ interface ProductDao {
         ORDER BY COUNT(*) DESC, name COLLATE NOCASE ASC
     """)
     suspend fun getAllMaterialNames(): List<String>
+
+    /**
+     * The product and, when it belongs to a batch, its siblings — so the gallery
+     * can show a shared photo's whole group.
+     */
+    @Transaction
+    @Query("""
+        SELECT * FROM ProductDetail
+        WHERE id = :productId
+           OR (
+               batchId IS NOT NULL
+               AND batchId = (SELECT batchId FROM ProductDetail WHERE id = :productId)
+           )
+        ORDER BY id ASC
+    """)
+    fun getProductWithBatchFlow(productId: Int): Flow<List<Product>>
 }

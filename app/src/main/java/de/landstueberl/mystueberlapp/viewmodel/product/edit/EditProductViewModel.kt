@@ -133,11 +133,15 @@ class EditProductViewModel(
             ),
             imageList = values.imageFileName?.let { fileName ->
                 val previous = existing.imageList.firstOrNull()
+                val isSameFile = previous?.fileName == fileName
                 listOf(
                     Image(
-                        id = if (previous?.fileName == fileName) previous.id else 0,
+                        id = if (isSameFile) previous.id else 0,
                         productId = productId,
-                        fileName = fileName
+                        fileName = fileName,
+                        // Keep the original date when the photo is unchanged;
+                        // a replacement is a new photo and gets today's.
+                        addedAt = if (isSameFile) previous.addedAt else LocalDate.now()
                     )
                 )
             } ?: emptyList(),

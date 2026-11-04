@@ -36,7 +36,8 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onNavigateToProducts: () -> Unit,
     onNavigateToOrders: () -> Unit,
-    onNavigateToStatistics: () -> Unit
+    onNavigateToStatistics: () -> Unit,
+    onNavigateToGallery: () -> Unit
 ) {
     val availableSalesAreaCount by viewModel.availableSalesAreaCount.collectAsStateWithLifecycle()
     val pendingOrderProductsCount by viewModel.pendingOrderProductsCount.collectAsStateWithLifecycle()
@@ -102,6 +103,11 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            // ── Gallery Tile - Full Width ──
+            GalleryTile(
+                onClick = onNavigateToGallery
+            )
         }
     }
 }

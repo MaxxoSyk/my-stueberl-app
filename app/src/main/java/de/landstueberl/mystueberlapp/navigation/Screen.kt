@@ -26,4 +26,11 @@ sealed interface Screen {
     /** [orderId] is null when creating a new order. */
     @Serializable
     data class OrderDetail(val orderId: Int? = null) : Screen
+
+    /** Read-only view of one product, or its batch. Reached from the gallery. */
+    @Serializable
+    data class ProductDetail(val productId: Int) : Screen
+
+    @Serializable
+    data object Gallery : Screen
 }
