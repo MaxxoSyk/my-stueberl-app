@@ -243,6 +243,7 @@
     <string name="statistics_revenue_orders">Revenue orders</string>
     <string name="statistics_sold_count">Products sold</string>
     <string name="statistics_profit_year">Profit %1$d</string>
+    <string name="statistics_profit_caption">Revenue minus the cost of everything sold or removed</string>
     <string name="statistics_avg_sale_price_year">Average sale price %1$d</string>
     <string name="statistics_avg_sale_price_all_time">Average sale price, all time</string>
     <string name="statistics_avg_stock_presence">Average stock presence</string>

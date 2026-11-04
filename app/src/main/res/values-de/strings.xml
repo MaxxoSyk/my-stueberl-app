@@ -243,6 +243,7 @@
     <string name="statistics_revenue_orders">Umsatz Bestellungen</string>
     <string name="statistics_sold_count">Verkaufte Werkstücke</string>
     <string name="statistics_profit_year">Gewinn %1$d</string>
+    <string name="statistics_profit_caption">Umsatz minus Kosten aller verkauften und entfernten Werkstücke</string>
     <string name="statistics_avg_sale_price_year">Ø Verkaufspreis %1$d</string>
     <string name="statistics_avg_sale_price_all_time">Ø Verkaufspreis, gesamt</string>
     <string name="statistics_avg_stock_presence">Ø Verweildauer</string>

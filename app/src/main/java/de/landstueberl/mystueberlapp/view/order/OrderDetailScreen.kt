@@ -461,23 +461,21 @@ fun OrderDetailScreen(
 
                     // ── Total ──────────────────
                     val total = remember(products) { products.orderTotal() }
-                    if (total != null) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.order_detail_total),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                            Spacer(modifier = Modifier.weight(1f))
-                            Text(
-                                text = total.format(),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = AccentGold
-                            )
-                        }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.order_detail_total),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = total.format(),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = AccentGold
+                        )
                     }
                 }
 

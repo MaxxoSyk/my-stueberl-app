@@ -23,9 +23,8 @@ import java.time.LocalDate
 interface StatisticsDao {
 
     /**
-     * Figures for the selected period. Products with no sales price are excluded
-     * from both the revenue and the count: an unpriced sale would contribute
-     * nothing to revenue while inflating the count.
+     * Figures for the selected period. Every sold product counts: prices are
+     * non-nullable, so a product given away is one sold at zero.
      */
     @Query("""
         SELECT
@@ -37,33 +36,45 @@ interface StatisticsDao {
             COUNT(*) AS soldCount
         FROM ProductDetail
         WHERE status = 'SOLD'
-          AND sales_amount IS NOT NULL
           AND soldOn >= :from
           AND soldOn <= :to
     """)
     fun getPeriodStatisticsFlow(from: LocalDate, to: LocalDate): Flow<PeriodStatistics>
 
-    /**
-     * Figures for [from]..[to] that are not driven by the period selector.
-     *
-     * A missing purchase price counts as zero, so profit for such a product is
-     * its full sales price.
-     */
+    /** Figures for [from]..[to] that are not driven by the period selector. */
     @Query("""
         SELECT
             COALESCE(SUM(sales_amount), 0) AS revenueCents,
-            COALESCE(SUM(COALESCE(purchase_amount, 0)), 0) AS costCents,
             COALESCE(MAX(sales_amount), 0) AS highestSaleCents,
-            COALESCE(MAX(sales_amount - COALESCE(purchase_amount, 0)), 0)
-                AS highestProfitCents,
+            COALESCE(MAX(sales_amount - purchase_amount), 0) AS highestProfitCents,
             COUNT(*) AS soldCount
         FROM ProductDetail
         WHERE status = 'SOLD'
-          AND sales_amount IS NOT NULL
           AND soldOn >= :from
           AND soldOn <= :to
     """)
     fun getYearStatisticsFlow(from: LocalDate, to: LocalDate): Flow<YearStatistics>
+
+    /**
+     * Profit for [from]..[to]: revenue from products sold, minus the cost of
+     * every product that left stock — sold **or** removed.
+     *
+     * A removed product earned nothing but still cost something to make, so its
+     * purchase price reduces profit. Cost is recognised when a product's fate is
+     * decided, dated by `soldOn` or `removedOn` accordingly, which matches the
+     * basis used by the rest of the screen.
+     */
+    @Query("""
+        SELECT
+            COALESCE(SUM(
+                CASE WHEN status = 'SOLD' THEN sales_amount ELSE 0 END
+            ), 0) AS revenueCents,
+            COALESCE(SUM(purchase_amount), 0) AS costCents
+        FROM ProductDetail
+        WHERE (status = 'SOLD' AND soldOn >= :from AND soldOn <= :to)
+           OR (status = 'REMOVED' AND removedOn >= :from AND removedOn <= :to)
+    """)
+    fun getProfitStatisticsFlow(from: LocalDate, to: LocalDate): Flow<ProfitStatistics>
 
     /** Revenue and count over all sold products, for the all-time average. */
     @Query("""
@@ -71,7 +82,7 @@ interface StatisticsDao {
             COALESCE(SUM(sales_amount), 0) AS revenueCents,
             COUNT(*) AS soldCount
         FROM ProductDetail
-        WHERE status = 'SOLD' AND sales_amount IS NOT NULL
+        WHERE status = 'SOLD'
     """)
     fun getAllTimeStatisticsFlow(): Flow<AllTimeStatistics>
 
@@ -87,11 +98,11 @@ interface StatisticsDao {
     """)
     fun getAverageStockPresenceFlow(): Flow<Double?>
 
-    /** Products sold within [from]..[to] with no sales price. */
+    /** Products sold at no charge within [from]..[to]. */
     @Query("""
         SELECT COUNT(*) FROM ProductDetail
         WHERE status = 'SOLD'
-          AND sales_amount IS NULL
+          AND sales_amount = 0
           AND soldOn >= :from
           AND soldOn <= :to
     """)

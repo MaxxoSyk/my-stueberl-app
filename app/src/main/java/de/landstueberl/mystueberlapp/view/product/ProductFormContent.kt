@@ -50,13 +50,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
-import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormViewModel
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -173,7 +173,7 @@ fun ProductDescriptionField(
     )
 }
 
-private val CURRENCY_SYMBOL: String = ProductFormViewModel.CURRENCY.symbol
+private val CURRENCY_SYMBOL: String = PriceInput.CURRENCY.symbol
 
 // ── Shared Price Input Field ───────────────────────────────────────────
 @Composable

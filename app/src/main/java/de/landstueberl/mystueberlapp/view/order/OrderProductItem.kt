@@ -105,29 +105,25 @@ fun OrderProductItem(
 
                 Spacer(modifier = Modifier.height(2.dp))
 
-                details.purchasePrice?.let { price ->
-                    Text(
-                        text = stringResource(
-                            R.string.order_detail_purchase_price_value,
-                            price.amount.toPlainString(),
-                            price.currency.symbol
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
-                    )
-                }
+                Text(
+                    text = stringResource(
+                        R.string.order_detail_purchase_price_value,
+                        details.purchasePrice.amount.toPlainString(),
+                        details.purchasePrice.currency.symbol
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
 
-                details.salesPrice?.let { price ->
-                    Text(
-                        text = stringResource(
-                            R.string.order_detail_sales_price_value,
-                            price.amount.toPlainString(),
-                            price.currency.symbol
-                        ),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = AccentGold
-                    )
-                }
+                Text(
+                    text = stringResource(
+                        R.string.order_detail_sales_price_value,
+                        details.salesPrice.amount.toPlainString(),
+                        details.salesPrice.currency.symbol
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = AccentGold
+                )
             }
 
             // ── Remove ──

@@ -194,47 +194,43 @@ fun ProductDisplayItem(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    details.purchasePrice?.let { price ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.products_screen_purchase_price),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary,
-                                modifier = Modifier.width(56.dp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.products_screen_purchase_price),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary,
+                            modifier = Modifier.width(56.dp)
+                        )
+                        Text(
+                            text = details.purchasePrice.format(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
+                        if (product.materialList.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.Calculate,
+                                contentDescription = stringResource(
+                                    R.string.products_screen_price_calculated
+                                ),
+                                tint = TextSecondary.copy(alpha = 0.6f),
+                                modifier = Modifier.size(11.dp)
                             )
-                            Text(
-                                text = price.format(),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
-                            )
-                            if (product.materialList.isNotEmpty()) {
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Icon(
-                                    imageVector = Icons.Default.Calculate,
-                                    contentDescription = stringResource(
-                                        R.string.products_screen_price_calculated
-                                    ),
-                                    tint = TextSecondary.copy(alpha = 0.6f),
-                                    modifier = Modifier.size(11.dp)
-                                )
-                            }
                         }
                     }
 
-                    details.salesPrice?.let { price ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.products_screen_sales_price),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary,
-                                modifier = Modifier.width(56.dp)
-                            )
-                            Text(
-                                text = price.format(),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = AccentGold
-                            )
-                        }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.products_screen_sales_price),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary,
+                            modifier = Modifier.width(56.dp)
+                        )
+                        Text(
+                            text = details.salesPrice.format(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = AccentGold
+                        )
                     }
                 }
 
