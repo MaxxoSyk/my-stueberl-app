@@ -85,7 +85,10 @@ fun StatisticsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        if (periodFigures == null || overallFigures == null) {
+        val figures = periodFigures
+        val overall = overallFigures
+
+        if (figures == null || overall == null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -96,9 +99,6 @@ fun StatisticsScreen(
             }
             return@Scaffold
         }
-
-        val figures = requireNotNull(periodFigures)
-        val overall = requireNotNull(overallFigures)
 
         Column(
             modifier = Modifier

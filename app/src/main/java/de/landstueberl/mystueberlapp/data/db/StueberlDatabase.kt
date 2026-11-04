@@ -3,6 +3,7 @@ package de.landstueberl.mystueberlapp.data.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import de.landstueberl.mystueberlapp.data.GalleryDao
 import de.landstueberl.mystueberlapp.data.OrderDao
 import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.StatisticsDao
@@ -20,7 +21,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
         OrderDetail::class,
         ProductMaterialDetail::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = true
 )
 @TypeConverters(
@@ -31,4 +32,5 @@ abstract class StueberlDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun orderDao(): OrderDao
     abstract fun statisticsDao(): StatisticsDao
+    abstract fun galleryDao(): GalleryDao
 }

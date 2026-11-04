@@ -8,19 +8,24 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.repository.GalleryRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.repository.StatisticsRepository
+import de.landstueberl.mystueberlapp.view.gallery.GalleryScreen
 import de.landstueberl.mystueberlapp.view.home.HomeScreen
 import de.landstueberl.mystueberlapp.view.order.OrderDetailScreen
 import de.landstueberl.mystueberlapp.view.order.OrdersScreen
+import de.landstueberl.mystueberlapp.view.product.ProductDetailScreen
 import de.landstueberl.mystueberlapp.view.product.ProductsScreen
 import de.landstueberl.mystueberlapp.view.product.add.AddProductScreen
 import de.landstueberl.mystueberlapp.view.product.edit.EditProductScreen
 import de.landstueberl.mystueberlapp.view.statistics.StatisticsScreen
+import de.landstueberl.mystueberlapp.viewmodel.gallery.GalleryViewModel
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
 import de.landstueberl.mystueberlapp.viewmodel.order.OrderDetailViewModel
 import de.landstueberl.mystueberlapp.viewmodel.order.OrdersViewModel
+import de.landstueberl.mystueberlapp.viewmodel.product.ProductDetailViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.edit.EditProductViewModel
@@ -37,6 +42,7 @@ fun NavGraph(
     productRepository: ProductRepository,
     orderRepository: OrderRepository,
     statisticsRepository: StatisticsRepository,
+    galleryRepository: GalleryRepository,
     imageStorage: ProductImageStorage,
     appScope: CoroutineScope
 ) {
@@ -56,7 +62,8 @@ fun NavGraph(
                 ),
                 onNavigateToProducts = { navController.navigate(Screen.Products) },
                 onNavigateToOrders = { navController.navigate(Screen.Orders) },
-                onNavigateToStatistics = { navController.navigate(Screen.Statistics) }
+                onNavigateToStatistics = { navController.navigate(Screen.Statistics) },
+                onNavigateToGallery = { navController.navigate(Screen.Gallery) }
             )
         }
 
@@ -182,6 +189,28 @@ fun NavGraph(
             StatisticsScreen(
                 viewModel = viewModel(
                     factory = StatisticsViewModel.factory(statisticsRepository)
+                ),
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Gallery ────────────────────────────
+        composable<Screen.Gallery> {
+            GalleryScreen(
+                viewModel = viewModel(
+                    factory = GalleryViewModel.factory(galleryRepository, imageStorage)
+                ),
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToProduct = { productId ->
+                    navController.navigate(Screen.ProductDetail(productId))
+                }
+            )
+        }
+
+        composable<Screen.ProductDetail> {
+            ProductDetailScreen(
+                viewModel = viewModel(
+                    factory = ProductDetailViewModel.factory(productRepository, imageStorage)
                 ),
                 onNavigateBack = { navController.popBackStack() }
             )

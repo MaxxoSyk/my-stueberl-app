@@ -14,6 +14,7 @@
     <string name="home_screen_tile_statistics">Statistics</string>
     <string name="home_screen_tile_products">Products</string>
     <string name="home_screen_tile_orders">Orders</string>
+    <string name="home_screen_tile_gallery">Gallery</string>
 
     <!-- Statistics Tile -->
     <string name="home_screen_stats_revenue_today">Revenue today</string>
@@ -254,4 +255,9 @@
     <string name="statistics_removed_products_year">Products removed %1$d</string>
     <string name="statistics_days_value">%1$d days</string>
     <string name="statistics_no_value">–</string>
+
+    <string name="gallery_screen_title">Gallery</string>
+    <string name="gallery_screen_empty">No photos yet. Photos you add to products appear here.</string>
+
+    <string name="product_detail_not_found">This product no longer exists.</string>
 </resources>

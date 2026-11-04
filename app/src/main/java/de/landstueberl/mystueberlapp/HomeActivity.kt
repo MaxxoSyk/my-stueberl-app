@@ -24,6 +24,7 @@ class HomeActivity : ComponentActivity() {
                     productRepository = app.productRepository,
                     orderRepository = app.orderRepository,
                     statisticsRepository = app.statisticsRepository,
+                    galleryRepository = app.galleryRepository,
                     imageStorage = app.productImageStorage,
                     appScope = app.appScope
                 )
