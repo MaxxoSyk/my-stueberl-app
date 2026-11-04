@@ -236,4 +236,21 @@
     <string name="statistics_period_week">Woche</string>
     <string name="statistics_period_month">Monat</string>
     <string name="statistics_period_year">Jahr</string>
+
+    <string name="statistics_section_overall">Gesamt</string>
+    <string name="statistics_revenue_total">Umsatz</string>
+    <string name="statistics_revenue_sales_area">Umsatz Stüberl</string>
+    <string name="statistics_revenue_orders">Umsatz Bestellungen</string>
+    <string name="statistics_sold_count">Verkaufte Werkstücke</string>
+    <string name="statistics_profit_year">Gewinn %1$d</string>
+    <string name="statistics_avg_sale_price_year">Ø Verkaufspreis %1$d</string>
+    <string name="statistics_avg_sale_price_all_time">Ø Verkaufspreis, gesamt</string>
+    <string name="statistics_avg_stock_presence">Ø Verweildauer</string>
+    <string name="statistics_avg_stock_presence_caption">Stüberl-Werkstücke, gesamt</string>
+    <string name="statistics_highest_sale_year">Höchster Verkaufspreis %1$d</string>
+    <string name="statistics_highest_profit_year">Höchster Gewinn %1$d</string>
+    <string name="statistics_free_products_year">Verschenkte Werkstücke %1$d</string>
+    <string name="statistics_removed_products_year">Entfernte Werkstücke %1$d</string>
+    <string name="statistics_days_value">%1$d Tage</string>
+    <string name="statistics_no_value">–</string>
 </resources>

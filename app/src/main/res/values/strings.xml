@@ -236,4 +236,21 @@
     <string name="statistics_period_week">Week</string>
     <string name="statistics_period_month">Month</string>
     <string name="statistics_period_year">Year</string>
+
+    <string name="statistics_section_overall">Overall</string>
+    <string name="statistics_revenue_total">Revenue</string>
+    <string name="statistics_revenue_sales_area">Revenue sales area</string>
+    <string name="statistics_revenue_orders">Revenue orders</string>
+    <string name="statistics_sold_count">Products sold</string>
+    <string name="statistics_profit_year">Profit %1$d</string>
+    <string name="statistics_avg_sale_price_year">Average sale price %1$d</string>
+    <string name="statistics_avg_sale_price_all_time">Average sale price, all time</string>
+    <string name="statistics_avg_stock_presence">Average stock presence</string>
+    <string name="statistics_avg_stock_presence_caption">Sales area products, all time</string>
+    <string name="statistics_highest_sale_year">Highest sale price %1$d</string>
+    <string name="statistics_highest_profit_year">Highest profit %1$d</string>
+    <string name="statistics_free_products_year">Products given away %1$d</string>
+    <string name="statistics_removed_products_year">Products removed %1$d</string>
+    <string name="statistics_days_value">%1$d days</string>
+    <string name="statistics_no_value">–</string>
 </resources>

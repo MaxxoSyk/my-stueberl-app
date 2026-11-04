@@ -23,6 +23,7 @@ class HomeActivity : ComponentActivity() {
                     navController = navController,
                     productRepository = app.productRepository,
                     orderRepository = app.orderRepository,
+                    statisticsRepository = app.statisticsRepository,
                     imageStorage = app.productImageStorage,
                     appScope = app.appScope
                 )

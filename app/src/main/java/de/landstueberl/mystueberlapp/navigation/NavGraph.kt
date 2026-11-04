@@ -1,12 +1,7 @@
 package de.landstueberl.mystueberlapp.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -15,18 +10,21 @@ import androidx.navigation.compose.composable
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
+import de.landstueberl.mystueberlapp.repository.StatisticsRepository
 import de.landstueberl.mystueberlapp.view.home.HomeScreen
 import de.landstueberl.mystueberlapp.view.order.OrderDetailScreen
 import de.landstueberl.mystueberlapp.view.order.OrdersScreen
 import de.landstueberl.mystueberlapp.view.product.ProductsScreen
 import de.landstueberl.mystueberlapp.view.product.add.AddProductScreen
 import de.landstueberl.mystueberlapp.view.product.edit.EditProductScreen
+import de.landstueberl.mystueberlapp.view.statistics.StatisticsScreen
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
 import de.landstueberl.mystueberlapp.viewmodel.order.OrderDetailViewModel
 import de.landstueberl.mystueberlapp.viewmodel.order.OrdersViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductsViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.add.AddProductViewModel
 import de.landstueberl.mystueberlapp.viewmodel.product.edit.EditProductViewModel
+import de.landstueberl.mystueberlapp.viewmodel.statistics.StatisticsViewModel
 import kotlinx.coroutines.CoroutineScope
 
 private const val KEY_PRODUCT_SAVED = "product_saved"
@@ -38,6 +36,7 @@ fun NavGraph(
     navController: NavHostController,
     productRepository: ProductRepository,
     orderRepository: OrderRepository,
+    statisticsRepository: StatisticsRepository,
     imageStorage: ProductImageStorage,
     appScope: CoroutineScope
 ) {
@@ -179,12 +178,12 @@ fun NavGraph(
 
         // ── Statistics ─────────────────────────
         composable<Screen.Statistics> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Statistics — coming next")
-            }
+            StatisticsScreen(
+                viewModel = viewModel(
+                    factory = StatisticsViewModel.factory(statisticsRepository)
+                ),
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }
