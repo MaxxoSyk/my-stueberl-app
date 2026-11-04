@@ -5,6 +5,7 @@ import de.landstueberl.mystueberlapp.data.DateRange
 import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.OverallFigures
 import de.landstueberl.mystueberlapp.data.PeriodFigures
+import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.StatisticsDao
 import de.landstueberl.mystueberlapp.data.StatisticsPeriod
 import de.landstueberl.mystueberlapp.data.StatisticsTileFigures
@@ -17,7 +18,6 @@ import kotlinx.coroutines.flow.map
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
-import java.util.Currency
 
 /**
  * Turns the statistics DAO's raw cent values into [Money].
@@ -43,15 +43,26 @@ class StatisticsRepository(
     fun getOverallFiguresFlow(): Flow<OverallFigures> {
         val year = yearRangeOf(LocalDate.now().year)
 
-        return combine(
+        val sales = combine(
             dao.getYearStatisticsFlow(year.from, year.to),
-            dao.getAllTimeStatisticsFlow(),
+            dao.getProfitStatisticsFlow(year.from, year.to),
+            dao.getAllTimeStatisticsFlow()
+        ) { yearStats, profit, allTime ->
+            Triple(yearStats, profit, allTime)
+        }
+
+        val counts = combine(
             dao.getAverageStockPresenceFlow(),
             dao.getFreeProductCountFlow(year.from, year.to),
             dao.getRemovedProductCountFlow(year.from, year.to)
-        ) { yearStats, allTime, stockPresence, freeCount, removedCount ->
+        ) { stockPresence, freeCount, removedCount ->
+            Triple(stockPresence, freeCount, removedCount)
+        }
+
+        return combine(sales, counts) { (yearStats, profit, allTime),
+                                        (stockPresence, freeCount, removedCount) ->
             OverallFigures(
-                profitThisYear = (yearStats.revenueCents - yearStats.costCents).toMoney(),
+                profitThisYear = (profit.revenueCents - profit.costCents).toMoney(),
                 averageSalePriceThisYear = yearStats.averageSalePrice(),
                 averageSalePriceAllTime = allTime.averageSalePrice(),
                 averageStockPresenceDays = stockPresence,
@@ -83,7 +94,7 @@ class StatisticsRepository(
     // ── Conversion ─────────────────────────────
     private fun Long.toMoney(): Money = Money(
         amount = BigDecimal.valueOf(this, CENTS_SCALE),
-        currency = CURRENCY
+        currency = PriceInput.CURRENCY
     )
 
     /**
@@ -101,12 +112,11 @@ class StatisticsRepository(
         return Money(
             amount = BigDecimal.valueOf(totalCents, CENTS_SCALE)
                 .divide(BigDecimal(count), CENTS_SCALE, RoundingMode.HALF_UP),
-            currency = CURRENCY
+            currency = PriceInput.CURRENCY
         )
     }
 
     private companion object {
         const val CENTS_SCALE = 2
-        val CURRENCY: Currency = Currency.getInstance("EUR")
     }
 }

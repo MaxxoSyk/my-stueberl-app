@@ -159,13 +159,11 @@ fun OrderDisplayItem(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                if (total != null) {
-                    Text(
-                        text = total.format(),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = AccentGold
-                    )
-                }
+                Text(
+                    text = total.format(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = AccentGold
+                )
             }
 
             // ── Created At ─────────────────────

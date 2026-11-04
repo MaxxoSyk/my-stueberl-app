@@ -139,16 +139,14 @@ fun ProductBatchItem(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    details.salesPrice?.let { price ->
-                        Text(
-                            text = stringResource(
-                                R.string.products_screen_batch_price_each,
-                                price.format()
-                            ),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = AccentGold
-                        )
-                    }
+                    Text(
+                        text = stringResource(
+                            R.string.products_screen_batch_price_each,
+                            details.salesPrice.format()
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = AccentGold
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))

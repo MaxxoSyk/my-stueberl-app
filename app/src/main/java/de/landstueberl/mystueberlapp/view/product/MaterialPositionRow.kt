@@ -48,7 +48,6 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
-import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormViewModel
 
 /**
  * One cost position, either read-only or in edit mode.
@@ -252,7 +251,7 @@ private fun MaterialPositionEditor(
                                 quantity = parsedQuantity,
                                 unitPrice = Money(
                                     amount = requireNotNull(parsedAmount),
-                                    currency = ProductFormViewModel.CURRENCY
+                                    currency = PriceInput.CURRENCY
                                 )
                             )
                         )

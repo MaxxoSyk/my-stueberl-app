@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,7 +14,6 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -158,10 +156,15 @@ fun StatisticsScreen(
 
             StatisticsRow(
                 label = stringResource(R.string.statistics_profit_year, currentYear),
+                caption = stringResource(R.string.statistics_profit_caption),
                 value = overall.profitThisYear.format(),
                 icon = Icons.AutoMirrored.Filled.TrendingUp,
                 iconTint = AccentGold,
-                valueColor = AccentGold,
+                valueColor = if (overall.profitThisYear.amount.signum() < 0) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    AccentGold
+                },
                 onClick = { }
             )
             StatisticsRow(

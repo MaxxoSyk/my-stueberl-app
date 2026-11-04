@@ -47,6 +47,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Money
+import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.calculatedTotal
 import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 import de.landstueberl.mystueberlapp.data.format
@@ -55,8 +56,6 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
-import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormViewModel
-import java.math.BigDecimal
 
 /** No row is being edited. */
 private const val NO_EDIT = -1
@@ -85,10 +84,7 @@ fun CostCalculatorDialog(
                 productId = 0,
                 name = "",
                 quantity = 1,
-                unitPrice = Money(
-                    amount = BigDecimal.ZERO,
-                    currency = ProductFormViewModel.CURRENCY
-                )
+                unitPrice = PriceInput.zeroMoney()
             )
         )
         editingIndex = positions.size   // the appended row

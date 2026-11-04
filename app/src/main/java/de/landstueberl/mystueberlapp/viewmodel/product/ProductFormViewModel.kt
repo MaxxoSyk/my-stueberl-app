@@ -18,14 +18,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
-import java.math.RoundingMode
-import java.util.Currency
 import kotlin.coroutines.cancellation.CancellationException
 
 data class ProductFormValues(
     val description: String,
-    val purchasePrice: Money?,
-    val salesPrice: Money?,
+    val purchasePrice: Money,
+    val salesPrice: Money,
     val imageFileName: String?,
     val materials: List<ProductMaterialDetail>
 )
@@ -96,8 +94,8 @@ abstract class ProductFormViewModel(
     /** The current form contents, trimmed and parsed. */
     protected fun currentFormValues(): ProductFormValues = ProductFormValues(
         description = _description.value.trim(),
-        purchasePrice = _purchasePrice.value.toMoneyOrNull(),
-        salesPrice = _salesPrice.value.toMoneyOrNull(),
+        purchasePrice = _purchasePrice.value.toMoney(),
+        salesPrice = _salesPrice.value.toMoney(),
         imageFileName = _imageFileName.value,
         materials = _materials.value
     )
@@ -183,18 +181,10 @@ abstract class ProductFormViewModel(
     protected abstract suspend fun persist(values: ProductFormValues)
 
     /**
-     * Parses user input into [Money], or null when the field is empty or
-     * unparseable.
-     *
-     * The amount is normalised to two decimal places so that stored values are
-     * directly comparable: BigDecimal.equals is scale-sensitive, and without
-     * this `3.5` and `3.50` would be treated as different prices.
-     *
-     * [RoundingMode.HALF_UP] matches the everyday expectation that 0.005 rounds
-     * up to 0.01.
+     * Parses user input into [Money], treating an empty field as zero — a
+     * product always has both prices, so there is no "not priced" state.
      */
-    private fun String.toMoneyOrNull(): Money? =
-        PriceInput.parseAmount(this)?.let { Money(amount = it, currency = CURRENCY) }
+    private fun String.toMoney(): Money = PriceInput.parseMoney(this)
 
     /**
      * Loads **all** previously used material names in one go, rather than
@@ -281,8 +271,5 @@ abstract class ProductFormViewModel(
 
         /** How long a shared flow stays active after its last collector. */
         private const val STOP_TIMEOUT_MILLIS = 5_000L
-
-        /** The shop trades exclusively in euros. */
-        val CURRENCY: Currency = Currency.getInstance("EUR")
     }
 }

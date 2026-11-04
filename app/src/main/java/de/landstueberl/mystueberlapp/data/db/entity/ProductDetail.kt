@@ -27,8 +27,8 @@ import java.time.LocalDate
 data class ProductDetail(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val description: String,
-    @Embedded(prefix = "purchase_") val purchasePrice: Money?,
-    @Embedded(prefix = "sales_") val salesPrice: Money?,
+    @Embedded(prefix = "purchase_") val purchasePrice: Money,
+    @Embedded(prefix = "sales_") val salesPrice: Money,
     val status: ProductStatus = ProductStatus.AVAILABLE,
     val orderId: Int? = null,
     val batchId: Int? = null,

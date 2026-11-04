@@ -66,8 +66,8 @@ class EditProductViewModel(
 
                 // Prefill the inherited form fields
                 _description.value = productDetails.description
-                _purchasePrice.value = productDetails.purchasePrice?.amount?.toPlainString() ?: ""
-                _salesPrice.value = productDetails.salesPrice?.amount?.toPlainString() ?: ""
+                _purchasePrice.value = productDetails.purchasePrice.amount.toPlainString()
+                _salesPrice.value = productDetails.salesPrice.amount.toPlainString()
                 _materials.value = product.materialList
 
                 // Existing image, if any

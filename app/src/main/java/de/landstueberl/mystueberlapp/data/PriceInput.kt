@@ -2,6 +2,7 @@ package de.landstueberl.mystueberlapp.data
 
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.Currency
 
 /**
  * Validation and parsing for monetary text input, shared by the product price
@@ -17,6 +18,12 @@ object PriceInput {
 
     /** Monetary amounts are stored with two decimal places. */
     private const val SCALE = 2
+
+    /** The shop trades exclusively in euros. */
+    val CURRENCY: Currency = Currency.getInstance("EUR")
+
+    /** Scale-correct zero, for prices left blank. */
+    val ZERO_AMOUNT: BigDecimal = BigDecimal.ZERO.setScale(SCALE)
 
     /**
      * Whether [input] is acceptable as a partially-typed price.
@@ -38,4 +45,13 @@ object PriceInput {
         input.takeIf { it.isNotBlank() }
             ?.toBigDecimalOrNull()
             ?.setScale(SCALE, RoundingMode.HALF_UP)
+
+    /** Parses [input], treating blank or unparseable as zero. */
+    fun parseMoney(input: String): Money = Money(
+        amount = parseAmount(input) ?: ZERO_AMOUNT,
+        currency = CURRENCY
+    )
+
+    /** Zero in the shop's currency. */
+    fun zeroMoney(): Money = Money(amount = ZERO_AMOUNT, currency = CURRENCY)
 }

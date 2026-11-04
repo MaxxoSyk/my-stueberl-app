@@ -16,7 +16,8 @@ val ProductMaterialDetail.lineTotal: BigDecimal
  */
 fun List<ProductMaterialDetail>.calculatedTotal(): Money? {
     if (isEmpty()) return null
-    val currency = first().unitPrice.currency
-    val amount = fold(BigDecimal.ZERO) { sum, line -> sum + line.lineTotal }
-    return Money(amount = amount, currency = currency)
+    return Money(
+        amount = fold(PriceInput.ZERO_AMOUNT) { sum, line -> sum + line.lineTotal },
+        currency = PriceInput.CURRENCY
+    )
 }
