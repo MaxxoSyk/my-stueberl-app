@@ -22,9 +22,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
+
+/** Shown while the statistics flow has yet to emit. */
+private const val PLACEHOLDER = "–"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,10 +41,10 @@ fun HomeScreen(
     val availableSalesAreaCount by viewModel.availableSalesAreaCount.collectAsStateWithLifecycle()
     val pendingOrderProductsCount by viewModel.pendingOrderProductsCount.collectAsStateWithLifecycle()
     val totalProductsCurrentYear by viewModel.totalProductsCurrentYear.collectAsStateWithLifecycle()
-
     val openOrderCount by viewModel.openOrderCount.collectAsStateWithLifecycle()
     val nextDueOrder by viewModel.nextDueOrder.collectAsStateWithLifecycle()
     val totalOrdersCurrentYear by viewModel.totalOrdersCurrentYear.collectAsStateWithLifecycle()
+    val statisticsFigures by viewModel.statisticsTileFigures.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -67,10 +71,10 @@ fun HomeScreen(
         ) {
             // ── Statistics Tile - Full Width ──
             StatisticsTile(
-                salesVolume = "€0,00",
-                soldToday = 0,
-                onSale = 0,
-                onClick = { onNavigateToStatistics() }
+                revenueToday = statisticsFigures?.revenueToday?.format() ?: PLACEHOLDER,
+                soldToday = statisticsFigures?.soldToday ?: 0,
+                revenueThisYear = statisticsFigures?.revenueThisYear?.format() ?: PLACEHOLDER,
+                onClick = onNavigateToStatistics
             )
 
             Spacer(modifier = Modifier.height(4.dp))

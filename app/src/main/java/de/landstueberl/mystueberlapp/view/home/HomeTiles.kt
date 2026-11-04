@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Inventory
@@ -83,9 +84,9 @@ private fun TileRow(
 // ── Statistics Tile ────────────────────────────────────────────────────
 @Composable
 fun StatisticsTile(
-    salesVolume: String,
+    revenueToday: String,
     soldToday: Int,
-    onSale: Int,
+    revenueThisYear: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -101,11 +102,9 @@ fun StatisticsTile(
             modifier = Modifier.padding(16.dp)
         ) {
             // ── Tile Header ──
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.AttachMoney,
+                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                     contentDescription = null,
                     tint = AccentGold,
                     modifier = Modifier.size(24.dp)
@@ -125,20 +124,23 @@ fun StatisticsTile(
             TileRow(
                 icon = Icons.Default.AttachMoney,
                 iconTint = AccentGold,
-                label = stringResource(R.string.stats_sales_volume),
-                value = salesVolume
+                label = stringResource(R.string.home_screen_stats_revenue_today),
+                value = revenueToday
             )
             TileRow(
                 icon = Icons.Default.ShoppingCart,
                 iconTint = SageGreenDark,
-                label = stringResource(R.string.stats_sold_today),
+                label = stringResource(R.string.home_screen_stats_sold_today),
                 value = soldToday.toString()
             )
             TileRow(
-                icon = Icons.Default.Inventory,
+                icon = Icons.AutoMirrored.Filled.TrendingUp,
                 iconTint = SageGreen,
-                label = stringResource(R.string.stats_on_sale),
-                value = onSale.toString()
+                label = stringResource(
+                    R.string.home_screen_stats_revenue_year,
+                    LocalDate.now().year
+                ),
+                value = revenueThisYear
             )
         }
     }

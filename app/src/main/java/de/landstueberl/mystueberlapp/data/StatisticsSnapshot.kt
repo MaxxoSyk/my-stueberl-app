@@ -19,3 +19,10 @@ data class OverallFigures(
     val freeProductsThisYear: Int,
     val removedProductsThisYear: Int
 )
+
+/** Figures for the home screen's statistics tile. */
+data class StatisticsTileFigures(
+    val revenueToday: Money,
+    val soldToday: Int,
+    val revenueThisYear: Money
+)
