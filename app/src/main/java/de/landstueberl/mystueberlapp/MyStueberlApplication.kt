@@ -7,10 +7,12 @@ import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
+import de.landstueberl.mystueberlapp.repository.StatisticsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlin.getValue
 
 class MyStueberlApplication : Application() {
 
@@ -36,6 +38,10 @@ class MyStueberlApplication : Application() {
             orderDao = database.orderDao(),
             productDao = database.productDao()
         )
+    }
+
+    val statisticsRepository by lazy {
+        StatisticsRepository(database.statisticsDao())
     }
 
     val productImageStorage by lazy { ProductImageStorage(applicationContext) }

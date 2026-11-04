@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import de.landstueberl.mystueberlapp.data.OrderDao
 import de.landstueberl.mystueberlapp.data.ProductDao
+import de.landstueberl.mystueberlapp.data.StatisticsDao
 import de.landstueberl.mystueberlapp.data.converter.DateConverters
 import de.landstueberl.mystueberlapp.data.converter.MoneyConverters
 import de.landstueberl.mystueberlapp.data.db.entity.Image
@@ -29,4 +30,5 @@ import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 abstract class StueberlDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun orderDao(): OrderDao
+    abstract fun statisticsDao(): StatisticsDao
 }
