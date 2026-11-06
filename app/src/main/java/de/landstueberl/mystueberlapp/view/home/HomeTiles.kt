@@ -309,14 +309,7 @@ fun GalleryTile(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = stringResource(R.string.home_screen_tile_gallery),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
-            )
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = TextSecondary.copy(alpha = 0.5f),
-                modifier = Modifier.size(20.dp)
+                style = MaterialTheme.typography.titleMedium
             )
         }
     }
