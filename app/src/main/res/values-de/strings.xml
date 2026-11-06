@@ -14,7 +14,7 @@
     <string name="home_screen_tile_statistics">Statistiken</string>
     <string name="home_screen_tile_products">Werkstücke</string>
     <string name="home_screen_tile_orders">Bestellungen</string>
-    <string name="home_screen_tile_gallery">Galerie</string>
+    <string name="home_screen_tile_gallery">Werkstück-Galerie</string>
 
     <!-- Statistics Tile -->
     <string name="home_screen_stats_revenue_today">Umsatz heute</string>
@@ -261,7 +261,7 @@
     <string name="statistics_days_value">%1$d Tage</string>
     <string name="statistics_no_value">–</string>
 
-    <string name="gallery_screen_title">Galerie</string>
+    <string name="gallery_screen_title">Werkstück-Galerie</string>
     <string name="gallery_screen_empty">Noch keine Fotos. Fotos, die du Produkten hinzufügst, erscheinen hier.</string>
 
     <string name="product_detail_not_found">Dieses Werkstück existiert nicht mehr.</string>
