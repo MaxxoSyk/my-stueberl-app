@@ -304,4 +304,21 @@ interface ProductDao {
         ORDER BY id ASC
     """)
     fun getProductWithBatchFlow(productId: Int): Flow<List<Product>>
+
+    /**
+     * Products whose description matches [query], ignoring the status, year and
+     * source filters — a search should find what you asked for, not what the
+     * current filter happens to allow.
+     *
+     * `LIKE` is case-insensitive for ASCII in SQLite. German umlauts are
+     * compared case-sensitively, so "Schale" will not match a typed "schale"
+     * if the stored text differs in an umlaut's case.
+     */
+    @Transaction
+    @Query("""
+        SELECT * FROM ProductDetail
+        WHERE description LIKE '%' || :query || '%'
+        ORDER BY createdAt DESC, id ASC
+    """)
+    fun searchProductsFlow(query: String): Flow<List<Product>>
 }

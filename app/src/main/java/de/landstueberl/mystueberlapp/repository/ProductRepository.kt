@@ -103,4 +103,7 @@ class ProductRepository(private val dao: ProductDao) {
 
     fun getProductWithBatchFlow(productId: Int): Flow<List<Product>> =
         dao.getProductWithBatchFlow(productId)
+
+    fun searchProductsFlow(query: String): Flow<List<Product>> =
+        dao.searchProductsFlow(query)
 }

@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -50,6 +51,28 @@ class ProductsViewModel(
 
     fun setSortOrder(order: ProductSortOrder) {
         _sortOrder.value = order
+    }
+
+    // ── Search ─────────────────────────────────
+    // Search bypasses the filter and sort: a query is a direct request for a
+    // product, not a refinement of the current view.
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive: StateFlow<Boolean> = _isSearchActive.asStateFlow()
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun openSearch() {
+        _isSearchActive.value = true
+    }
+
+    fun closeSearch() {
+        _isSearchActive.value = false
+        _searchQuery.value = ""
     }
 
     val availableYears: StateFlow<List<Int>> = repo
@@ -106,7 +129,7 @@ class ProductsViewModel(
 
     // ── Products List ──────────────────────────
     // Filter changes re-query; sort changes only re-sort the existing list.
-    val products: StateFlow<List<Product>> = combine(
+    private val products: StateFlow<List<Product>> = combine(
         _filter.flatMapLatest { filter -> repo.getFilteredProductsFlow(filter) },
         _sortOrder
     ) { list, order ->
@@ -117,14 +140,32 @@ class ProductsViewModel(
         initialValue = emptyList()
     )
 
-    /** The products list collapsed into single rows and batch groups. */
-    val listItems: StateFlow<List<ProductListItem>> = products
-        .map { it.groupByBatch() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            initialValue = emptyList()
-        )
+    /**
+     * The list contents: search results when searching, otherwise the filtered
+     * and sorted products. Both are grouped into batches.
+     */
+    val listItems: StateFlow<List<ProductListItem>> = combine(
+        _isSearchActive,
+        _searchQuery
+    ) { active, query ->
+        active to query
+    }.flatMapLatest { (active, query) ->
+        when {
+            // Searching with a query: results from the whole table
+            active && query.isNotBlank() ->
+                repo.searchProductsFlow(query).map { it.groupByBatch() }
+
+            // Search open but nothing typed yet — no results to show
+            active -> flowOf(emptyList())
+
+            // Normal browsing
+            else -> products.map { it.groupByBatch() }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        initialValue = emptyList()
+    )
 
     // ── Selection Mode ─────────────────────────
     private val _selectedProducts = MutableStateFlow<Set<Int>>(emptySet())
@@ -144,6 +185,12 @@ class ProductsViewModel(
         // A filter change can hide rows that are still selected; dropping the
         // selection prevents deleting products the user can no longer see.
         _filter
+            .drop(1)
+            .onEach { clearSelection() }
+            .launchIn(viewModelScope)
+
+        // Same reasoning for entering or leaving search.
+        _isSearchActive
             .drop(1)
             .onEach { clearSelection() }
             .launchIn(viewModelScope)
