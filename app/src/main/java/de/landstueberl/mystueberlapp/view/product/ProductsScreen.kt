@@ -1,8 +1,10 @@
 package de.landstueberl.mystueberlapp.view.product
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,7 +12,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material3.Badge
@@ -26,6 +30,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -38,6 +44,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -66,7 +74,6 @@ fun ProductsScreen(
     productUpdated: Boolean = false,
     onProductUpdatedConsumed: () -> Unit = {}
 ) {
-    val products by viewModel.products.collectAsStateWithLifecycle()
     val selectedProducts by viewModel.selectedProducts.collectAsStateWithLifecycle()
     val selectedProductId by viewModel.selectedProductId.collectAsStateWithLifecycle()
     val filter by viewModel.filter.collectAsStateWithLifecycle()
@@ -76,12 +83,25 @@ fun ProductsScreen(
     val isError by viewModel.isError.collectAsStateWithLifecycle()
     val isFilterNarrowing by viewModel.isFilterNarrowing.collectAsStateWithLifecycle()
     val listItems by viewModel.listItems.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val isSearchActive by viewModel.isSearchActive.collectAsStateWithLifecycle()
+
+    val focusRequester = remember { FocusRequester() }
 
     // Collapses when leaving the screen — plain remember, not rememberSaveable.
     val expandedBatchIds = remember { mutableStateSetOf<Int>() }
 
-    val selectedProduct = remember(selectedProductId, products) {
-        selectedProductId?.let { id -> products.firstOrNull { it.details.id == id } }
+    val selectedProduct = remember(selectedProductId, listItems) {
+        selectedProductId?.let { id ->
+            listItems.asSequence()
+                .flatMap { item ->
+                    when (item) {
+                        is ProductListItem.Single -> sequenceOf(item.product)
+                        is ProductListItem.Batch -> item.products.asSequence()
+                    }
+                }
+                .firstOrNull { it.details.id == id }
+        }
     }
 
     val isSelectionMode = selectedProducts.isNotEmpty()
@@ -96,6 +116,11 @@ fun ProductsScreen(
     val sortOrder by viewModel.sortOrder.collectAsStateWithLifecycle()
 
     var previewImageName by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // Focus the field as it appears, so you can type immediately.
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) focusRequester.requestFocus()
+    }
 
     // ── Show success message when product saved ──
     LaunchedEffect(productSaved) {
@@ -121,106 +146,159 @@ fun ProductsScreen(
         }
     }
 
+    BackHandler(enabled = isSearchActive) {
+        viewModel.closeSearch()
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                // ── Back Button ──
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (isSelectionMode) {
-                            viewModel.clearSelection()
-                        } else {
-                            onNavigateBack()
+                        when {
+                            isSearchActive -> viewModel.closeSearch()
+                            isSelectionMode -> viewModel.clearSelection()
+                            else -> onNavigateBack()
                         }
                     }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.common_back),
+                            imageVector = if (isSearchActive) {
+                                Icons.Default.Close
+                            } else {
+                                Icons.AutoMirrored.Filled.ArrowBack
+                            },
+                            contentDescription = stringResource(
+                                if (isSearchActive) R.string.common_cancel
+                                else R.string.common_back
+                            ),
                             tint = Color.White
                         )
                     }
                 },
-                // ── Title ──
                 title = {
-                    Text(
-                        text = if (isSelectionMode)
-                            stringResource(R.string.products_screen_selected, selectedProducts.size)
-                        else
-                            stringResource(R.string.products_screen_title),
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = Color.White
-                    )
-                },
-                // ── Action Icons ──
-                actions = {
-                    if (isSelectionMode) {
-                        // ── Delete Icon ──
-                        IconButton(onClick = { showDeleteConfirmation = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.products_screen_delete),
-                                tint = Color.White
+                    if (isSearchActive) {
+                        TextField(
+                            value = searchQuery,
+                            onValueChange = viewModel::onSearchQueryChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
+                            placeholder = {
+                                Text(
+                                    text = stringResource(R.string.products_screen_search_hint),
+                                    color = Color.White.copy(alpha = 0.7f)
+                                )
+                            },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.White.copy(alpha = 0.5f),
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                cursorColor = Color.White
                             )
-                        }
+                        )
                     } else {
-                        // ── Sort Menu ──
-                        Box {
-                            IconButton(onClick = { sortMenuExpanded = true }) {
+                        Text(
+                            text = if (isSelectionMode) {
+                                stringResource(
+                                    R.string.products_screen_selected,
+                                    selectedProducts.size
+                                )
+                            } else {
+                                stringResource(R.string.products_screen_title)
+                            },
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = Color.White
+                        )
+                    }
+                },
+                actions = {
+                    when {
+                        // No actions while searching — sort and filter don't apply
+                        isSearchActive -> Unit
+
+                        isSelectionMode -> {
+                            IconButton(onClick = { showDeleteConfirmation = true }) {
                                 Icon(
-                                    imageVector = Icons.Default.SwapVert,
-                                    contentDescription = stringResource(R.string.products_screen_sort),
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(R.string.products_screen_delete),
+                                    tint = Color.White
+                                )
+                            }
+                        }
+
+                        else -> {
+                            // ── Search Icon ──
+                            IconButton(onClick = { viewModel.openSearch() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = stringResource(R.string.products_screen_search),
                                     tint = Color.White
                                 )
                             }
 
-                            DropdownMenu(
-                                expanded = sortMenuExpanded,
-                                onDismissRequest = { sortMenuExpanded = false }
-                            ) {
-                                ProductSortOrder.entries.forEach { order ->
-                                    DropdownMenuItem(
-                                        text = { Text(stringResource(order.labelRes)) },
-                                        onClick = {
-                                            viewModel.setSortOrder(order)
-                                            sortMenuExpanded = false
-                                        },
-                                        trailingIcon = {
-                                            if (order == sortOrder) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Check,
-                                                    contentDescription = null,
-                                                    tint = SageGreenDark
+                            // ── Sort Menu ──
+                            Box {
+                                IconButton(onClick = { sortMenuExpanded = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.SwapVert,
+                                        contentDescription = stringResource(R.string.products_screen_sort),
+                                        tint = Color.White
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = sortMenuExpanded,
+                                    onDismissRequest = { sortMenuExpanded = false }
+                                ) {
+                                    ProductSortOrder.entries.forEach { order ->
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(order.labelRes)) },
+                                            onClick = {
+                                                viewModel.setSortOrder(order)
+                                                sortMenuExpanded = false
+                                            },
+                                            trailingIcon = {
+                                                if (order == sortOrder) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = SageGreenDark
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            // ── Filter Icon ──
+                            IconButton(onClick = { viewModel.showFilterSheet() }) {
+                                BadgedBox(
+                                    badge = {
+                                        if (activeFilterCount > 0) {
+                                            Badge(
+                                                containerColor = SageGreenDark
+                                            ) {
+                                                Text(
+                                                    text = activeFilterCount.toString(),
+                                                    color = Color.White,
+                                                    style = MaterialTheme.typography.labelSmall
                                                 )
                                             }
                                         }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.FilterAlt,
+                                        contentDescription = stringResource(R.string.products_screen_filter),
+                                        tint = Color.White
                                     )
                                 }
-                            }
-                        }
-
-                        // ── Filter Icon ──
-                        IconButton(onClick = { viewModel.showFilterSheet() }) {
-                            BadgedBox(
-                                badge = {
-                                    if (activeFilterCount > 0) {
-                                        Badge(
-                                            containerColor = SageGreenDark
-                                        ) {
-                                            Text(
-                                                text = activeFilterCount.toString(),
-                                                color = Color.White,
-                                                style = MaterialTheme.typography.labelSmall
-                                            )
-                                        }
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.FilterAlt,
-                                    contentDescription = stringResource(R.string.products_screen_filter),
-                                    tint = Color.White
-                                )
                             }
                         }
                     }
@@ -232,7 +310,7 @@ fun ProductsScreen(
             )
         },
         floatingActionButton = {
-            if (!isSelectionMode) {
+            if (!isSelectionMode && !isSearchActive) {
                 FloatingActionButton(
                     onClick = { onNavigateToAddProduct() },
                     containerColor = SageGreen
@@ -247,7 +325,7 @@ fun ProductsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        if (products.isEmpty()) {
+        if (listItems.isEmpty()) {
             // ── Empty State ──
             Box(
                 modifier = Modifier
@@ -257,10 +335,15 @@ fun ProductsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (isFilterNarrowing) {
-                        stringResource(R.string.products_screen_empty_filtered)
-                    } else {
-                        stringResource(R.string.products_screen_empty)
+                    text = when {
+                        isSearchActive && searchQuery.isNotBlank() ->
+                            stringResource(R.string.products_screen_search_no_results)
+                        isSearchActive ->
+                            stringResource(R.string.products_screen_search_prompt)
+                        isFilterNarrowing ->
+                            stringResource(R.string.products_screen_empty_filtered)
+                        else ->
+                            stringResource(R.string.products_screen_empty)
                     },
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleMedium,

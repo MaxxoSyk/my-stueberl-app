@@ -65,6 +65,11 @@
     <string name="products_screen_batch_collapse">Hide individual products</string>
     <string name="products_screen_price_calculated">Preis aus Materialien berechnet</string>
 
+    <string name="products_screen_search">Search</string>
+    <string name="products_screen_search_hint">Search description…</string>
+    <string name="products_screen_search_prompt">Type to search product descriptions.</string>
+    <string name="products_screen_search_no_results">No products match your search.</string>
+
     <string name="products_sort_oldest">Oldest first</string>
     <string name="products_sort_newest">Newest first</string>
     <string name="products_sort_activity">Recent activity</string>
