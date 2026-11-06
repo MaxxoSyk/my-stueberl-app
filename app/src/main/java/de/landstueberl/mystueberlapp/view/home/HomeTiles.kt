@@ -89,6 +89,7 @@ fun StatisticsTile(
     revenueToday: String,
     soldToday: Int,
     revenueThisYear: String,
+    year: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -140,7 +141,7 @@ fun StatisticsTile(
                 iconTint = SageGreen,
                 label = stringResource(
                     R.string.home_screen_stats_revenue_year,
-                    LocalDate.now().year
+                    year
                 ),
                 value = revenueThisYear
             )
@@ -154,6 +155,7 @@ fun ProductsTile(
     availableSalesAreaProducts: Int,
     pendingOrderProducts: Int,
     totalProductsCurrentYear: Int,
+    year: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -205,7 +207,7 @@ fun ProductsTile(
                 iconTint = SageGreenDark,
                 label = stringResource(
                     R.string.home_screen_tile_products_total,
-                    LocalDate.now().year
+                    year
                 ),
                 value = totalProductsCurrentYear.toString()
             )
@@ -219,6 +221,7 @@ fun OrdersTile(
     openOrders: Int,
     nextDueDate: LocalDate?,
     totalOrdersCurrentYear: Int,
+    year: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -271,7 +274,7 @@ fun OrdersTile(
                 iconTint = SageGreenDark,
                 label = stringResource(
                     R.string.home_screen_tile_orders_total,
-                    LocalDate.now().year
+                    year
                 ),
                 value = totalOrdersCurrentYear.toString()
             )

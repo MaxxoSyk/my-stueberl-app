@@ -16,6 +16,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,6 +27,7 @@ import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
+import java.time.LocalDate
 
 /** Shown while the statistics flow has yet to emit. */
 private const val PLACEHOLDER = "–"
@@ -46,6 +48,8 @@ fun HomeScreen(
     val nextDueOrder by viewModel.nextDueOrder.collectAsStateWithLifecycle()
     val totalOrdersCurrentYear by viewModel.totalOrdersCurrentYear.collectAsStateWithLifecycle()
     val statisticsFigures by viewModel.statisticsTileFigures.collectAsStateWithLifecycle()
+
+    val currentYear = remember { LocalDate.now().year }
 
     Scaffold(
         topBar = {
@@ -75,6 +79,7 @@ fun HomeScreen(
                 revenueToday = statisticsFigures?.revenueToday?.format() ?: PLACEHOLDER,
                 soldToday = statisticsFigures?.soldToday ?: 0,
                 revenueThisYear = statisticsFigures?.revenueThisYear?.format() ?: PLACEHOLDER,
+                year = currentYear,
                 onClick = onNavigateToStatistics
             )
 
@@ -92,6 +97,7 @@ fun HomeScreen(
                     availableSalesAreaProducts = availableSalesAreaCount,
                     pendingOrderProducts = pendingOrderProductsCount,
                     totalProductsCurrentYear = totalProductsCurrentYear,
+                    year = currentYear,
                     onClick = { onNavigateToProducts() },
                     modifier = Modifier.weight(1f)
                 )
@@ -99,6 +105,7 @@ fun HomeScreen(
                     openOrders = openOrderCount,
                     nextDueDate = nextDueOrder?.dueDate,
                     totalOrdersCurrentYear = totalOrdersCurrentYear,
+                    year = currentYear,
                     onClick = { onNavigateToOrders() },
                     modifier = Modifier.weight(1f)
                 )
