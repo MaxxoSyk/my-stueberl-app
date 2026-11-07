@@ -63,12 +63,12 @@
     <string name="products_screen_batch_price_each">%1$s pro Stück</string>
     <string name="products_screen_batch_expand">Einzelwerkstücke anzeigen</string>
     <string name="products_screen_batch_collapse">Einzelwerkstücke verbergen</string>
-    <string name="products_screen_price_calculated">Price calculated from materials</string>
+    <string name="products_screen_price_calculated">Preis aus Materialien berechnet</string>
 
     <string name="products_screen_search">Suchen</string>
     <string name="products_screen_search_hint">Beschreibung suchen…</string>
     <string name="products_screen_search_prompt">Tippe, um Werkstückbeschreibungen zu durchsuchen.</string>
-    <string name="products_screen_search_no_results">Keine Produkte entsprechen deiner Suche.</string>
+    <string name="products_screen_search_no_results">Keine Werkstücke entsprechen deiner Suche.</string>
 
     <string name="products_sort_oldest">Älteste zuerst</string>
     <string name="products_sort_newest">Neueste zuerst</string>
@@ -215,8 +215,8 @@
     <string name="attach_product_confirm_none">Werkstücke auswählen</string>
 
     <plurals name="attach_product_confirm">
-        <item quantity="one">1 Produkt hinzufügen</item>
-        <item quantity="other">%1$d Produkte hinzufügen</item>
+        <item quantity="one">1 Werkstück hinzufügen</item>
+        <item quantity="other">%1$d Werkstücke hinzufügen</item>
     </plurals>
 
     <string name="material_adjustment_label">Preisanpassung</string>
@@ -229,6 +229,7 @@
     <string name="material_position_edit">Position bearbeiten</string>
     <string name="material_position_remove">Position entfernen</string>
     <string name="material_position_confirm">Position bestätigen</string>
+    <string name="material_position_price_suggestions">Bisherige Preise</string>
 
     <string name="cost_calculator_title_purchase">Kosten (Einkauf)</string>
     <string name="cost_calculator_empty">Noch keine Positionen. Füge die Materialien hinzu, die für dieses Werkstück eingesetzt wurden.</string>
@@ -262,7 +263,7 @@
     <string name="statistics_no_value">–</string>
 
     <string name="gallery_screen_title">Werkstück-Galerie</string>
-    <string name="gallery_screen_empty">Noch keine Fotos. Fotos, die du Produkten hinzufügst, erscheinen hier.</string>
+    <string name="gallery_screen_empty">Noch keine Fotos. Fotos, die du Werkstücken hinzufügst, erscheinen hier.</string>
 
     <string name="product_detail_not_found">Dieses Werkstück existiert nicht mehr.</string>
 </resources>

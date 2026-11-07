@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,22 +34,26 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.MaterialSuggestion
 import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.lineTotal
+import de.landstueberl.mystueberlapp.data.materialKey
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import java.math.BigDecimal
 
 /**
  * One cost position, either read-only or in edit mode.
@@ -56,7 +62,7 @@ import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 fun MaterialPositionRow(
     position: ProductMaterialDetail,
     isEditing: Boolean,
-    nameSuggestions: List<String>,
+    materialSuggestions: List<MaterialSuggestion>,
     onStartEdit: () -> Unit,
     onConfirmEdit: (ProductMaterialDetail) -> Unit,
     onCancelEdit: () -> Unit,
@@ -66,7 +72,7 @@ fun MaterialPositionRow(
     if (isEditing) {
         MaterialPositionEditor(
             position = position,
-            nameSuggestions = nameSuggestions,
+            materialSuggestions = materialSuggestions,
             onConfirm = onConfirmEdit,
             onCancel = onCancelEdit,
             modifier = modifier
@@ -148,7 +154,7 @@ private fun MaterialPositionDisplay(
 @Composable
 private fun MaterialPositionEditor(
     position: ProductMaterialDetail,
-    nameSuggestions: List<String>,
+    materialSuggestions: List<MaterialSuggestion>,
     onConfirm: (ProductMaterialDetail) -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
@@ -168,6 +174,14 @@ private fun MaterialPositionEditor(
     val parsedAmount = PriceInput.parseAmount(amount)
 
     val isValid = parsedAmount != null && name.isNotBlank() && parsedQuantity >= 1
+
+    // Keyed by name, so the chips appear whenever the field matches a known
+    // material — after tapping a suggestion, typing it in full, or when
+    // editing an existing row.
+    val suggestionsByKey = remember(materialSuggestions) {
+        materialSuggestions.associateBy { materialKey(it.name) }
+    }
+    val priceSuggestions = suggestionsByKey[materialKey(name)]?.prices.orEmpty()
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -193,8 +207,8 @@ private fun MaterialPositionEditor(
 
             MaterialNameSuggestions(
                 query = name,
-                suggestions = nameSuggestions,
-                onSelect = { name = it }
+                suggestions = materialSuggestions,
+                onSelect = { name = it.name }
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -229,6 +243,13 @@ private fun MaterialPositionEditor(
                     colors = materialFieldColors()
                 )
             }
+
+            PriceSuggestions(
+                prices = priceSuggestions,
+                currentAmount = parsedAmount,
+                // Scale 2 → "2.50", which PriceInput.isValid accepts.
+                onSelect = { price -> amount = price.amount.toPlainString() }
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -291,8 +312,8 @@ private val QUANTITY_PATTERN = Regex("^\\d{0,3}$")
 @Composable
 private fun MaterialNameSuggestions(
     query: String,
-    suggestions: List<String>,
-    onSelect: (String) -> Unit,
+    suggestions: List<MaterialSuggestion>,
+    onSelect: (MaterialSuggestion) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val matches = remember(query, suggestions) {
@@ -301,8 +322,8 @@ private fun MaterialNameSuggestions(
         } else {
             suggestions
                 .filter {
-                    it.contains(query, ignoreCase = true) &&
-                            !it.equals(query, ignoreCase = true)
+                    it.name.contains(query, ignoreCase = true) &&
+                            !it.name.equals(query.trim(), ignoreCase = true)
                 }
                 .take(MAX_SUGGESTIONS)
         }
@@ -320,7 +341,7 @@ private fun MaterialNameSuggestions(
                 onClick = { onSelect(suggestion) },
                 label = {
                     Text(
-                        text = suggestion,
+                        text = suggestion.name,
                         style = MaterialTheme.typography.labelMedium
                     )
                 },
@@ -337,3 +358,71 @@ private fun MaterialNameSuggestions(
 
 private const val MIN_QUERY_LENGTH = 3
 private const val MAX_SUGGESTIONS = 8
+
+// ── Price suggestions ──────────────────────────────────────────────────
+/**
+ * Previously paid unit prices for the material in the name field, most used
+ * first. Renders nothing when there is no history. The chip matching the
+ * entered price is shown as selected.
+ */
+@Composable
+private fun PriceSuggestions(
+    prices: List<Money>,
+    currentAmount: BigDecimal?,
+    onSelect: (Money) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (prices.isEmpty()) return
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.material_position_price_suggestions),
+            style = MaterialTheme.typography.labelSmall,
+            color = TextSecondary
+        )
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            prices.forEach { price ->
+                // Both sides are scale 2 (PriceInput / Money), so equals() is safe.
+                val selected = currentAmount == price.amount
+
+                FilterChip(
+                    selected = selected,
+                    onClick = { onSelect(price) },
+                    label = {
+                        Text(
+                            text = price.format(),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    },
+                    leadingIcon = if (selected) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = AccentGold.copy(alpha = 0.15f),
+                        labelColor = SageGreenDark,
+                        selectedContainerColor = SageGreen,
+                        selectedLabelColor = Color.White,
+                        selectedLeadingIconColor = Color.White
+                    ),
+                    border = null
+                )
+            }
+        }
+    }
+}

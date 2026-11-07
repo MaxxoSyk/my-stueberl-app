@@ -76,7 +76,7 @@ fun AddProductScreen(
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
     val isPurchasePriceCalculated by viewModel.isPurchasePriceCalculated.collectAsStateWithLifecycle()
     val materialDraft by viewModel.materialDraft.collectAsStateWithLifecycle()
-    val materialNameSuggestions by viewModel.materialNameSuggestions.collectAsStateWithLifecycle()
+    val materialSuggestions by viewModel.materialSuggestions.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val saveErrorMessage = stringResource(R.string.product_form_save_failed)
@@ -271,7 +271,7 @@ fun AddProductScreen(
     if (showCostCalculator) {
         CostCalculatorDialog(
             positions = materialDraft,
-            nameSuggestions = materialNameSuggestions,
+            materialSuggestions = materialSuggestions,
             onAdd = viewModel::addDraftPosition,
             onUpdate = viewModel::updateDraftPosition,
             onRemove = viewModel::removeDraftPosition,

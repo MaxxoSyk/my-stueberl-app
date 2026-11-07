@@ -279,15 +279,29 @@ interface ProductDao {
     suspend fun deleteMaterialsByProductId(productId: Int)
 
     /**
-     * Every material name used so far, most frequently used first — so common
-     * materials surface at the top of the calculator's suggestions.
+     * One row per material name (exact spelling) and unit price, with the newest
+     * row id and a usage count.
+     *
+     * A batch counts as one use: its members get identical material copies, so
+     * counting rows would let a single batch of 50 outweigh everything else.
+     * Unbatched products are keyed by -id and batches by +batchId, so the two
+     * can't collide.
+     *
+     * Zero prices are kept so materials only ever used at 0 € still appear as
+     * name suggestions; they are dropped from the price chips in Kotlin. Grouping
+     * by name is case-sensitive here on purpose — see [materialKey].
      */
     @Query("""
-        SELECT name FROM ProductMaterialDetail
-        GROUP BY name COLLATE NOCASE
-        ORDER BY COUNT(*) DESC, name COLLATE NOCASE ASC
-    """)
-    suspend fun getAllMaterialNames(): List<String>
+    SELECT m.name AS name,
+           m.unit_amount AS unit_amount,
+           m.unit_currency AS unit_currency,
+           MAX(m.id) AS lastUsedId,
+           COUNT(DISTINCT CASE WHEN p.batchId IS NULL THEN -p.id ELSE p.batchId END) AS usageCount
+    FROM ProductMaterialDetail m
+    INNER JOIN ProductDetail p ON p.id = m.productId
+    GROUP BY m.name, m.unit_amount, m.unit_currency
+""")
+    suspend fun getMaterialPriceUsages(): List<MaterialPriceUsage>
 
     /**
      * The product and, when it belongs to a batch, its siblings — so the gallery
