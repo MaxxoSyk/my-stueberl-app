@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.MaterialSuggestion
 import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.calculatedTotal
@@ -64,7 +65,7 @@ private const val NO_EDIT = -1
 @Composable
 fun CostCalculatorDialog(
     positions: List<ProductMaterialDetail>,
-    nameSuggestions: List<String>,
+    materialSuggestions: List<MaterialSuggestion>,
     onAdd: (ProductMaterialDetail) -> Unit,
     onUpdate: (index: Int, ProductMaterialDetail) -> Unit,
     onRemove: (index: Int) -> Unit,
@@ -176,7 +177,7 @@ fun CostCalculatorDialog(
                         itemsIndexed(positions) { index, position ->
                             MaterialPositionRow(
                                 position = position,
-                                nameSuggestions = nameSuggestions,
+                                materialSuggestions = materialSuggestions,
                                 isEditing = index == editingIndex,
                                 onStartEdit = { editingIndex = index },
                                 onConfirmEdit = { updated ->

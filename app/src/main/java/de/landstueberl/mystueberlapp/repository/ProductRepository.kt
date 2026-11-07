@@ -1,9 +1,11 @@
 package de.landstueberl.mystueberlapp.repository
 
+import de.landstueberl.mystueberlapp.data.MaterialSuggestion
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.ProductFilter
 import de.landstueberl.mystueberlapp.data.ProductSourceFilter
+import de.landstueberl.mystueberlapp.data.buildMaterialSuggestions
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 import de.landstueberl.mystueberlapp.data.yearRangeOf
@@ -99,7 +101,8 @@ class ProductRepository(private val dao: ProductDao) {
         materials = materials
     )
 
-    suspend fun getAllMaterialNames(): List<String> = dao.getAllMaterialNames()
+    suspend fun getMaterialSuggestions(): List<MaterialSuggestion> =
+        buildMaterialSuggestions(dao.getMaterialPriceUsages())
 
     fun getProductWithBatchFlow(productId: Int): Flow<List<Product>> =
         dao.getProductWithBatchFlow(productId)

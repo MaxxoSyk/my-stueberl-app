@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import de.landstueberl.mystueberlapp.data.MaterialSuggestion
 import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.calculatedTotal
@@ -66,10 +67,10 @@ abstract class ProductFormViewModel(
         .map { it.isNotEmpty() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
 
-    // ── Material Name Suggestions ──────────────
-    private val _materialNameSuggestions = MutableStateFlow<List<String>>(emptyList())
-    val materialNameSuggestions: StateFlow<List<String>> =
-        _materialNameSuggestions.asStateFlow()
+    // ── Material Suggestions ───────────────────
+    private val _materialSuggestions = MutableStateFlow<List<MaterialSuggestion>>(emptyList())
+    val materialSuggestions: StateFlow<List<MaterialSuggestion>> =
+        _materialSuggestions.asStateFlow()
 
     // ── UI State ───────────────────────────────
     protected val _isSaved = MutableStateFlow(false)
@@ -187,30 +188,28 @@ abstract class ProductFormViewModel(
     private fun String.toMoney(): Money = PriceInput.parseMoney(this)
 
     /**
-     * Loads **all** previously used material names in one go, rather than
-     * querying per keystroke.
+     * Loads **all** previously used materials with their price suggestions in
+     * one go, rather than querying per keystroke.
      *
      * A single shop accumulates tens of distinct materials, not thousands, so
-     * filtering in memory is cheaper than a debounced query per character and
-     * avoids a coroutine on every edit. Revisit if the list ever grows large
-     * enough to notice.
+     * filtering in memory is cheaper than a debounced query per character.
      */
-    private fun loadMaterialNameSuggestions() {
+    private fun loadMaterialSuggestions() {
         viewModelScope.launch {
             try {
-                _materialNameSuggestions.value = repo.getAllMaterialNames()
+                _materialSuggestions.value = repo.getMaterialSuggestions()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // Autocomplete is a convenience; failing silently is acceptable.
-                Log.e(TAG, "Failed to load material names", e)
+                // Suggestions are a convenience; failing silently is acceptable.
+                Log.e(TAG, "Failed to load material suggestions", e)
             }
         }
     }
 
     fun startMaterialDraft() {
         _materialDraft.value = _materials.value
-        loadMaterialNameSuggestions()
+        loadMaterialSuggestions()
     }
 
     /**
