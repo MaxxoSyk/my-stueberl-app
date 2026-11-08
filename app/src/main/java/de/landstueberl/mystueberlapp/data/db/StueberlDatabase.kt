@@ -9,6 +9,8 @@ import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.StatisticsDao
 import de.landstueberl.mystueberlapp.data.converter.DateConverters
 import de.landstueberl.mystueberlapp.data.converter.MoneyConverters
+import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.db.entity.EventProductDetail
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
@@ -19,9 +21,11 @@ import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
         ProductDetail::class,
         Image::class,
         OrderDetail::class,
-        ProductMaterialDetail::class
+        ProductMaterialDetail::class,
+        EventDetail::class,
+        EventProductDetail::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = true
 )
 @TypeConverters(
