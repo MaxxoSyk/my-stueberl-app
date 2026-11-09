@@ -266,4 +266,25 @@
     <string name="gallery_screen_empty">No photos yet. Photos you add to products appear here.</string>
 
     <string name="product_detail_not_found">This product no longer exists.</string>
+
+    <!-- Events -->
+    <string name="home_screen_tile_events">Events</string>
+    <string name="events_screen_title">Events</string>
+    <string name="events_screen_add">New event</string>
+    <string name="events_screen_empty">No events yet. Tap + to plan your first one.</string>
+    <string name="events_screen_section_upcoming">Upcoming</string>
+    <string name="events_screen_section_past">Past</string>
+    <string name="events_screen_no_upcoming">No upcoming events.</string>
+    <string name="events_screen_success_save">Event saved</string>
+    <plurals name="events_screen_product_count">
+        <item quantity="one">%1$d product</item>
+        <item quantity="other">%1$d products</item>
+    </plurals>
+    <string name="event_date_range">%1$s – %2$s</string>
+
+    <string name="event_status_planned">Planned</string>
+    <string name="event_status_in_preparation">In preparation</string>
+    <string name="event_status_in_progress">In progress</string>
+    <string name="event_status_done">Done</string>
+    <string name="event_status_cancelled">Cancelled</string>
 </resources>

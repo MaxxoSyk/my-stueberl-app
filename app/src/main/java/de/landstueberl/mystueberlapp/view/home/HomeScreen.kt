@@ -38,6 +38,7 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onNavigateToProducts: () -> Unit,
     onNavigateToOrders: () -> Unit,
+    onNavigateToEvents: () -> Unit,
     onNavigateToStatistics: () -> Unit,
     onNavigateToGallery: () -> Unit
 ) {
@@ -110,6 +111,11 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            // ── Events Tile - Full Width ──
+            EventsTile(
+                onClick = onNavigateToEvents
+            )
 
             // ── Gallery Tile - Full Width ──
             GalleryTile(

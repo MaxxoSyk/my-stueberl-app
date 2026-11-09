@@ -33,4 +33,7 @@ sealed interface Screen {
 
     @Serializable
     data object Gallery : Screen
+
+    @Serializable
+    data object Events : Screen
 }
