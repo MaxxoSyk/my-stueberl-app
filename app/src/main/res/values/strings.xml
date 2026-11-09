@@ -287,4 +287,21 @@
     <string name="event_status_in_progress">In progress</string>
     <string name="event_status_done">Done</string>
     <string name="event_status_cancelled">Cancelled</string>
+
+    <string name="event_form_title_new">New event</string>
+    <string name="event_form_title_edit">Edit event</string>
+    <string name="event_form_name">Name</string>
+    <string name="event_form_location">Location</string>
+    <string name="event_form_start_date">Date</string>
+    <string name="event_form_end_date">Last day</string>
+    <string name="event_form_end_date_hint">Leave empty for a one-day event.</string>
+    <string name="event_form_clear_end_date">Remove last day</string>
+    <string name="event_form_stand_fee">Stand fee</string>
+    <string name="event_form_stand_fee_hint">Leave empty if not known yet. Enter 0 for a free stand.</string>
+    <string name="event_form_note">Note</string>
+    <string name="event_form_save">Save</string>
+    <string name="event_form_save_hint">Enter a name and a date first.</string>
+    <string name="event_form_save_failed">Could not save the event. Please try again.</string>
+    <string name="event_form_load_failed">The event could not be loaded.</string>
+    <string name="event_form_retry">Try again</string>
 </resources>

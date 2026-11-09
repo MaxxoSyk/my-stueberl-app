@@ -13,6 +13,7 @@ import de.landstueberl.mystueberlapp.repository.GalleryRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.repository.StatisticsRepository
+import de.landstueberl.mystueberlapp.view.event.EventFormScreen
 import de.landstueberl.mystueberlapp.view.event.EventsScreen
 import de.landstueberl.mystueberlapp.view.gallery.GalleryScreen
 import de.landstueberl.mystueberlapp.view.home.HomeScreen
@@ -23,6 +24,7 @@ import de.landstueberl.mystueberlapp.view.product.ProductsScreen
 import de.landstueberl.mystueberlapp.view.product.add.AddProductScreen
 import de.landstueberl.mystueberlapp.view.product.edit.EditProductScreen
 import de.landstueberl.mystueberlapp.view.statistics.StatisticsScreen
+import de.landstueberl.mystueberlapp.viewmodel.event.EventFormViewModel
 import de.landstueberl.mystueberlapp.viewmodel.event.EventsViewModel
 import de.landstueberl.mystueberlapp.viewmodel.gallery.GalleryViewModel
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
@@ -215,11 +217,29 @@ fun NavGraph(
                     // Step 6: navController.navigate(Screen.EventDetail(eventId))
                 },
                 onNavigateToNewEvent = {
-                    // Step 5: navController.navigate(Screen.EventForm())
+                    navController.navigate(Screen.EventForm())
                 },
                 eventSaved = eventSaved,
                 onEventSavedConsumed = {
                     backStackEntry.savedStateHandle[KEY_EVENT_SAVED] = false
+                }
+            )
+        }
+
+        composable<Screen.EventForm> {
+            EventFormScreen(
+                viewModel = viewModel(
+                    factory = EventFormViewModel.factory(eventRepository)
+                ),
+                onNavigateBack = { eventSaved ->
+                    if (eventSaved) {
+                        // Signals whichever screen opened the form: the list now,
+                        // the detail screen once editing exists.
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set(KEY_EVENT_SAVED, true)
+                    }
+                    navController.popBackStack()
                 }
             )
         }
