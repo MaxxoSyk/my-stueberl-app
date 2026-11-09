@@ -5,32 +5,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,10 +39,8 @@ import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
-import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
-import de.landstueberl.mystueberlapp.util.toLocalDateFromPicker
-import de.landstueberl.mystueberlapp.util.toPickerMillis
+import de.landstueberl.mystueberlapp.view.common.StueberlDatePickerDialog
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -61,21 +48,6 @@ import java.time.format.FormatStyle
 
 private val HINT_DATE_FORMAT: DateTimeFormatter =
     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-
-/**
- * A product's status can only have changed between the day it was added
- * and today.
- */
-private class ProductDateRange(private val createdAt: LocalDate) : SelectableDates {
-
-    override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-        val date = utcTimeMillis.toLocalDateFromPicker()
-        return !date.isBefore(createdAt) && !date.isAfter(LocalDate.now())
-    }
-
-    override fun isSelectableYear(year: Int): Boolean =
-        year in createdAt.year..LocalDate.now().year
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,7 +210,7 @@ private fun BottomSheetItem(
     }
 }
 
-// ── Shared Status Date Picker ──────────────────────────────────────────
+// ── Status Date Picker ─────────────────────────────────────────────────
 /**
  * Asks for the date on which a product changed status. Confirming performs the
  * action, so the common "it happened today" case is a single extra tap.
@@ -255,123 +227,20 @@ private fun ProductStatusDateDialog(
     onDismiss: () -> Unit,
     isDestructive: Boolean = false
 ) {
-    val today = LocalDate.now()
-    val initialDate = if (createdAt.isAfter(today)) createdAt else today
+    val today = remember { LocalDate.now() }
 
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate.toPickerMillis(),
-        yearRange = createdAt.year..today.year,
-        selectableDates = remember(createdAt) { ProductDateRange(createdAt) }
-    )
-
-    val accentColor = if (isDestructive) {
-        MaterialTheme.colorScheme.error
-    } else {
-        SageGreen
-    }
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(20.dp),
-        colors = DatePickerDefaults.colors(
-            containerColor = MaterialTheme.colorScheme.surface
+    StueberlDatePickerDialog(
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        initialDate = today,
+        minDate = createdAt,
+        maxDate = today,
+        title = title,
+        hint = stringResource(
+            R.string.product_bottom_sheet_date_hint,
+            createdAt.format(HINT_DATE_FORMAT)
         ),
-        confirmButton = {
-            Button(
-                onClick = {
-                    val selected = datePickerState.selectedDateMillis
-                        ?.toLocalDateFromPicker()
-                        ?: initialDate
-
-                    onConfirm(selected)
-                },
-                enabled = datePickerState.selectedDateMillis != null,
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = accentColor,
-                    contentColor = Color.White,
-                    disabledContainerColor = SageGreenLight,
-                    disabledContentColor = TextSecondary
-                )
-            ) {
-                Text(
-                    text = confirmLabel,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = TextSecondary
-                )
-            ) {
-                Text(stringResource(R.string.common_cancel))
-            }
-        }
-    ) {
-        Column {
-            // ── Header ──
-            Column(
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 20.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = stringResource(
-                        R.string.product_bottom_sheet_date_hint,
-                        createdAt.format(HINT_DATE_FORMAT)
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                color = SageGreen.copy(alpha = 0.3f)
-            )
-
-            // ── Picker ──
-            DatePicker(
-                state = datePickerState,
-                title = null,
-                headline = null,
-                showModeToggle = false,
-                colors = DatePickerDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    selectedDayContainerColor = accentColor,
-                    selectedDayContentColor = Color.White,
-                    todayDateBorderColor = accentColor,
-                    todayContentColor = accentColor,
-                    dayContentColor = MaterialTheme.colorScheme.onSurface,
-                    disabledDayContentColor = TextSecondary.copy(alpha = 0.3f),
-                    weekdayContentColor = TextSecondary,
-                    subheadContentColor = TextSecondary,
-                    navigationContentColor = SageGreenDark,
-                    yearContentColor = MaterialTheme.colorScheme.onSurface,
-                    selectedYearContainerColor = accentColor,
-                    selectedYearContentColor = Color.White,
-                    currentYearContentColor = accentColor
-                )
-            )
-        }
-    }
+        confirmLabel = confirmLabel,
+        isDestructive = isDestructive
+    )
 }
