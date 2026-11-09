@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.room.Room
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.GalleryRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
@@ -48,6 +49,9 @@ class MyStueberlApplication : Application() {
     val galleryRepository by lazy {
         GalleryRepository(database.galleryDao())
     }
+
+    val eventRepository by lazy {
+        EventRepository(database.eventDao()) }
 
     val productImageStorage by lazy { ProductImageStorage(applicationContext) }
 
