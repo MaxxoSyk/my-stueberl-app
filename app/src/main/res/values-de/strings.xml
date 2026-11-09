@@ -287,4 +287,21 @@
     <string name="event_status_in_progress">Läuft</string>
     <string name="event_status_done">Abgeschlossen</string>
     <string name="event_status_cancelled">Abgesagt</string>
+
+    <string name="event_form_title_new">Neue Veranstaltung</string>
+    <string name="event_form_title_edit">Veranstaltung bearbeiten</string>
+    <string name="event_form_name">Name</string>
+    <string name="event_form_location">Ort</string>
+    <string name="event_form_start_date">Datum</string>
+    <string name="event_form_end_date">Letzter Tag</string>
+    <string name="event_form_end_date_hint">Leer lassen bei eintägigen Veranstaltungen.</string>
+    <string name="event_form_clear_end_date">Letzten Tag entfernen</string>
+    <string name="event_form_stand_fee">Standgebühr</string>
+    <string name="event_form_stand_fee_hint">Leer lassen, wenn noch unbekannt. 0 für einen kostenlosen Stand.</string>
+    <string name="event_form_note">Notiz</string>
+    <string name="event_form_save">Speichern</string>
+    <string name="event_form_save_hint">Bitte zuerst Name und Datum eingeben.</string>
+    <string name="event_form_save_failed">Veranstaltung konnte nicht gespeichert werden. Bitte erneut versuchen.</string>
+    <string name="event_form_load_failed">Veranstaltung konnte nicht geladen werden.</string>
+    <string name="event_form_retry">Erneut versuchen</string>
 </resources>
