@@ -8,10 +8,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.GalleryRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.repository.StatisticsRepository
+import de.landstueberl.mystueberlapp.view.event.EventsScreen
 import de.landstueberl.mystueberlapp.view.gallery.GalleryScreen
 import de.landstueberl.mystueberlapp.view.home.HomeScreen
 import de.landstueberl.mystueberlapp.view.order.OrderDetailScreen
@@ -21,6 +23,7 @@ import de.landstueberl.mystueberlapp.view.product.ProductsScreen
 import de.landstueberl.mystueberlapp.view.product.add.AddProductScreen
 import de.landstueberl.mystueberlapp.view.product.edit.EditProductScreen
 import de.landstueberl.mystueberlapp.view.statistics.StatisticsScreen
+import de.landstueberl.mystueberlapp.viewmodel.event.EventsViewModel
 import de.landstueberl.mystueberlapp.viewmodel.gallery.GalleryViewModel
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
 import de.landstueberl.mystueberlapp.viewmodel.order.OrderDetailViewModel
@@ -35,12 +38,14 @@ import kotlinx.coroutines.CoroutineScope
 private const val KEY_PRODUCT_SAVED = "product_saved"
 private const val KEY_PRODUCT_UPDATED = "product_updated"
 private const val KEY_ORDER_SAVED = "order_saved"
+private const val KEY_EVENT_SAVED = "event_saved"
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     productRepository: ProductRepository,
     orderRepository: OrderRepository,
+    eventRepository: EventRepository,
     statisticsRepository: StatisticsRepository,
     galleryRepository: GalleryRepository,
     imageStorage: ProductImageStorage,
@@ -62,6 +67,7 @@ fun NavGraph(
                 ),
                 onNavigateToProducts = { navController.navigate(Screen.Products) },
                 onNavigateToOrders = { navController.navigate(Screen.Orders) },
+                onNavigateToEvents = { navController.navigate(Screen.Events) },
                 onNavigateToStatistics = { navController.navigate(Screen.Statistics) },
                 onNavigateToGallery = { navController.navigate(Screen.Gallery) }
             )
@@ -191,6 +197,30 @@ fun NavGraph(
                     factory = StatisticsViewModel.factory(statisticsRepository)
                 ),
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        // ── Events ─────────────────────────────
+        composable<Screen.Events> { backStackEntry ->
+            val eventSaved by backStackEntry.savedStateHandle
+                .getStateFlow(KEY_EVENT_SAVED, false)
+                .collectAsStateWithLifecycle()
+
+            EventsScreen(
+                viewModel = viewModel(
+                    factory = EventsViewModel.factory(eventRepository)
+                ),
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEvent = { _ ->
+                    // Step 6: navController.navigate(Screen.EventDetail(eventId))
+                },
+                onNavigateToNewEvent = {
+                    // Step 5: navController.navigate(Screen.EventForm())
+                },
+                eventSaved = eventSaved,
+                onEventSavedConsumed = {
+                    backStackEntry.savedStateHandle[KEY_EVENT_SAVED] = false
+                }
             )
         }
 

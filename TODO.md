@@ -13,19 +13,24 @@
 - [x] 1. Data model (`EventStatus`, `EventDetail`, `EventProductDetail`, DB version 14)
 - [x] 2. `EventDao`, `EventRepository`, app wiring
 - [x] 3. Shared date picker (`StueberlDatePickerDialog`)
-- [ ] 4. Events list screen + navigation (upcoming / past by date, product count on cards)
+- [x] 4. Events list screen + navigation (upcoming / past by date, product count on cards, simple home tile)
 - [ ] 5. Create / edit event screen (location autocomplete; end date with `minDate = eventDate`, clear icon for one-day events)
+  - After saving a new event: back to the list, set `KEY_EVENT_SAVED` → snackbar
+  - Wire the FAB in `NavGraph` (`Screen.EventForm()`)
 - [ ] 6. Event detail screen for PLANNED: info, "Start preparation", edit, delete
-- [ ] 7. Home tile "Events" (nearest event not over yet, skip CANCELLED) + scrollable home screen
-  - Handle "today" changing at midnight while the app stays open
+  - Wire the cards in `NavGraph` (`Screen.EventDetail(eventId)`)
+  - Decide: does the detail screen show its own "Event saved" snackbar after editing?
+- [ ] 7. Home tile "Events": add next-event row (nearest event not over yet, skip CANCELLED, "today" / "in 5 days") + scrollable home screen
+  - Reuse `todayFlow()` so the tile updates at midnight
 
 ## 🟡 Cleanup
 - [ ] Status icon/tint duplication (3 files)
+  - `EventStatusBadge` and `OrderStatusBadge` share the same layout; consider one shared theme-based `StatusBadge`
 - [x] Extract date picker dialog (done as Events step 3)
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests (good first candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping)
+- [ ] Tests (good first candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`)
 - [ ] Undo on delete
 - [x] German strings: a few still said "Produkt" instead of "Werkstück" (`products_screen_search_no_results`, `attach_product_confirm`, `gallery_screen_empty`)
 
