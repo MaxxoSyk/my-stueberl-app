@@ -52,4 +52,15 @@ object StueberlDefaults {
             actionIconContentColor = onPrimary
         )
     }
+
+    /** Like [primaryButtonColors], for actions that remove or discard something. */
+    @Composable
+    fun destructiveButtonColors() = with(MaterialTheme.colorScheme) {
+        ButtonDefaults.buttonColors(
+            containerColor = error,
+            contentColor = onError,
+            disabledContainerColor = error.copy(alpha = 0.38f),
+            disabledContentColor = onSurfaceVariant
+        )
+    }
 }

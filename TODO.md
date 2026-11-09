@@ -6,21 +6,22 @@
   - Main issue: input fields show white text on `FloralWhite` in dark mode
   - Quick first candidate: cost calculator (`CostCalculatorDialog`, `MaterialPositionRow`, price chips)
   - Home tiles: switch to the shared theme-based `HomeTile` / `HomeTileRow` once they exist (Events step 7)
+  - `StueberlConfirmationDialog`: switch to `StueberlDefaults.primaryButtonColors()` / `destructiveButtonColors()`
 - Rule for all new screens and components: only `MaterialTheme.colorScheme` and `StueberlDefaults`, no direct imports from `Color.kt`
 
 ## 🚧 In progress: Events feature (part 1)
 - [x] 1. Data model (`EventStatus`, `EventDetail`, `EventProductDetail`, DB version 14)
 - [x] 2. `EventDao`, `EventRepository`, app wiring
-- [ ] 3. Shared date picker (= cleanup item "Extract date picker dialog")
+- [x] 3. Shared date picker (`StueberlDatePickerDialog`)
 - [ ] 4. Events list screen + navigation (upcoming / past by date, product count on cards)
-- [ ] 5. Create / edit event screen (location autocomplete)
+- [ ] 5. Create / edit event screen (location autocomplete; end date with `minDate = eventDate`, clear icon for one-day events)
 - [ ] 6. Event detail screen for PLANNED: info, "Start preparation", edit, delete
 - [ ] 7. Home tile "Events" (nearest event not over yet, skip CANCELLED) + scrollable home screen
   - Handle "today" changing at midnight while the app stays open
 
 ## 🟡 Cleanup
 - [ ] Status icon/tint duplication (3 files)
-- [ ] Extract date picker dialog (planned as Events step 3)
+- [x] Extract date picker dialog (done as Events step 3)
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`

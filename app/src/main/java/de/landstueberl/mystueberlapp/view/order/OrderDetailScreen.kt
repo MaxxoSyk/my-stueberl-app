@@ -28,9 +28,6 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,10 +41,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -76,13 +71,11 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
-import de.landstueberl.mystueberlapp.util.toLocalDateFromPicker
-import de.landstueberl.mystueberlapp.util.toPickerMillis
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
+import de.landstueberl.mystueberlapp.view.common.StueberlDatePickerDialog
 import de.landstueberl.mystueberlapp.view.product.ProductFormDivider
 import de.landstueberl.mystueberlapp.view.product.ProductReadOnlyDateField
 import de.landstueberl.mystueberlapp.viewmodel.order.OrderDetailViewModel
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
@@ -580,68 +573,14 @@ fun OrderDetailScreen(
 
     // ── Date Picker ────────────────────────────
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = (dueDate ?: LocalDate.now()).toPickerMillis()
-        )
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            shape = RoundedCornerShape(20.dp),
-            colors = DatePickerDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            confirmButton = {
-                Button(
-                    onClick = {
-                        datePickerState.selectedDateMillis
-                            ?.toLocalDateFromPicker()
-                            ?.let(viewModel::onDueDateChange)
-                        showDatePicker = false
-                    },
-                    enabled = datePickerState.selectedDateMillis != null,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SageGreen,
-                        contentColor = Color.White,
-                        disabledContainerColor = SageGreenLight,
-                        disabledContentColor = TextSecondary
-                    )
-                ) {
-                    Text(
-                        text = stringResource(R.string.common_ok),
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
+        StueberlDatePickerDialog(
+            initialDate = dueDate,
+            onConfirm = { date ->
+                viewModel.onDueDateChange(date)
+                showDatePicker = false
             },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
-            }
-        ) {
-            DatePicker(
-                state = datePickerState,
-                title = null,
-                headline = null,
-                showModeToggle = false,
-                colors = DatePickerDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    selectedDayContainerColor = SageGreen,
-                    selectedDayContentColor = Color.White,
-                    todayDateBorderColor = SageGreen,
-                    todayContentColor = SageGreen,
-                    dayContentColor = MaterialTheme.colorScheme.onSurface,
-                    disabledDayContentColor = TextSecondary.copy(alpha = 0.3f),
-                    weekdayContentColor = TextSecondary,
-                    subheadContentColor = TextSecondary,
-                    navigationContentColor = SageGreenDark,
-                    yearContentColor = MaterialTheme.colorScheme.onSurface,
-                    selectedYearContainerColor = SageGreen,
-                    selectedYearContentColor = Color.White,
-                    currentYearContentColor = SageGreen
-                )
-            )
-        }
+            onDismiss = { showDatePicker = false }
+        )
     }
 
     // ── Confirmations ──────────────────────────
