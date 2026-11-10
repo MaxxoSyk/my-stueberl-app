@@ -6,7 +6,7 @@
   - Main issue: input fields show white text on `FloralWhite` in dark mode
   - Quick first candidate: cost calculator (`CostCalculatorDialog`, `MaterialPositionRow`, price chips)
   - Home tiles: switch to the shared theme-based `HomeTile` / `HomeTileRow` once they exist (Events step 7)
-  - `StueberlConfirmationDialog`: switch to `StueberlDefaults.primaryButtonColors()` / `destructiveButtonColors()`
+  - `StueberlConfirmationDialog`: switch to `StueberlDefaults.primaryButtonColors()` / `destructiveButtonColors()` (now also used by the event detail screen)
   - `ProductPriceField`: theme-based version (the event form's stand fee field already shows the pattern)
 - Rule for all new screens and components: only `MaterialTheme.colorScheme` and `StueberlDefaults`, no direct imports from `Color.kt`
 
@@ -16,12 +16,10 @@
 - [x] 3. Shared date picker (`StueberlDatePickerDialog`)
 - [x] 4. Events list screen + navigation (upcoming / past by date, product count on cards, simple home tile)
 - [x] 5. Create / edit event form (location suggestions, end date with `minDate`, start date shifts end date, stand fee `null` vs `0`; unsaved changes discarded without asking, like orders)
-- [ ] 6. Event detail screen for PLANNED: info, "Start preparation", edit, delete
-  - Wire the cards in `NavGraph` (`Screen.EventDetail(eventId)`)
-  - Edit opens `Screen.EventForm(eventId)`; test edit mode of the form here
-  - Decide: does the detail screen show its own "Event saved" snackbar after editing?
+- [x] 6. Event detail screen for PLANNED: info, "Start preparation" with confirmation, edit, delete; own "Event saved" snackbar after editing
 - [ ] 7. Home tile "Events": add next-event row (nearest event not over yet, skip CANCELLED, "today" / "in 5 days") + scrollable home screen
   - Reuse `todayFlow()` so the tile updates at midnight
+  - `HomeViewModel` gets `eventRepository` (factory + `NavGraph`)
 
 ## 🟡 Cleanup
 - [ ] Status icon/tint duplication (3 files)
@@ -41,9 +39,22 @@
 - [ ] Sales-price calculator
 - [ ] Empty orders surviving process death
 - [ ] Events: detail screens for IN_PREPARATION / IN_PROGRESS / DONE / CANCELLED
+  - Decide per status whether edit and delete stay available (currently allowed in every status)
 - [ ] Events: link products (only in IN_PREPARATION; new via Add Product incl. batches, existing via picker, exclusive with orders, one active event per product)
   - Active event per product needs its own query; `@Relation` with a junction can't filter by status
 - [ ] Events: event badge in product list (after linking)
 - [ ] Events: going back a status (possible but rare: overflow menu + confirmation)
 - [ ] Events: no adding/removing products during IN_PROGRESS
-- [ ] Events: point-of-sale screen for IN_PROGRESS (basket per customer, total
+- [ ] Events: point-of-sale screen for IN_PROGRESS (basket per customer, total, lock basket, cash given → change)
+- [ ] Events: mark sales during the event (sale date defaults to the event date)
+- [ ] Events: "Close event" flow (mark sold items, the rest go back to the stand)
+- [ ] Events: statistics per event (revenue, stand fee, profit)
+- [ ] Events: duplicate event for recurring markets
+
+## 📦 Pre-release
+- [ ] R8
+- [ ] Real migrations (replace the debug-only destructive migration)
+  - [x] `exportSchema = true` with `app/schemas/` configured; JSON files are generated and checked in
+- [ ] Device pass on hardware
+- [ ] Review backup rules
+- [ ] Play Store icon

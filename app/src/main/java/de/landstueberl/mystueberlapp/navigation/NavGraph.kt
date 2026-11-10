@@ -13,6 +13,7 @@ import de.landstueberl.mystueberlapp.repository.GalleryRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.repository.StatisticsRepository
+import de.landstueberl.mystueberlapp.view.event.EventDetailScreen
 import de.landstueberl.mystueberlapp.view.event.EventFormScreen
 import de.landstueberl.mystueberlapp.view.event.EventsScreen
 import de.landstueberl.mystueberlapp.view.gallery.GalleryScreen
@@ -24,6 +25,7 @@ import de.landstueberl.mystueberlapp.view.product.ProductsScreen
 import de.landstueberl.mystueberlapp.view.product.add.AddProductScreen
 import de.landstueberl.mystueberlapp.view.product.edit.EditProductScreen
 import de.landstueberl.mystueberlapp.view.statistics.StatisticsScreen
+import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailViewModel
 import de.landstueberl.mystueberlapp.viewmodel.event.EventFormViewModel
 import de.landstueberl.mystueberlapp.viewmodel.event.EventsViewModel
 import de.landstueberl.mystueberlapp.viewmodel.gallery.GalleryViewModel
@@ -213,8 +215,8 @@ fun NavGraph(
                     factory = EventsViewModel.factory(eventRepository)
                 ),
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToEvent = { _ ->
-                    // Step 6: navController.navigate(Screen.EventDetail(eventId))
+                onNavigateToEvent = { eventId ->
+                    navController.navigate(Screen.EventDetail(eventId))
                 },
                 onNavigateToNewEvent = {
                     navController.navigate(Screen.EventForm())
@@ -240,6 +242,27 @@ fun NavGraph(
                             ?.set(KEY_EVENT_SAVED, true)
                     }
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable<Screen.EventDetail> { backStackEntry ->
+            // Set by the form when an edit is saved.
+            val eventSaved by backStackEntry.savedStateHandle
+                .getStateFlow(KEY_EVENT_SAVED, false)
+                .collectAsStateWithLifecycle()
+
+            EventDetailScreen(
+                viewModel = viewModel(
+                    factory = EventDetailViewModel.factory(eventRepository)
+                ),
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToEdit = { eventId ->
+                    navController.navigate(Screen.EventForm(eventId))
+                },
+                eventSaved = eventSaved,
+                onEventSavedConsumed = {
+                    backStackEntry.savedStateHandle[KEY_EVENT_SAVED] = false
                 }
             )
         }

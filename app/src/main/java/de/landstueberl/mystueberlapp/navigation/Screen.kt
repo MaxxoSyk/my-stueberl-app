@@ -40,4 +40,7 @@ sealed interface Screen {
     /** [eventId] is null when creating a new event. */
     @Serializable
     data class EventForm(val eventId: Int? = null) : Screen
+
+    @Serializable
+    data class EventDetail(val eventId: Int) : Screen
 }

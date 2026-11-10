@@ -304,4 +304,19 @@
     <string name="event_form_save_failed">Veranstaltung konnte nicht gespeichert werden. Bitte erneut versuchen.</string>
     <string name="event_form_load_failed">Veranstaltung konnte nicht geladen werden.</string>
     <string name="event_form_retry">Erneut versuchen</string>
+
+    <string name="event_detail_title">Veranstaltung</string>
+    <string name="event_detail_edit">Veranstaltung bearbeiten</string>
+    <string name="event_detail_delete">Veranstaltung löschen</string>
+    <string name="event_detail_start_preparation">Vorbereitung starten</string>
+    <string name="event_detail_start_preparation_confirm_title">Vorbereitung starten?</string>
+    <string name="event_detail_start_preparation_confirm_message">Die Veranstaltung wechselt auf „In Vorbereitung“. Danach kannst du Werkstücke hinzufügen.</string>
+    <string name="event_detail_delete_confirm_title">Veranstaltung löschen?</string>
+    <string name="event_detail_delete_confirm_message">Die Veranstaltung wird dauerhaft gelöscht. Zugeordnete Werkstücke bleiben erhalten.</string>
+    <string name="event_detail_planned_hint">Werkstücke können hinzugefügt werden, sobald die Vorbereitung gestartet wurde.</string>
+    <string name="event_detail_stand_fee_unknown">Noch nicht eingetragen</string>
+    <string name="event_detail_stand_fee_free">Kostenlos</string>
+    <string name="event_detail_created_at">Erstellt am %1$s</string>
+    <string name="event_detail_not_found">Diese Veranstaltung existiert nicht mehr.</string>
+    <string name="event_detail_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
 </resources>
