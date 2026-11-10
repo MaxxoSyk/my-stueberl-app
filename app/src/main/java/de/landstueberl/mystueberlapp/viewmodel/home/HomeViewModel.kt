@@ -4,18 +4,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import de.landstueberl.mystueberlapp.data.NextEvent
 import de.landstueberl.mystueberlapp.data.StatisticsTileFigures
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
+import de.landstueberl.mystueberlapp.data.eventTiming
+import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.repository.StatisticsRepository
+import de.landstueberl.mystueberlapp.util.todayFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 class HomeViewModel(
     private val productRepo: ProductRepository,
     private val orderRepo: OrderRepository,
+    private val eventRepo: EventRepository,
     private val statisticsRepo: StatisticsRepository
 ) : ViewModel() {
     /** Sales-area products still available. */
@@ -54,18 +62,34 @@ class HomeViewModel(
         .getTileFiguresFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
+    // ── Events ─────────────────────────────────
+    /**
+     * The nearest event that isn't over yet (cancelled ones skipped). Null
+     * while loading or when there is none; the tile shows "–" for both.
+     * Re-queried at midnight, so a finished event drops off on its own.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val nextEvent: StateFlow<NextEvent?> = todayFlow()
+        .flatMapLatest { today ->
+            eventRepo.getNextEventFlow(today)
+                .map { event -> event?.let { NextEvent(it, eventTiming(it, today)) } }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+
     companion object {
         private const val STOP_TIMEOUT_MILLIS = 5_000L
 
         fun factory(
             productRepository: ProductRepository,
             orderRepository: OrderRepository,
+            eventRepository: EventRepository,
             statisticsRepository: StatisticsRepository
         ) = viewModelFactory {
             initializer<HomeViewModel> {
                 HomeViewModel(
                     productRepo = productRepository,
                     orderRepo = orderRepository,
+                    eventRepo = eventRepository,
                     statisticsRepo = statisticsRepository
                 )
             }

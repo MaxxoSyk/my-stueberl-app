@@ -31,14 +31,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.EventTiming
+import de.landstueberl.mystueberlapp.data.NextEvent
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.view.event.eventDateText
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -282,37 +286,51 @@ fun OrdersTile(
     }
 }
 
+// ── Events Tile ────────────────────────────────────────────────────────
+/** The next event, or "–" while loading and when nothing is planned. */
 @Composable
 fun EventsTile(
+    nextEvent: NextEvent?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
+    HomeTile(
+        icon = Icons.Default.Festival,
+        title = stringResource(R.string.home_screen_tile_events),
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Festival,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier.size(24.dp)
+        if (nextEvent == null) {
+            HomeTileRow(
+                icon = Icons.Default.Event,
+                label = stringResource(R.string.home_screen_events_next),
+                value = stringResource(R.string.home_screen_events_no_next)
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = stringResource(R.string.home_screen_tile_events),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+        } else {
+            HomeTileRow(
+                icon = Icons.Default.Event,
+                label = nextEvent.event.name,
+                labelColor = MaterialTheme.colorScheme.onSurface,
+                supportingText = eventDateText(nextEvent.event),
+                value = eventTimingText(nextEvent.timing)
             )
         }
     }
+}
+
+@Composable
+private fun eventTimingText(timing: EventTiming): String = when (timing) {
+    EventTiming.Today -> stringResource(R.string.home_screen_events_today)
+    EventTiming.Tomorrow -> stringResource(R.string.home_screen_events_tomorrow)
+    is EventTiming.InDays -> pluralStringResource(
+        R.plurals.home_screen_events_in_days,
+        timing.days,
+        timing.days
+    )
+    is EventTiming.RunsUntil -> stringResource(
+        R.string.home_screen_events_runs_until,
+        timing.lastDay.format(TILE_DATE_FORMAT)
+    )
 }
 
 // ── Gallery Tile ───────────────────────────────────────────────────────

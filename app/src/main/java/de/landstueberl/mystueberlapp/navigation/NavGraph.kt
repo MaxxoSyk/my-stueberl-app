@@ -66,6 +66,7 @@ fun NavGraph(
                     factory = HomeViewModel.factory(
                         productRepository = productRepository,
                         orderRepository = orderRepository,
+                        eventRepository = eventRepository,
                         statisticsRepository = statisticsRepository
                     )
                 ),
