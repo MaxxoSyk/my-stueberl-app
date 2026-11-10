@@ -304,4 +304,19 @@
     <string name="event_form_save_failed">Could not save the event. Please try again.</string>
     <string name="event_form_load_failed">The event could not be loaded.</string>
     <string name="event_form_retry">Try again</string>
+
+    <string name="event_detail_title">Event</string>
+    <string name="event_detail_edit">Edit event</string>
+    <string name="event_detail_delete">Delete event</string>
+    <string name="event_detail_start_preparation">Start preparation</string>
+    <string name="event_detail_start_preparation_confirm_title">Start preparation?</string>
+    <string name="event_detail_start_preparation_confirm_message">The event moves to \"In preparation\". You can then add products to it.</string>
+    <string name="event_detail_delete_confirm_title">Delete event?</string>
+    <string name="event_detail_delete_confirm_message">The event will be permanently deleted. Products linked to it are kept.</string>
+    <string name="event_detail_planned_hint">Products can be added once preparation has started.</string>
+    <string name="event_detail_stand_fee_unknown">Not entered yet</string>
+    <string name="event_detail_stand_fee_free">Free</string>
+    <string name="event_detail_created_at">Created %1$s</string>
+    <string name="event_detail_not_found">This event no longer exists.</string>
+    <string name="event_detail_action_failed">Action failed. Please try again.</string>
 </resources>
