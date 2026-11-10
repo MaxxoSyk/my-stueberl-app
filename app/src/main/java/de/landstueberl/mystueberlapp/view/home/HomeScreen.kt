@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -49,6 +52,7 @@ fun HomeScreen(
     val nextDueOrder by viewModel.nextDueOrder.collectAsStateWithLifecycle()
     val totalOrdersCurrentYear by viewModel.totalOrdersCurrentYear.collectAsStateWithLifecycle()
     val statisticsFigures by viewModel.statisticsTileFigures.collectAsStateWithLifecycle()
+    val nextEvent by viewModel.nextEvent.collectAsStateWithLifecycle()
 
     val currentYear = remember { LocalDate.now().year }
 
@@ -70,8 +74,10 @@ fun HomeScreen(
     ) { padding ->
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(padding)
+                // Scrolls on small phones and with large system font sizes.
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -114,6 +120,7 @@ fun HomeScreen(
 
             // ── Events Tile - Full Width ──
             EventsTile(
+                nextEvent = nextEvent,
                 onClick = onNavigateToEvents
             )
 

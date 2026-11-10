@@ -32,6 +32,16 @@
     <string name="home_screen_orders_no_next">–</string>
     <string name="home_screen_tile_orders_total">Bestellungen %1$d</string>
 
+    <string name="home_screen_events_next">Nächste Veranstaltung</string>
+    <string name="home_screen_events_no_next">–</string>
+    <string name="home_screen_events_today">Heute</string>
+    <string name="home_screen_events_tomorrow">Morgen</string>
+    <string name="home_screen_events_runs_until">Bis %1$s</string>
+    <plurals name="home_screen_events_in_days">
+        <item quantity="one">In %1$d Tag</item>
+        <item quantity="other">In %1$d Tagen</item>
+    </plurals>
+
     <!-- Products Screen -->
     <string name="products_screen_title">Werkstücke</string>
     <string name="products_screen_filter">Filter</string>
