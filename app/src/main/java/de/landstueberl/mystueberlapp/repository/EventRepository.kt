@@ -3,8 +3,10 @@ package de.landstueberl.mystueberlapp.repository
 import de.landstueberl.mystueberlapp.data.EventDao
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.EventWithProductCount
+import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 
 class EventRepository(private val dao: EventDao) {
@@ -44,4 +46,42 @@ class EventRepository(private val dao: EventDao) {
             .values
             .sortedByDescending { it.size }      // stable: ties stay newest first
             .map { it.first() }
+
+    /** @see EventDao.cancelEvent */
+    suspend fun cancelEvent(eventId: Int) = dao.cancelEvent(
+        id = eventId,
+        date = LocalDate.now(),
+        cancelled = EventStatus.CANCELLED.name,
+        cancellableStatuses = EventStatus.CANCELLABLE_NAMES
+    )
+
+    fun getEventProductsFlow(eventId: Int): Flow<List<Product>> =
+        dao.getEventProductsFlow(eventId)
+
+    fun getAttachableProductsFlow(eventId: Int): Flow<List<Product>> =
+        dao.getAttachableProductsFlow(eventId, EventStatus.ACTIVE_NAMES)
+
+    /** Products can only be assigned while the event is being prepared. */
+    suspend fun linkProducts(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        dao.linkProducts(
+            eventId = eventId,
+            productIds = productIds,
+            addedAt = LocalDate.now(),
+            requiredStatus = EventStatus.IN_PREPARATION.name,
+            activeStatuses = EventStatus.ACTIVE_NAMES
+        )
+    }
+
+    suspend fun unlinkProducts(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        dao.unlinkProducts(eventId, productIds, EventStatus.IN_PREPARATION.name)
+    }
+
+    fun getAvailableProductCountFlow(eventId: Int): Flow<Int> =
+        dao.getAvailableProductCountFlow(eventId)
+
+    fun getProductIdsInActiveEventsFlow(): Flow<Set<Int>> =
+        dao.getProductIdsInActiveEventsFlow(EventStatus.ACTIVE_NAMES)
+            .map { it.toSet() }
 }

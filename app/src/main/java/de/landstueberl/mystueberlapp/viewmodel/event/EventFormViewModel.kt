@@ -8,7 +8,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
-import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
@@ -191,10 +190,12 @@ class EventFormViewModel(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                val existing = loadedEvent
+                // New events start from the entity defaults (PLANNED, created
+                // today); edits start from the loaded row, so fields the form
+                // doesn't show (status, createdAt, cancelledOn, …) are kept.
+                val base = loadedEvent ?: EventDetail(name = "", eventDate = start)
                 repo.saveEvent(
-                    EventDetail(
-                        id = existing?.id ?: 0,
+                    base.copy(
                         name = _name.value.trim(),
                         location = _location.value.trim().ifEmpty { null },
                         eventDate = start,
@@ -204,9 +205,7 @@ class EventFormViewModel(
                         // "unknown" instead of becoming a free stand.
                         standFee = PriceInput.parseAmount(_standFee.value)
                             ?.let { Money(amount = it, currency = PriceInput.CURRENCY) },
-                        note = _note.value.trim().ifEmpty { null },
-                        status = existing?.status ?: EventStatus.PLANNED,
-                        createdAt = existing?.createdAt ?: LocalDate.now()
+                        note = _note.value.trim().ifEmpty { null }
                     )
                 )
                 onSaved()
