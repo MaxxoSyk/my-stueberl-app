@@ -1,15 +1,20 @@
 package de.landstueberl.mystueberlapp.repository
 
+import androidx.room.withTransaction
 import de.landstueberl.mystueberlapp.data.EventDao
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.EventWithProductCount
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 
-class EventRepository(private val dao: EventDao) {
+class EventRepository(
+    private val db: StueberlDatabase,
+    private val dao: EventDao
+) {
 
     /** @return the id of the saved event, new or existing */
     suspend fun saveEvent(event: EventDetail): Int {
@@ -84,4 +89,22 @@ class EventRepository(private val dao: EventDao) {
     fun getProductIdsInActiveEventsFlow(): Flow<Set<Int>> =
         dao.getProductIdsInActiveEventsFlow(EventStatus.ACTIVE_NAMES)
             .map { it.toSet() }
+
+    /**
+     * Runs [createProducts] and links everything it created to the event, in
+     * one transaction. Throws (and rolls back, so no products are created) if
+     * the event is no longer being prepared, e.g. it was started or cancelled
+     * while the form was open.
+     */
+    suspend fun createProductsForEvent(
+        eventId: Int,
+        createProducts: suspend () -> List<Int>
+    ) {
+        db.withTransaction {
+            check(dao.getEventStatus(eventId) == EventStatus.IN_PREPARATION) {
+                "Event $eventId is not in preparation"
+            }
+            linkProducts(eventId, createProducts())
+        }
+    }
 }

@@ -101,6 +101,9 @@ class ProductRepository(private val dao: ProductDao) {
         materials = materials
     )
 
+    suspend fun getProductIdsByBatchId(batchId: Int): List<Int> =
+        dao.getProductIdsByBatchId(batchId)
+
     suspend fun getMaterialSuggestions(): List<MaterialSuggestion> =
         buildMaterialSuggestions(dao.getMaterialPriceUsages())
 

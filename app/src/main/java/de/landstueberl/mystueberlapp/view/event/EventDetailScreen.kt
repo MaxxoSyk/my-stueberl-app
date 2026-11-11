@@ -91,6 +91,7 @@ fun EventDetailScreen(
     onNavigateBack: () -> Unit,
     onNavigateToEdit: (eventId: Int) -> Unit,
     onNavigateToEditProduct: (productId: Int) -> Unit,
+    onNavigateToAddProduct: (eventId: Int) -> Unit,
     eventSaved: Boolean = false,
     onEventSavedConsumed: () -> Unit = {}
 ) {
@@ -279,6 +280,11 @@ fun EventDetailScreen(
                     } else {
                         null
                     },
+                    onAddNew = if (isPreparing) {
+                        { onNavigateToAddProduct(state.event.id) }
+                    } else {
+                        null
+                    },
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -373,6 +379,7 @@ private fun EventDetailContent(
     onProductClick: (Int) -> Unit,
     onRemove: ((List<Int>) -> Unit)?,
     onAddExisting: (() -> Unit)?,
+    onAddNew: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     // Keyed by status: collapses by itself when preparation starts.
@@ -414,7 +421,8 @@ private fun EventDetailContent(
                 expandedBatchIds = expandedBatchIds,
                 onProductClick = onProductClick,
                 onRemove = onRemove,
-                onAddExisting = onAddExisting
+                onAddExisting = onAddExisting,
+                onAddNew = onAddNew
             )
         }
 
@@ -430,7 +438,8 @@ private fun LazyListScope.eventProductSections(
     expandedBatchIds: MutableSet<Int>,
     onProductClick: (Int) -> Unit,
     onRemove: ((List<Int>) -> Unit)?,
-    onAddExisting: (() -> Unit)?
+    onAddExisting: (() -> Unit)?,
+    onAddNew: (() -> Unit)?
 ) {
     item(key = "header_products") {
         DetailSectionHeader(stringResource(R.string.event_detail_section_products))
@@ -474,7 +483,7 @@ private fun LazyListScope.eventProductSections(
 
     if (onAddExisting != null) {
         item(key = "add_buttons") {
-            AddProductButtons(onAddExisting = onAddExisting)
+            AddProductButtons(onAddExisting = onAddExisting, onAddNew = onAddNew)
         }
     }
 
@@ -686,7 +695,7 @@ private fun HintText(text: String) {
     )
 }
 
-/** "New" follows in the next step; until then "Existing" takes the full width. */
+/** "New" and "Existing", side by side. */
 @Composable
 private fun AddProductButtons(
     onAddExisting: () -> Unit,

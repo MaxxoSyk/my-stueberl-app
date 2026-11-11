@@ -16,9 +16,15 @@ sealed interface Screen {
     @Serializable
     data object Statistics : Screen
 
-    /** [orderId] is set when the product is being created for an order. */
+    /**
+     * [orderId] or [eventId] is set when the product is created for an order
+     * or an event. Never both.
+     */
     @Serializable
-    data class AddProduct(val orderId: Int? = null) : Screen
+    data class AddProduct(
+        val orderId: Int? = null,
+        val eventId: Int? = null
+    ) : Screen
 
     @Serializable
     data class EditProduct(val productId: Int) : Screen

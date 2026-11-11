@@ -181,4 +181,8 @@ interface EventDao {
         WHERE e.status IN (:activeStatuses)
     """)
     fun getProductIdsInActiveEventsFlow(activeStatuses: List<String>): Flow<List<Int>>
+
+    /** Single-column read for guards inside transactions. Null if the event is gone. */
+    @Query("SELECT status FROM EventDetail WHERE id = :id")
+    suspend fun getEventStatus(id: Int): EventStatus?
 }

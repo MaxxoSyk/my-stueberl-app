@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -32,8 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -101,19 +104,22 @@ fun EventProductItem(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = details.salesPrice.format(),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = colorScheme.tertiary
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Same layout as the products list: purchase first, then sales.
+                    PriceRow(
+                        label = stringResource(R.string.products_screen_purchase_price),
+                        value = details.purchasePrice.format(),
+                        valueStyle = MaterialTheme.typography.bodySmall,
+                        valueColor = colorScheme.onSurfaceVariant,
+                        isCalculated = product.materialList.isNotEmpty()
                     )
-                    Text(
-                        text = stringResource(
-                            R.string.event_detail_purchase_price,
-                            details.purchasePrice.format()
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colorScheme.onSurfaceVariant
+                    PriceRow(
+                        label = stringResource(R.string.products_screen_sales_price),
+                        value = details.salesPrice.format(),
+                        valueStyle = MaterialTheme.typography.labelMedium,
+                        valueColor = colorScheme.tertiary
                     )
 
                     if (showStatus) {
@@ -271,6 +277,39 @@ fun EventProductBatchItem(
 }
 
 // ── Building Blocks ────────────────────────────────────────────────────
+/** Label + price, aligned like the products list rows. */
+@Composable
+private fun PriceRow(
+    label: String,
+    value: String,
+    valueStyle: TextStyle,
+    valueColor: Color,
+    isCalculated: Boolean = false
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(56.dp)
+        )
+        Text(
+            text = value,
+            style = valueStyle,
+            color = valueColor
+        )
+        if (isCalculated) {
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                imageVector = Icons.Default.Calculate,
+                contentDescription = stringResource(R.string.products_screen_price_calculated),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.size(11.dp)
+            )
+        }
+    }
+}
+
 @Composable
 private fun ProductThumbnail(imageFile: File?, size: Dp) {
     Box(

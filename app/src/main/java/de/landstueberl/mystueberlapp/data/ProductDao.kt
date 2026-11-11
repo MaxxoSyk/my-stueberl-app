@@ -286,6 +286,10 @@ interface ProductDao {
         return batchId
     }
 
+    /** Members of a batch, e.g. right after [insertProductBatch] created it. */
+    @Query("SELECT id FROM ProductDetail WHERE batchId = :batchId ORDER BY id ASC")
+    suspend fun getProductIdsByBatchId(batchId: Int): List<Int>
+
     // ── Materials ──────────────────────────────
     @Upsert
     suspend fun upsertMaterials(materials: List<ProductMaterialDetail>)
