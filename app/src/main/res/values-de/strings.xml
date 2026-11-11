@@ -329,4 +329,23 @@
     <string name="event_detail_created_at">Erstellt am %1$s</string>
     <string name="event_detail_not_found">Diese Veranstaltung existiert nicht mehr.</string>
     <string name="event_detail_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="event_detail_remove_product">Remove from event</string>
+    <string name="event_detail_remove_batch">Remove all from event</string>
+    <string name="event_detail_purchase_price">Cost: %1$s</string>
+    <string name="event_detail_cancel">Veranstaltung absagen</string>
+    <string name="event_detail_cancel_dismiss">Beibehalten</string>
+    <string name="event_detail_cancel_confirm_title">Veranstaltung absagen?</string>
+    <string name="event_detail_cancel_confirm_message">Die Veranstaltung wird als abgesagt markiert. Ihre Werkstücke sind wieder frei und können im Stüberl verkauft oder zu einer anderen Veranstaltung mitgenommen werden.</string>
+    <string name="event_detail_cancelled_on">Abgesagt am %1$s</string>
+    <string name="event_detail_show_details">Details anzeigen</string>
+    <string name="event_detail_hide_details">Details ausblenden</string>
+    <string name="event_detail_section_products">Werkstücke</string>
+    <string name="event_detail_section_no_longer_available">Nicht mehr verfügbar</string>
+    <string name="event_detail_no_products">Noch keine Werkstücke zugeordnet.</string>
+    <string name="event_detail_total">Gesamt</string>
+    <string name="event_detail_remove_confirm_title">Aus Veranstaltung entfernen?</string>
+    <plurals name="event_detail_remove_confirm_message">
+        <item quantity="one">Das Werkstück wird aus dieser Veranstaltung entfernt. Es bleibt im Bestand.</item>
+        <item quantity="other">%1$d Werkstücke werden aus dieser Veranstaltung entfernt. Sie bleiben im Bestand.</item>
+    </plurals>
 </resources>
