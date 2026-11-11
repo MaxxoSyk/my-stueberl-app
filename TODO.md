@@ -25,10 +25,10 @@
 Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusive with orders; products in an active event are NOT stand stock; sold/removed before the event stays linked (doesn't count toward totals or the tile counter)
 - [x] 1. Data access: event products (join ordered by `addedAt`, then `ep.rowid`), attachable products, guarded link/unlink, cancel event (sets `cancelledOn`), order picker + `attachProductsToOrder` exclude event products, stand count excludes event products, next-event product count (AVAILABLE only), product IDs in active events; `EventStatus.ACTIVE_NAMES` / `CANCELLABLE_NAMES`; DB version 15; `EventFormViewModel.saveEvent()` uses `base.copy(...)`
 - [x] 2. IN_PREPARATION detail screen: collapsible info card (collapsed by default in IN_PREPARATION), products grouped by batch, "No longer available" section, totals (sales large, purchase small), remove with confirmation (batch / single / no longer available), tap → Edit Product, "Cancel event" in overflow (PLANNED + IN_PREPARATION), "Cancelled on" in footer; new theme-based `EventProductItem` / `EventProductBatchItem`; content is a `LazyColumn`
-- [ ] 3. "Existing": reuse `AttachProductDialog` (optional `emptyText`); shared selection helper for orders + events
-  - Add the "New" / "Existing" buttons to the IN_PREPARATION detail screen ("New" wired in step 4)
+- [x] 3. "Existing": `AttachProductDialog` reused (optional `emptyText`); shared `AttachSelection` helper for orders + events; "Existing" button in IN_PREPARATION
 - [ ] 4. "New": `AddProduct(orderId, eventId)`, batches allowed, product + link in one transaction
   - `EventRepository` (or the product side) gets `db` for the transaction (moved from step 1)
+  - Add the "New" button: `AddProductButtons(onAddNew = …)`
 - [ ] 5. Product list: "Event" badge, "Go to event" in bottom sheet, new source filter chip "From event"
   - Event membership isn't on `ProductDetail`: use `getProductIdsInActiveEventsFlow()` → `Set<Int>` in `ProductsViewModel` → `isEventProduct: Boolean = false` on `ProductDisplayItem` / `ProductBatchItem`
   - New theme-based `EventBadge` (`secondary`) next to the existing `OrderBadge`
@@ -36,16 +36,22 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
   - "Available in sales area" already excludes event products (done in step 1)
 
 ## 🗓️ Events feature (part 3+, not started)
+- [ ] Sale channel: `ProductDetail.soldAtEventId` (decided: option A)
+  - Set by POS / "Close event"; stand sales (incl. before the event and after DONE/CANCELLED) stay `null`
+  - "Reset to available" clears it
+  - Foreign key `RESTRICT` as a safety net against deleting an event with sales
+  - Statistics: stand sales = `orderId IS NULL AND soldAtEventId IS NULL`; event revenue as its own channel
+- [ ] Deleting events (decided): blocked for IN_PROGRESS / DONE events that have products sold at the event; PLANNED / IN_PREPARATION / CANCELLED and events without sales stay deletable
 - [ ] Detail screens for IN_PROGRESS / DONE / CANCELLED
-  - Decide per status whether edit and delete stay available (currently allowed in every status)
+  - Decide per status whether edit stays available (currently allowed in every status)
 - [ ] "Start event" (IN_PREPARATION → IN_PROGRESS) with confirmation
 - [ ] Going back a status (possible but rare: overflow menu + confirmation)
   - Leaving CANCELLED must clear `cancelledOn`
-- [ ] No adding/removing products during IN_PROGRESS (already true: remove icons only show in IN_PREPARATION, and link/unlink are guarded in SQL)
+- [ ] No adding/removing products during IN_PROGRESS (already true: remove icons and "Existing" only show in IN_PREPARATION, and link/unlink are guarded in SQL)
 - [ ] Point-of-sale screen for IN_PROGRESS (basket per customer, total, lock basket, cash given → change)
 - [ ] Mark sales during the event (sale date defaults to the event date)
 - [ ] "Close event" flow (mark sold items, the rest go back to the stand)
-- [ ] Statistics per event (revenue, stand fee, profit); decide how event sales show up in the existing sales area / orders split
+- [ ] Statistics per event (revenue, stand fee, profit); event sales as their own channel next to sales area / orders
 - [ ] Duplicate event for recurring markets
 
 ## 🟡 Cleanup
@@ -55,7 +61,7 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests (good first candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals; Room instrumented tests for `linkProducts` / `unlinkProducts` guards)
+- [ ] Tests (good first candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards)
 - [ ] Undo on delete
 - [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
 - [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove

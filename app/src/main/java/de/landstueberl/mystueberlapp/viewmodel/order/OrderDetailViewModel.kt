@@ -17,6 +17,7 @@ import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.OrderRepository
+import de.landstueberl.mystueberlapp.viewmodel.common.AttachSelection
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -151,38 +152,23 @@ class OrderDetailViewModel(
         .map { it.groupByBatch() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
 
+    private val attachSelection = AttachSelection()
     /** Product ids ticked in the picker. */
-    private val _selectedForAttach = MutableStateFlow<Set<Int>>(emptySet())
-    val selectedForAttach: StateFlow<Set<Int>> = _selectedForAttach.asStateFlow()
+    val selectedForAttach: StateFlow<Set<Int>> = attachSelection.selectedIds
 
-    fun toggleAttachSelection(productId: Int) {
-        val current = _selectedForAttach.value.toMutableSet()
-        if (!current.remove(productId)) current.add(productId)
-        _selectedForAttach.value = current
-    }
+    fun toggleAttachSelection(productId: Int) = attachSelection.toggle(productId)
 
     /** Ticks or unticks every member of a batch at once. */
-    fun toggleBatchAttachSelection(productIds: List<Int>) {
-        val current = _selectedForAttach.value
-        val allSelected = productIds.all { it in current }
+    fun toggleBatchAttachSelection(productIds: List<Int>) = attachSelection.toggleBatch(productIds)
 
-        _selectedForAttach.value = if (allSelected) {
-            current - productIds.toSet()
-        } else {
-            current + productIds.toSet()
-        }
-    }
-
-    fun clearAttachSelection() {
-        _selectedForAttach.value = emptySet()
-    }
+    fun clearAttachSelection() = attachSelection.clear()
 
     /**
      * Attaches the selected products, persisting the order first if it only
      * exists as a draft — same reasoning as [prepareForAddProduct].
      */
     fun attachSelectedProducts(onAttached: () -> Unit) {
-        val ids = _selectedForAttach.value.toList()
+        val ids = attachSelection.current.toList()
         if (ids.isEmpty() || !canSave || _isSaving.value) return
 
         viewModelScope.launch {

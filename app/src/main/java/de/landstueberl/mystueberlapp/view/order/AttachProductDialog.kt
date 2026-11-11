@@ -46,10 +46,12 @@ import de.landstueberl.mystueberlapp.view.product.ProductDisplayItem
 import java.io.File
 
 /**
- * Picks sales-area products to attach to an order.
+ * Picks sales-area products to attach to an order or event.
  *
  * Reuses the products list rows, which already render a checkbox in selection
  * mode — so `isSelectionMode` is always true here.
+ *
+ * @param emptyText shown when nothing can be attached; defaults to the order text
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,7 +62,8 @@ fun AttachProductDialog(
     onToggleProduct: (Int) -> Unit,
     onToggleBatch: (List<Int>) -> Unit,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    emptyText: String = stringResource(R.string.attach_product_empty)
 ) {
     val expandedBatchIds = remember { mutableStateSetOf<Int>() }
 
@@ -139,7 +142,7 @@ fun AttachProductDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.attach_product_empty),
+                        text = emptyText,
                         style = MaterialTheme.typography.bodyLarge,
                         color = TextSecondary,
                         textAlign = TextAlign.Center

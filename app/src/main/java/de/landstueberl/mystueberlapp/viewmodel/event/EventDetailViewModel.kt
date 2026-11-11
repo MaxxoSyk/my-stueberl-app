@@ -11,11 +11,14 @@ import androidx.navigation.toRoute
 import de.landstueberl.mystueberlapp.data.EventProducts
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.data.toEventProducts
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.EventRepository
+import de.landstueberl.mystueberlapp.viewmodel.common.AttachSelection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -75,6 +78,37 @@ class EventDetailViewModel(
             emit(emptyList<Product>().toEventProducts())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+
+    // ── Attach Existing Products ───────────────
+    /** Stand stock that can be taken to this event, grouped like the products list. */
+    val attachableItems: StateFlow<List<ProductListItem>> =
+        repo.getAttachableProductsFlow(eventId)
+            .map { it.groupByBatch() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+
+    private val attachSelection = AttachSelection()
+    val selectedForAttach: StateFlow<Set<Int>> = attachSelection.selectedIds
+
+    fun toggleAttachSelection(productId: Int) = attachSelection.toggle(productId)
+
+    fun toggleBatchAttachSelection(productIds: List<Int>) = attachSelection.toggleBatch(productIds)
+
+    fun clearAttachSelection() = attachSelection.clear()
+
+    /**
+     * Links the ticked products. The SQL guard skips any that were sold or
+     * assigned elsewhere meanwhile, and links nothing unless still preparing.
+     */
+    fun attachSelectedProducts(onAttached: () -> Unit) {
+        val ids = attachSelection.current.toList()
+        if (ids.isEmpty() || currentEvent?.status != EventStatus.IN_PREPARATION) return
+
+        launchWorking {
+            repo.linkProducts(eventId, ids)
+            attachSelection.clear()
+            onAttached()
+        }
+    }
 
     private val currentEvent: EventDetail?
         get() = (uiState.value as? EventDetailUiState.Loaded)?.event
