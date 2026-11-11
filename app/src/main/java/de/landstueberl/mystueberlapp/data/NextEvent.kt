@@ -15,7 +15,9 @@ sealed interface EventTiming {
 
 data class NextEvent(
     val event: EventDetail,
-    val timing: EventTiming
+    val timing: EventTiming,
+    /** AVAILABLE products assigned to the event: what is actually taken along. */
+    val availableProductCount: Int
 )
 
 /**

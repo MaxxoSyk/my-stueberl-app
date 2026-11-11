@@ -174,13 +174,19 @@ interface EventDao {
     """)
     fun getAvailableProductCountFlow(eventId: Int): Flow<Int>
 
-    /** Products currently held by an active event, for the "Event" badge. */
+    /**
+     * Available products held by an active event, with that event. A product is
+     * in at most one active event, so each productId appears once. Sold or
+     * removed products are left out: they were sold at the stand (rule 1a).
+     */
     @Query("""
-        SELECT DISTINCT ep.productId FROM EventProductDetail ep
+        SELECT ep.productId AS productId, ep.eventId AS eventId
+        FROM EventProductDetail ep
         INNER JOIN EventDetail e ON e.id = ep.eventId
-        WHERE e.status IN (:activeStatuses)
+        INNER JOIN ProductDetail p ON p.id = ep.productId
+        WHERE e.status IN (:activeStatuses) AND p.status = 'AVAILABLE'
     """)
-    fun getProductIdsInActiveEventsFlow(activeStatuses: List<String>): Flow<List<Int>>
+    fun getActiveEventLinksFlow(activeStatuses: List<String>): Flow<List<ProductEventLink>>
 
     /** Single-column read for guards inside transactions. Null if the event is gone. */
     @Query("SELECT status FROM EventDetail WHERE id = :id")

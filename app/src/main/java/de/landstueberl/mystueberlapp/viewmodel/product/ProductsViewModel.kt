@@ -14,6 +14,7 @@ import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.comparator
 import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,6 +37,7 @@ import java.time.LocalDate
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProductsViewModel(
     private val repo: ProductRepository,
+    eventRepo: EventRepository,
     private val imageStorage: ProductImageStorage
 ) : ViewModel() {
 
@@ -167,6 +169,20 @@ class ProductsViewModel(
         initialValue = emptyList()
     )
 
+    // ── Event Membership ───────────────────────
+    /**
+     * productId → eventId for available products in an active event. Drives
+     * the "Event" badge and "Go to event"; observed live, so assigning or
+     * cancelling an event updates the list immediately.
+     */
+    val eventIdByProduct: StateFlow<Map<Int, Int>> = eventRepo
+        .getEventIdByProductFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = emptyMap()
+        )
+
     // ── Selection Mode ─────────────────────────
     private val _selectedProducts = MutableStateFlow<Set<Int>>(emptySet())
     val selectedProducts: StateFlow<Set<Int>> = _selectedProducts.asStateFlow()
@@ -286,9 +302,16 @@ class ProductsViewModel(
 
         fun factory(
             repo: ProductRepository,
+            eventRepository: EventRepository,
             imageStorage: ProductImageStorage
         ) = viewModelFactory {
-            initializer<ProductsViewModel> { ProductsViewModel(repo, imageStorage) }
+            initializer<ProductsViewModel> {
+                ProductsViewModel(
+                    repo = repo,
+                    eventRepo = eventRepository,
+                    imageStorage = imageStorage
+                )
+            }
         }
     }
 }

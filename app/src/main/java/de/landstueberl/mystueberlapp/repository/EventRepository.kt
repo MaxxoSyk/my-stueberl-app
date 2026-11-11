@@ -86,9 +86,10 @@ class EventRepository(
     fun getAvailableProductCountFlow(eventId: Int): Flow<Int> =
         dao.getAvailableProductCountFlow(eventId)
 
-    fun getProductIdsInActiveEventsFlow(): Flow<Set<Int>> =
-        dao.getProductIdsInActiveEventsFlow(EventStatus.ACTIVE_NAMES)
-            .map { it.toSet() }
+    /** productId → eventId, for the "Event" badge and "Go to event". */
+    fun getEventIdByProductFlow(): Flow<Map<Int, Int>> =
+        dao.getActiveEventLinksFlow(EventStatus.ACTIVE_NAMES)
+            .map { links -> links.associate { it.productId to it.eventId } }
 
     /**
      * Runs [createProducts] and links everything it created to the event, in

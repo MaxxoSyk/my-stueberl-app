@@ -61,16 +61,21 @@ class ProductRepository(private val dao: ProductDao) {
     }
 
     fun getFilteredProductsFlow(filter: ProductFilter): Flow<List<Product>> {
-        val statuses = filter.statuses.map { it.name }
-        val includeFromOrder = filter.productSourceFilter == ProductSourceFilter.ALL ||
-                filter.productSourceFilter == ProductSourceFilter.FROM_ORDER
-        val includeNotOrdered = filter.productSourceFilter == ProductSourceFilter.ALL ||
-                filter.productSourceFilter == ProductSourceFilter.FROM_SALES_AREA
+        // Exhaustive on purpose: a new source must be handled here, or it
+        // won't compile, instead of being silently ignored by the query.
+        val source = when (filter.productSourceFilter) {
+            ProductSourceFilter.ALL -> SourceFlags(ordered = true, event = true, salesArea = true)
+            ProductSourceFilter.FROM_ORDER -> SourceFlags(ordered = true)
+            ProductSourceFilter.FROM_EVENT -> SourceFlags(event = true)
+            ProductSourceFilter.FROM_SALES_AREA -> SourceFlags(salesArea = true)
+        }
 
         return dao.getFilteredProductsFlow(
-            statuses = statuses,
-            includeOrdered = includeFromOrder,
-            includeNotOrdered = includeNotOrdered
+            statuses = filter.statuses.map { it.name },
+            includeOrdered = source.ordered,
+            includeEvent = source.event,
+            includeSalesArea = source.salesArea,
+            activeEventStatuses = EventStatus.ACTIVE_NAMES
         ).map { products ->
             // The year filter moved out of SQL: with epoch days there is no
             // strftime equivalent, and an arbitrary set of years doesn't reduce
@@ -82,6 +87,12 @@ class ProductRepository(private val dao: ProductDao) {
             }
         }
     }
+
+    private data class SourceFlags(
+        val ordered: Boolean = false,
+        val event: Boolean = false,
+        val salesArea: Boolean = false
+    )
 
     suspend fun getAllImageFileNames(): List<String> = dao.getAllImageFileNames()
 

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Festival
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,7 +59,8 @@ fun ProductBottomSheet(
     onResetToAvailable: () -> Unit,
     onGoToOrder: () -> Unit,
     onEdit: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onGoToEvent: (() -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
@@ -116,6 +118,17 @@ fun ProductBottomSheet(
                     onClick = onGoToOrder
                 )
             } else {
+                // Event products keep their status actions (rule 1a); the
+                // event only adds a shortcut to it.
+                if (onGoToEvent != null) {
+                    BottomSheetItem(
+                        icon = Icons.Default.Festival,
+                        iconTint = MaterialTheme.colorScheme.secondary,
+                        label = stringResource(R.string.product_bottom_sheet_go_to_event),
+                        onClick = onGoToEvent
+                    )
+                }
+
                 when (details.status) {
                     ProductStatus.AVAILABLE -> {
                         BottomSheetItem(

@@ -43,6 +43,7 @@ import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import de.landstueberl.mystueberlapp.view.event.eventDateText
+import de.landstueberl.mystueberlapp.view.event.eventStatusIconAndTint
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -287,13 +288,18 @@ fun OrdersTile(
 }
 
 // ── Events Tile ────────────────────────────────────────────────────────
-/** The next event, or "–" while loading and when nothing is planned. */
+/**
+ * The next event and how many products are assigned to it, or "–" for both
+ * while loading and when nothing is planned.
+ */
 @Composable
 fun EventsTile(
     nextEvent: NextEvent?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val placeholder = stringResource(R.string.home_screen_events_no_next)
+
     HomeTile(
         icon = Icons.Default.Festival,
         title = stringResource(R.string.home_screen_tile_events),
@@ -304,17 +310,26 @@ fun EventsTile(
             HomeTileRow(
                 icon = Icons.Default.Event,
                 label = stringResource(R.string.home_screen_events_next),
-                value = stringResource(R.string.home_screen_events_no_next)
+                value = placeholder
             )
         } else {
+            val (statusIcon, statusTint) = eventStatusIconAndTint(nextEvent.event.status)
             HomeTileRow(
-                icon = Icons.Default.Event,
+                icon = statusIcon,
+                iconTint = statusTint,
                 label = nextEvent.event.name,
                 labelColor = MaterialTheme.colorScheme.onSurface,
                 supportingText = eventDateText(nextEvent.event),
                 value = eventTimingText(nextEvent.timing)
             )
         }
+
+        // Always shown, so the tile keeps its height when an event appears.
+        HomeTileRow(
+            icon = Icons.Default.Inventory,
+            label = stringResource(R.string.home_screen_events_products),
+            value = nextEvent?.availableProductCount?.toString() ?: placeholder
+        )
     }
 }
 

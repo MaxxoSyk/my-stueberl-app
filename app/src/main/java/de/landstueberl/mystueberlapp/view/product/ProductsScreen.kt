@@ -69,6 +69,7 @@ fun ProductsScreen(
     onNavigateToAddProduct: () -> Unit,
     onNavigateToEditProduct: (Int) -> Unit,
     onNavigateToOrder: (Int) -> Unit,
+    onNavigateToEvent: (Int) -> Unit,
     productSaved: Boolean = false,
     onProductSavedConsumed: () -> Unit = {},
     productUpdated: Boolean = false,
@@ -85,6 +86,7 @@ fun ProductsScreen(
     val listItems by viewModel.listItems.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isSearchActive by viewModel.isSearchActive.collectAsStateWithLifecycle()
+    val eventIdByProduct by viewModel.eventIdByProduct.collectAsStateWithLifecycle()
 
     val focusRequester = remember { FocusRequester() }
 
@@ -388,7 +390,8 @@ fun ProductsScreen(
                                 onImageTap = {
                                     previewImageName =
                                         product.imageList.firstOrNull()?.fileName
-                                }
+                                },
+                                isEventProduct = product.details.id in eventIdByProduct,
                             )
                         }
 
@@ -421,7 +424,8 @@ fun ProductsScreen(
                                 onImageTap = { product ->
                                     previewImageName =
                                         product.imageList.firstOrNull()?.fileName
-                                }
+                                },
+                                eventProductIds = eventIdByProduct.keys,
                             )
                         }
                     }
@@ -473,6 +477,12 @@ fun ProductsScreen(
             onGoToOrder = {
                 viewModel.dismissBottomSheet()
                 product.details.orderId?.let(onNavigateToOrder)
+            },
+            onGoToEvent = eventIdByProduct[product.details.id]?.let { eventId ->
+                {
+                    viewModel.dismissBottomSheet()
+                    onNavigateToEvent(eventId)
+                }
             },
             onDismiss = { viewModel.dismissBottomSheet() }
         )
