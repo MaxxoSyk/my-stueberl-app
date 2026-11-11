@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -152,20 +153,26 @@ fun eventDateText(event: EventDetail): String {
     }
 }
 
-// ── Event Status Badge ─────────────────────────────────────────────────
+/** Icon and tint per status, shared by [EventStatusBadge] and the home tile. */
 @Composable
-fun EventStatusBadge(
-    status: EventStatus,
-    modifier: Modifier = Modifier
-) {
+fun eventStatusIconAndTint(status: EventStatus): Pair<ImageVector, Color> {
     val colorScheme = MaterialTheme.colorScheme
-    val (icon, tint) = when (status) {
+    return when (status) {
         EventStatus.PLANNED -> Icons.Default.Event to colorScheme.onSurfaceVariant
         EventStatus.IN_PREPARATION -> Icons.Default.Construction to colorScheme.tertiary
         EventStatus.IN_PROGRESS -> Icons.Default.Storefront to colorScheme.secondary
         EventStatus.DONE -> Icons.Default.CheckCircle to colorScheme.primary
         EventStatus.CANCELLED -> Icons.Default.Cancel to colorScheme.error
     }
+}
+
+// ── Event Status Badge ─────────────────────────────────────────────────
+@Composable
+fun EventStatusBadge(
+    status: EventStatus,
+    modifier: Modifier = Modifier
+) {
+    val (icon, tint) = eventStatusIconAndTint(status)
 
     Surface(
         modifier = modifier,

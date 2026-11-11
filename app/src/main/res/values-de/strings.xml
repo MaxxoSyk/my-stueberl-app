@@ -41,6 +41,7 @@
         <item quantity="one">In %1$d Tag</item>
         <item quantity="other">In %1$d Tagen</item>
     </plurals>
+    <string name="home_screen_events_products">Zugeordnete Werkstücke</string>
 
     <!-- Products Screen -->
     <string name="products_screen_title">Werkstücke</string>
@@ -68,6 +69,7 @@
         <item quantity="other">%1$d Werkstücke werden dauerhaft gelöscht.</item>
     </plurals>
     <string name="products_screen_order_badge">Bestellung</string>
+    <string name="products_screen_event_badge">Veranstaltung</string>
     <string name="products_screen_sort">Sortieren</string>
     <string name="products_screen_batch_count">×%1$d</string>
     <string name="products_screen_batch_price_each">%1$s pro Stück</string>
@@ -96,6 +98,7 @@
     <string name="products_filter_sheet_status_removed">Entfernt</string>
     <string name="products_filter_sheet_source_all">Alle</string>
     <string name="products_filter_sheet_source_ordered">aus Bestellung</string>
+    <string name="products_filter_sheet_source_event">aus Veranstaltung</string>
     <string name="products_filter_sheet_source_sales_area">aus Stüberl</string>
     <string name="products_filter_sheet_active_count">%1$d aktiv</string>
 
@@ -125,6 +128,7 @@
     <string name="product_bottom_sheet_edit">Werkstück bearbeiten</string>
     <string name="product_bottom_sheet_order_managed">Status wird über die zugehörige Bestellung verwaltet.</string>
     <string name="product_bottom_sheet_go_to_order">Zur Bestellung</string>
+    <string name="product_bottom_sheet_go_to_event">Zur Veranstaltung</string>
     <string name="product_bottom_sheet_sold_date_title">Verkaufsdatum</string>
     <string name="product_bottom_sheet_date_hint">Das Werkstück wurde am %1$s angelegt.</string>
     <string name="product_bottom_sheet_mark_sold_confirm">Verkauft</string>

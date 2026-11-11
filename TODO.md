@@ -9,7 +9,9 @@
   - Home screen top bar: switch to `StueberlDefaults.topAppBarColors()`
   - `StueberlConfirmationDialog`: switch to `StueberlDefaults.primaryButtonColors()` / `destructiveButtonColors()` (also used by the event detail screen)
   - `AttachProductDialog`: theme-based colors (reused by orders and events)
+  - `FilterBottomSheet`: theme-based chip and button colors
   - `ProductPriceField`: theme-based version (the event form's stand fee field already shows the pattern)
+  - `OrderBadge`: theme-based, like the new `EventBadge`
 - Rule for all new screens and components: only `MaterialTheme.colorScheme` and `StueberlDefaults`, no direct imports from `Color.kt`
 
 ## ✅ Done: Events feature (part 1)
@@ -21,18 +23,13 @@
 - [x] 6. Event detail screen for PLANNED: info, "Start preparation" with confirmation, edit, delete; own "Event saved" snackbar after editing
 - [x] 7. Home tile "Events": next event with timing (today / tomorrow / in X days / until), "–" when none, updates at midnight; scrollable home screen
 
-## 🚧 In progress: Events feature (part 2: IN_PREPARATION + product linking)
+## ✅ Done: Events feature (part 2: IN_PREPARATION + product linking)
 Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusive with orders; products in an active event are NOT stand stock; sold/removed before the event stays linked (doesn't count toward totals or the tile counter)
-- [x] 1. Data access: event products (join ordered by `addedAt`, then `ep.rowid`), attachable products, guarded link/unlink, cancel event (sets `cancelledOn`), order picker + `attachProductsToOrder` exclude event products, stand count excludes event products, next-event product count (AVAILABLE only), product IDs in active events; `EventStatus.ACTIVE_NAMES` / `CANCELLABLE_NAMES`; DB version 15; `EventFormViewModel.saveEvent()` uses `base.copy(...)`
-- [x] 2. IN_PREPARATION detail screen: collapsible info card (collapsed by default in IN_PREPARATION), products grouped by batch, "No longer available" section, totals (sales large, purchase small), remove with confirmation (batch / single / no longer available), tap → Edit Product, "Cancel event" in overflow (PLANNED + IN_PREPARATION), "Cancelled on" in footer; new theme-based `EventProductItem` / `EventProductBatchItem`; content is a `LazyColumn`
-- [x] 3. "Existing": `AttachProductDialog` reused (optional `emptyText`); shared `AttachSelection` helper for orders + events; "Existing" button in IN_PREPARATION
-- [x] 4. "New": `AddProduct(orderId, eventId)`, batches allowed for events, products + links in one transaction (`EventRepository.createProductsForEvent()`, rolled back if the event is no longer IN_PREPARATION); "New" button next to "Existing"; event rows match the product list (purchase first, labels, calculator icon)
-- [ ] 5. Product list: "Event" badge, "Go to event" in bottom sheet, new source filter chip "From event"
-  - Event membership isn't on `ProductDetail`: use `getProductIdsInActiveEventsFlow()` → `Set<Int>` in `ProductsViewModel` → `isEventProduct: Boolean = false` on `ProductDisplayItem` / `ProductBatchItem`
-  - New theme-based `EventBadge` (`secondary`) next to the existing `OrderBadge`
-  - "Go to event" needs the event ID per product, not just a `Set<Int>`: consider a `Map<productId, eventId>` instead
-- [ ] 6. Home: Events tile counter for AVAILABLE products of the next event (query exists: `getAvailableProductCountFlow()`); products tile unchanged
-  - "Available in sales area" already excludes event products (done in step 1)
+- [x] 1. Data access: event products (join ordered by `addedAt`, then `ep.rowid`), attachable products, guarded link/unlink, cancel event (sets `cancelledOn`), order picker + `attachProductsToOrder` exclude event products, stand count excludes event products, next-event product count (AVAILABLE only); `EventStatus.ACTIVE_NAMES` / `CANCELLABLE_NAMES`; DB version 15; `EventFormViewModel.saveEvent()` uses `base.copy(...)`
+- [x] 2. IN_PREPARATION detail screen: collapsible info card, products grouped by batch, "No longer available" section, totals, remove with confirmation, tap → Edit Product, "Cancel event", "Cancelled on" in footer; theme-based `EventProductItem` / `EventProductBatchItem`
+- [x] 3. "Existing": `AttachProductDialog` reused (optional `emptyText`); shared `AttachSelection` helper; "Existing" button in IN_PREPARATION
+- [x] 4. "New": `AddProduct(orderId, eventId)`, batches allowed, products + links in one transaction (`createProductsForEvent()`); event rows match the product list
+- [x] 5. Product list + home tile: "Event" badge, "Go to event" in the bottom sheet, "From event" filter chip (available + in an active event); exhaustive `when` on `ProductSourceFilter`; Events tile counter for AVAILABLE products of the next event; next event's status icon on the tile (`eventStatusIconAndTint()`)
 
 ## 🗓️ Events feature (part 3+, not started)
 - [ ] Sale channel: `ProductDetail.soldAtEventId` (decided: option A)
@@ -40,6 +37,7 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
   - "Reset to available" clears it
   - Foreign key `RESTRICT` as a safety net against deleting an event with sales
   - Statistics: stand sales = `orderId IS NULL AND soldAtEventId IS NULL`; event revenue as its own channel
+  - Product list: "From event" should then also include products sold at an event (`soldAtEventId IS NOT NULL`); today it only covers available products in an active event
 - [ ] Deleting events (decided): blocked for IN_PROGRESS / DONE events that have products sold at the event; PLANNED / IN_PREPARATION / CANCELLED and events without sales stay deletable
 - [ ] Detail screens for IN_PROGRESS / DONE / CANCELLED
   - Decide per status whether edit stays available (currently allowed in every status)
@@ -55,8 +53,31 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
 
 ## 🟡 Cleanup
 - [ ] Status icon/tint duplication (3 files)
-  - `EventStatusBadge` and `OrderStatusBadge` share the same layout; consider one shared theme-based `StatusBadge`
+  - `EventStatusBadge` and `OrderStatusBadge` share the same layout; consider one shared theme-based `StatusBadge` (events already use `eventStatusIconAndTint()`)
 - [x] Extract date picker dialog (done as Events step 3)
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
+- [ ] Tests (good first candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback and the source groups in `getFilteredProductsFlow`)
+- [ ] Undo on delete
+- [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
+- [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove
+- [ ] Hard-coded `'AVAILABLE'` / `'CANCELLED'` literals in SQL: consider passing them as parameters like the event statuses
+- [ ] `KEY_PRODUCT_UPDATED` / `KEY_PRODUCT_SAVED` are set on the event detail screen after Edit / Add Product but never read (harmless; list updates via the database). Optionally show a snackbar there
+- [ ] Accessibility (optional): `HomeTileRow` icons have no content description, so the next event's status isn't announced by screen readers
+- [x] German strings: a few still said "Produkt" instead of "Werkstück" (`products_screen_search_no_results`, `attach_product_confirm`, `gallery_screen_empty`)
+
+## 🟠 Deferred features
+- [ ] Statistics breakdowns
+- [ ] Bulk status actions
+- [ ] Batches in orders
+- [ ] Sales-price calculator
+- [ ] Empty orders surviving process death
+
+## 📦 Pre-release
+- [ ] R8
+- [ ] Real migrations (replace the debug-only destructive migration)
+  - [x] `exportSchema = true` with `app/schemas/` configured; JSON files are generated and checked in
+- [ ] Device pass on hardware
+- [ ] Review backup rules
+- [ ] Play Store icon

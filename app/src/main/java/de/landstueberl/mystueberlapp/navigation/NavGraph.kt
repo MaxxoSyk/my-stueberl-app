@@ -90,7 +90,11 @@ fun NavGraph(
 
             ProductsScreen(
                 viewModel = viewModel(
-                    factory = ProductsViewModel.factory(productRepository, imageStorage)
+                    factory = ProductsViewModel.factory(
+                        repo = productRepository,
+                        eventRepository = eventRepository,
+                        imageStorage = imageStorage
+                    )
                 ),
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToAddProduct = { navController.navigate(Screen.AddProduct()) },
@@ -108,6 +112,9 @@ fun NavGraph(
                 onNavigateToOrder = { orderId ->
                     navController.navigate(Screen.OrderDetail(orderId))
                 },
+                onNavigateToEvent = { eventId ->
+                    navController.navigate(Screen.EventDetail(eventId))
+                }
             )
         }
 

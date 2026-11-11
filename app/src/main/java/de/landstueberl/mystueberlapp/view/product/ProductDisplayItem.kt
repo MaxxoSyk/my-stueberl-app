@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Festival
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Receipt
@@ -67,7 +68,8 @@ fun ProductDisplayItem(
     onTap: () -> Unit,
     onLongPress: () -> Unit,
     onImageTap: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isEventProduct: Boolean = false
 ) {
     val details = product.details
     val status = details.status
@@ -189,6 +191,10 @@ fun ProductDisplayItem(
                         if (isOrderProduct) {
                             Spacer(modifier = Modifier.width(6.dp))
                             OrderBadge()
+                        } else if (isEventProduct) {
+                            // Orders and events are exclusive, so at most one badge.
+                            Spacer(modifier = Modifier.width(6.dp))
+                            EventBadge()
                         }
                     }
 
@@ -359,6 +365,38 @@ private fun OrderBadge(
                 text = stringResource(R.string.products_screen_order_badge),
                 style = MaterialTheme.typography.labelSmall,
                 color = AccentGold
+            )
+        }
+    }
+}
+
+// ── Event Source Badge ─────────────────────────────────────────────────
+/** Theme-based, unlike [OrderBadge]; dark green to stay apart from the gold money/order color. */
+@Composable
+private fun EventBadge(
+    modifier: Modifier = Modifier
+) {
+    val color = MaterialTheme.colorScheme.secondary
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(4.dp),
+        color = color.copy(alpha = 0.15f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Festival,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(11.dp)
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            Text(
+                text = stringResource(R.string.products_screen_event_badge),
+                style = MaterialTheme.typography.labelSmall,
+                color = color
             )
         }
     }

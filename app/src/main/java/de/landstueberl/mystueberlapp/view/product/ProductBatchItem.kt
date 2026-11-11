@@ -58,7 +58,8 @@ fun ProductBatchItem(
     onProductLongPress: (Product) -> Unit,
     onImageTap: (Product) -> Unit,
     modifier: Modifier = Modifier,
-    onHeaderLongPress: (() -> Unit)? = null
+    onHeaderLongPress: (() -> Unit)? = null,
+    eventProductIds: Set<Int> = emptySet()
 ) {
     val representative = batch.representative
     val details = representative.details
@@ -185,7 +186,8 @@ fun ProductBatchItem(
                         isSelectionMode = isSelectionMode,
                         onTap = { onProductTap(product) },
                         onLongPress = { onProductLongPress(product) },
-                        onImageTap = { onImageTap(product) }
+                        onImageTap = { onImageTap(product) },
+                        isEventProduct = product.details.id in eventProductIds
                     )
                 }
             }

@@ -41,6 +41,7 @@
         <item quantity="one">In %1$d day</item>
         <item quantity="other">In %1$d days</item>
     </plurals>
+    <string name="home_screen_events_products">Products assigned</string>
 
     <!-- Products Screen -->
     <string name="products_screen_title">Products</string>
@@ -68,6 +69,7 @@
         <item quantity="other">%1$d products will be permanently deleted.</item>
     </plurals>
     <string name="products_screen_order_badge">Order</string>
+    <string name="products_screen_event_badge">Event</string>
     <string name="products_screen_sort">Sort</string>
     <string name="products_screen_batch_count">×%1$d</string>
     <string name="products_screen_batch_price_each">%1$s each</string>
@@ -96,6 +98,7 @@
     <string name="products_filter_sheet_status_removed">Removed</string>
     <string name="products_filter_sheet_source_all">All</string>
     <string name="products_filter_sheet_source_ordered">From Order</string>
+    <string name="products_filter_sheet_source_event">From Event</string>
     <string name="products_filter_sheet_source_sales_area">From Sales Area</string>
     <string name="products_filter_sheet_active_count">%1$d active</string>
 
@@ -125,6 +128,7 @@
     <string name="product_bottom_sheet_edit">Edit Product</string>
     <string name="product_bottom_sheet_order_managed">Status is managed by the linked order.</string>
     <string name="product_bottom_sheet_go_to_order">Go to order</string>
+    <string name="product_bottom_sheet_go_to_event">Go to event</string>
     <string name="product_bottom_sheet_sold_date_title">Sale date</string>
     <string name="product_bottom_sheet_date_hint">The product was added on %1$s.</string>
     <string name="product_bottom_sheet_mark_sold_confirm">Sold</string>

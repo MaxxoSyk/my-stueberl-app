@@ -17,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -64,15 +65,30 @@ class HomeViewModel(
 
     // ── Events ─────────────────────────────────
     /**
-     * The nearest event that isn't over yet (cancelled ones skipped). Null
-     * while loading or when there is none; the tile shows "–" for both.
-     * Re-queried at midnight, so a finished event drops off on its own.
+     * The nearest event that isn't over yet (cancelled ones skipped), with the
+     * number of available products assigned to it. Null while loading or when
+     * there is none; the tile shows "–" for both.
+     *
+     * Re-queried at midnight, so a finished event drops off on its own. The
+     * count follows whichever event is next, and updates live as products are
+     * assigned, removed or sold.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val nextEvent: StateFlow<NextEvent?> = todayFlow()
         .flatMapLatest { today ->
-            eventRepo.getNextEventFlow(today)
-                .map { event -> event?.let { NextEvent(it, eventTiming(it, today)) } }
+            eventRepo.getNextEventFlow(today).flatMapLatest { event ->
+                if (event == null) {
+                    flowOf(null)
+                } else {
+                    eventRepo.getAvailableProductCountFlow(event.id).map { count ->
+                        NextEvent(
+                            event = event,
+                            timing = eventTiming(event, today),
+                            availableProductCount = count
+                        )
+                    }
+                }
+            }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 

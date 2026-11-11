@@ -87,8 +87,11 @@ interface ProductDao {
     suspend fun getProductById(id: Int): Product
 
     /**
-     * Filtered product list. Ordering here is only for determinism — the display
-     * order is applied in Kotlin via [ProductSortOrder].
+     * Filtered product list. Each product is in exactly one source group:
+     * order, event (available and held by an active event) or sales area.
+     *
+     * Ordering here is only for determinism; the display order is applied in
+     * Kotlin via [ProductSortOrder].
      */
     @Transaction
     @Query("""
@@ -97,14 +100,39 @@ interface ProductDao {
             status IN (:statuses)
             AND (
                 (:includeOrdered = 1 AND orderId IS NOT NULL)
-                OR (:includeNotOrdered = 1 AND orderId IS NULL)
+                OR (
+                    :includeEvent = 1
+                    AND orderId IS NULL
+                    AND status = 'AVAILABLE'
+                    AND EXISTS (
+                        SELECT 1 FROM EventProductDetail ep
+                        INNER JOIN EventDetail e ON e.id = ep.eventId
+                        WHERE ep.productId = ProductDetail.id
+                          AND e.status IN (:activeEventStatuses)
+                    )
+                )
+                OR (
+                    :includeSalesArea = 1
+                    AND orderId IS NULL
+                    AND NOT (
+                        status = 'AVAILABLE'
+                        AND EXISTS (
+                            SELECT 1 FROM EventProductDetail ep
+                            INNER JOIN EventDetail e ON e.id = ep.eventId
+                            WHERE ep.productId = ProductDetail.id
+                              AND e.status IN (:activeEventStatuses)
+                        )
+                    )
+                )
             )
         ORDER BY createdAt ASC, id ASC
     """)
     fun getFilteredProductsFlow(
         statuses: List<String>,
         includeOrdered: Boolean,
-        includeNotOrdered: Boolean
+        includeEvent: Boolean,
+        includeSalesArea: Boolean,
+        activeEventStatuses: List<String>
     ): Flow<List<Product>>
 
     /** Creation dates of all products, for deriving which years have data. */

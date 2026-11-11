@@ -11,5 +11,6 @@ data class ProductFilter(
 enum class ProductSourceFilter {
     ALL,
     FROM_ORDER,
+    FROM_EVENT,
     FROM_SALES_AREA
 }

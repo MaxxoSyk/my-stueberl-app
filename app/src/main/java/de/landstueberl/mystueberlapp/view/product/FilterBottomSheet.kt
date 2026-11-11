@@ -135,7 +135,8 @@ fun FilterBottomSheet(
                 title = stringResource(R.string.products_filter_sheet_source)
             ) {
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     FilterChip(
                         selected = filter.productSourceFilter == ProductSourceFilter.ALL,
@@ -150,6 +151,15 @@ fun FilterBottomSheet(
                         selected = filter.productSourceFilter == ProductSourceFilter.FROM_ORDER,
                         onClick = { onProductSourceFilterChange(ProductSourceFilter.FROM_ORDER) },
                         label = { Text(stringResource(R.string.products_filter_sheet_source_ordered)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = SageGreen,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                    FilterChip(
+                        selected = filter.productSourceFilter == ProductSourceFilter.FROM_EVENT,
+                        onClick = { onProductSourceFilterChange(ProductSourceFilter.FROM_EVENT) },
+                        label = { Text(stringResource(R.string.products_filter_sheet_source_event)) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = SageGreen,
                             selectedLabelColor = Color.White
