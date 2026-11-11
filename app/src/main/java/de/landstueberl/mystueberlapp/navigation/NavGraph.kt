@@ -255,11 +255,14 @@ fun NavGraph(
 
             EventDetailScreen(
                 viewModel = viewModel(
-                    factory = EventDetailViewModel.factory(eventRepository)
+                    factory = EventDetailViewModel.factory(eventRepository, imageStorage)
                 ),
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToEdit = { eventId ->
                     navController.navigate(Screen.EventForm(eventId))
+                },
+                onNavigateToEditProduct = { productId ->
+                    navController.navigate(Screen.EditProduct(productId))
                 },
                 eventSaved = eventSaved,
                 onEventSavedConsumed = {

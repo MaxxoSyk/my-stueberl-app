@@ -329,4 +329,23 @@
     <string name="event_detail_created_at">Created %1$s</string>
     <string name="event_detail_not_found">This event no longer exists.</string>
     <string name="event_detail_action_failed">Action failed. Please try again.</string>
+    <string name="event_detail_remove_product">Aus Veranstaltung entfernen</string>
+    <string name="event_detail_remove_batch">Alle aus Veranstaltung entfernen</string>
+    <string name="event_detail_purchase_price">EK: %1$s</string>
+    <string name="event_detail_cancel">Cancel event</string>
+    <string name="event_detail_cancel_dismiss">Keep event</string>
+    <string name="event_detail_cancel_confirm_title">Cancel event?</string>
+    <string name="event_detail_cancel_confirm_message">The event will be marked as cancelled. Its products are free again and can be sold at the stand or taken to another event.</string>
+    <string name="event_detail_cancelled_on">Cancelled %1$s</string>
+    <string name="event_detail_show_details">Show details</string>
+    <string name="event_detail_hide_details">Hide details</string>
+    <string name="event_detail_section_products">Products</string>
+    <string name="event_detail_section_no_longer_available">No longer available</string>
+    <string name="event_detail_no_products">No products assigned yet.</string>
+    <string name="event_detail_total">Total</string>
+    <string name="event_detail_remove_confirm_title">Remove from event?</string>
+    <plurals name="event_detail_remove_confirm_message">
+        <item quantity="one">The product will be removed from this event. It stays in stock.</item>
+        <item quantity="other">%1$d products will be removed from this event. They stay in stock.</item>
+    </plurals>
 </resources>

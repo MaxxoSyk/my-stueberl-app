@@ -1,5 +1,6 @@
 package de.landstueberl.mystueberlapp.view.event
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,20 +13,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -37,13 +42,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -51,22 +56,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.EventProducts
 import de.landstueberl.mystueberlapp.data.EventStatus
+import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailUiState
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailViewModel
+import java.io.File
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-private val CREATED_FORMAT: DateTimeFormatter =
+private val FOOTER_DATE_FORMAT: DateTimeFormatter =
     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,16 +85,21 @@ fun EventDetailScreen(
     viewModel: EventDetailViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToEdit: (eventId: Int) -> Unit,
+    onNavigateToEditProduct: (productId: Int) -> Unit,
     eventSaved: Boolean = false,
     onEventSavedConsumed: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val products by viewModel.products.collectAsStateWithLifecycle()
     val isWorking by viewModel.isWorking.collectAsStateWithLifecycle()
     val isError by viewModel.isError.collectAsStateWithLifecycle()
 
     var showOverflowMenu by remember { mutableStateOf(false) }
     var showStartConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showCancelConfirmation by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
+    // IntArray, because it survives configuration changes in rememberSaveable.
+    var pendingRemoval by rememberSaveable { mutableStateOf<IntArray?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val savedMessage = stringResource(R.string.events_screen_success_save)
@@ -147,6 +162,15 @@ fun EventDetailScreen(
                                 expanded = showOverflowMenu,
                                 onDismissRequest = { showOverflowMenu = false }
                             ) {
+                                if (event.status.isCancellable) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.event_detail_cancel)) },
+                                        onClick = {
+                                            showOverflowMenu = false
+                                            showCancelConfirmation = true
+                                        }
+                                    )
+                                }
                                 DropdownMenuItem(
                                     text = {
                                         Text(
@@ -224,6 +248,17 @@ fun EventDetailScreen(
 
             is EventDetailUiState.Loaded -> EventDetailContent(
                 event = state.event,
+                products = products,
+                imageFileOf = { product ->
+                    product.imageList.firstOrNull()?.fileName?.let(viewModel::imageFile)
+                },
+                onProductClick = onNavigateToEditProduct,
+                // Products can only be removed while preparing.
+                onRemove = if (state.event.status == EventStatus.IN_PREPARATION) {
+                    { ids -> pendingRemoval = ids.toIntArray() }
+                } else {
+                    null
+                },
                 modifier = Modifier.padding(padding)
             )
         }
@@ -243,6 +278,21 @@ fun EventDetailScreen(
         )
     }
 
+    if (showCancelConfirmation) {
+        StueberlConfirmationDialog(
+            title = stringResource(R.string.event_detail_cancel_confirm_title),
+            message = stringResource(R.string.event_detail_cancel_confirm_message),
+            confirmLabel = stringResource(R.string.event_detail_cancel),
+            dismissLabel = stringResource(R.string.event_detail_cancel_dismiss),
+            isDestructive = true,
+            onConfirm = {
+                showCancelConfirmation = false
+                viewModel.cancelEvent()
+            },
+            onDismiss = { showCancelConfirmation = false }
+        )
+    }
+
     if (showDeleteConfirmation) {
         StueberlConfirmationDialog(
             title = stringResource(R.string.event_detail_delete_confirm_title),
@@ -256,53 +306,198 @@ fun EventDetailScreen(
             onDismiss = { showDeleteConfirmation = false }
         )
     }
+
+    pendingRemoval?.let { ids ->
+        StueberlConfirmationDialog(
+            title = stringResource(R.string.event_detail_remove_confirm_title),
+            message = pluralStringResource(
+                R.plurals.event_detail_remove_confirm_message,
+                ids.size,
+                ids.size
+            ),
+            confirmLabel = stringResource(R.string.event_detail_remove_product),
+            onConfirm = {
+                pendingRemoval = null
+                viewModel.removeProducts(ids.toList())
+            },
+            onDismiss = { pendingRemoval = null }
+        )
+    }
 }
 
 // ── Content ────────────────────────────────────────────────────────────
 @Composable
 private fun EventDetailContent(
     event: EventDetail,
+    products: EventProducts?,
+    imageFileOf: (Product) -> File?,
+    onProductClick: (Int) -> Unit,
+    onRemove: ((List<Int>) -> Unit)?,
     modifier: Modifier = Modifier
+) {
+    // Keyed by status: collapses by itself when preparation starts.
+    var isInfoExpanded by rememberSaveable(event.status) {
+        mutableStateOf(event.status != EventStatus.IN_PREPARATION)
+    }
+    val expandedBatchIds = remember { mutableStateSetOf<Int>() }
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item(key = "status") {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                EventStatusBadge(status = event.status)
+            }
+        }
+
+        item(key = "info") {
+            EventInfoCard(
+                event = event,
+                isExpanded = isInfoExpanded,
+                onToggle = { isInfoExpanded = !isInfoExpanded }
+            )
+        }
+
+        if (event.status == EventStatus.PLANNED) {
+            item(key = "planned_hint") {
+                HintText(stringResource(R.string.event_detail_planned_hint))
+            }
+        } else if (products != null) {
+            eventProductSections(
+                products = products,
+                imageFileOf = imageFileOf,
+                expandedBatchIds = expandedBatchIds,
+                onProductClick = onProductClick,
+                onRemove = onRemove
+            )
+        }
+
+        item(key = "footer") {
+            EventFooter(event = event)
+        }
+    }
+}
+
+private fun LazyListScope.eventProductSections(
+    products: EventProducts,
+    imageFileOf: (Product) -> File?,
+    expandedBatchIds: MutableSet<Int>,
+    onProductClick: (Int) -> Unit,
+    onRemove: ((List<Int>) -> Unit)?
+) {
+    item(key = "header_products") {
+        DetailSectionHeader(stringResource(R.string.event_detail_section_products))
+    }
+
+    if (products.items.isEmpty()) {
+        item(key = "no_products") {
+            HintText(stringResource(R.string.event_detail_no_products))
+        }
+    } else {
+        item(key = "totals") {
+            EventTotals(products = products)
+        }
+        items(items = products.items, key = { it.key }) { item ->
+            when (item) {
+                is ProductListItem.Single -> EventProductItem(
+                    product = item.product,
+                    imageFile = imageFileOf(item.product),
+                    onClick = { onProductClick(item.product.details.id) },
+                    onRemove = onRemove?.let { remove -> { remove(listOf(item.product.details.id)) } }
+                )
+
+                is ProductListItem.Batch -> EventProductBatchItem(
+                    batch = item,
+                    imageFileOf = imageFileOf,
+                    isExpanded = item.batchId in expandedBatchIds,
+                    onToggleExpanded = {
+                        if (!expandedBatchIds.add(item.batchId)) expandedBatchIds.remove(item.batchId)
+                    },
+                    onProductClick = { onProductClick(it.details.id) },
+                    onRemoveBatch = onRemove?.let { remove ->
+                        { remove(item.products.map { it.details.id }) }
+                    },
+                    onRemoveProduct = onRemove?.let { remove ->
+                        { product: Product -> remove(listOf(product.details.id)) }
+                    }
+                )
+            }
+        }
+    }
+
+    if (products.noLongerAvailable.isNotEmpty()) {
+        item(key = "header_gone") {
+            DetailSectionHeader(
+                text = stringResource(R.string.event_detail_section_no_longer_available),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+        items(
+            items = products.noLongerAvailable,
+            key = { "gone_${it.details.id}" }
+        ) { product ->
+            EventProductItem(
+                product = product,
+                imageFile = imageFileOf(product),
+                onClick = { onProductClick(product.details.id) },
+                onRemove = onRemove?.let { remove -> { remove(listOf(product.details.id)) } },
+                showStatus = true
+            )
+        }
+    }
+}
+
+// ── Info Card ──────────────────────────────────────────────────────────
+@Composable
+private fun EventInfoCard(
+    event: EventDetail,
+    isExpanded: Boolean,
+    onToggle: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Card(
+        onClick = onToggle,
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            EventStatusBadge(status = event.status)
-        }
-
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            color = colorScheme.surface,
-            shadowElevation = 1.dp
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = event.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colorScheme.onSurface
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = event.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = colorScheme.onSurface
+                    )
+                    Text(
+                        text = eventDateText(event),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = stringResource(
+                        if (isExpanded) R.string.event_detail_hide_details else R.string.event_detail_show_details
+                    ),
+                    tint = colorScheme.secondary
                 )
+            }
 
+            if (isExpanded) {
                 HorizontalDivider(color = colorScheme.primary.copy(alpha = 0.3f))
-
-                DetailRow(
-                    icon = Icons.Default.Schedule,
-                    label = stringResource(R.string.event_form_start_date),
-                    value = eventDateText(event)
-                )
 
                 event.location?.takeIf { it.isNotBlank() }?.let { location ->
                     DetailRow(
@@ -333,27 +528,6 @@ private fun EventDetailContent(
                 }
             }
         }
-
-        if (event.status == EventStatus.PLANNED) {
-            Text(
-                text = stringResource(R.string.event_detail_planned_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Text(
-            text = stringResource(
-                R.string.event_detail_created_at,
-                event.createdAt.format(CREATED_FORMAT)
-            ),
-            style = MaterialTheme.typography.labelSmall,
-            color = colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
     }
 }
 
@@ -384,6 +558,111 @@ private fun DetailRow(
                 text = value,
                 style = MaterialTheme.typography.bodyLarge,
                 color = valueColor
+            )
+        }
+    }
+}
+
+// ── Totals, Headers, Footer ────────────────────────────────────────────
+/** Only available products count: what is actually taken along. */
+@Composable
+private fun EventTotals(products: EventProducts) {
+    val colorScheme = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.event_detail_total),
+                style = MaterialTheme.typography.titleSmall,
+                color = colorScheme.onBackground
+            )
+            Text(
+                text = pluralStringResource(
+                    R.plurals.events_screen_product_count,
+                    products.availableCount,
+                    products.availableCount
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.onSurfaceVariant
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(
+                text = products.salesTotal.format(),
+                style = MaterialTheme.typography.titleLarge,
+                color = colorScheme.tertiary
+            )
+            Text(
+                text = stringResource(
+                    R.string.event_detail_purchase_price,
+                    products.purchaseTotal.format()
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun DetailSectionHeader(text: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text.uppercase(),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        HorizontalDivider(
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+        )
+    }
+}
+
+@Composable
+private fun HintText(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    )
+}
+
+@Composable
+private fun EventFooter(event: EventDetail) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = stringResource(
+                R.string.event_detail_created_at,
+                event.createdAt.format(FOOTER_DATE_FORMAT)
+            ),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        event.cancelledOn?.let { cancelledOn ->
+            Text(
+                text = stringResource(
+                    R.string.event_detail_cancelled_on,
+                    cancelledOn.format(FOOTER_DATE_FORMAT)
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.error
             )
         }
     }

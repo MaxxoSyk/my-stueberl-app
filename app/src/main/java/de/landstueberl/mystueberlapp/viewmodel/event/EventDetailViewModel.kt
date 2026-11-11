@@ -8,8 +8,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
+import de.landstueberl.mystueberlapp.data.EventProducts
 import de.landstueberl.mystueberlapp.data.EventStatus
+import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.toEventProducts
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.EventRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,8 +22,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface EventDetailUiState {
@@ -30,6 +36,7 @@ sealed interface EventDetailUiState {
 
 class EventDetailViewModel(
     private val repo: EventRepository,
+    private val imageStorage: ProductImageStorage,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -57,6 +64,21 @@ class EventDetailViewModel(
                 EventDetailUiState.Loading
             )
 
+    /**
+     * The event's products, observed live: linking, unlinking and a product
+     * being sold elsewhere all show up immediately. Null while loading.
+     */
+    val products: StateFlow<EventProducts?> = repo.getEventProductsFlow(eventId)
+        .map { it.toEventProducts() }
+        .catch { e ->
+            Log.e(TAG, "Failed to observe products of event $eventId", e)
+            emit(emptyList<Product>().toEventProducts())
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+
+    private val currentEvent: EventDetail?
+        get() = (uiState.value as? EventDetailUiState.Loaded)?.event
+
     // ── UI State ───────────────────────────────
     private val _isWorking = MutableStateFlow(false)
     val isWorking: StateFlow<Boolean> = _isWorking.asStateFlow()
@@ -68,13 +90,25 @@ class EventDetailViewModel(
         _isError.value = false
     }
 
+    fun imageFile(fileName: String): File = imageStorage.fileFor(fileName)
+
     // ── Actions ────────────────────────────────
     /** PLANNED → IN_PREPARATION. Other transitions follow with their screens. */
     fun startPreparation() {
-        val event = (uiState.value as? EventDetailUiState.Loaded)?.event ?: return
-        if (event.status != EventStatus.PLANNED) return
-
+        if (currentEvent?.status != EventStatus.PLANNED) return
         launchWorking { repo.updateStatus(eventId, EventStatus.IN_PREPARATION) }
+    }
+
+    /** Links stay as history; the products are free again. Guarded in SQL as well. */
+    fun cancelEvent() {
+        if (currentEvent?.status?.isCancellable != true) return
+        launchWorking { repo.cancelEvent(eventId) }
+    }
+
+    /** Unlinks products; they stay in stock. Only while preparing (guarded in SQL too). */
+    fun removeProducts(productIds: List<Int>) {
+        if (currentEvent?.status != EventStatus.IN_PREPARATION) return
+        launchWorking { repo.unlinkProducts(eventId, productIds) }
     }
 
     /** Product links are removed by CASCADE; the products themselves stay. */
@@ -111,10 +145,14 @@ class EventDetailViewModel(
         private const val TAG = "EventDetailViewModel"
         private const val STOP_TIMEOUT_MILLIS = 5_000L
 
-        fun factory(repo: EventRepository) = viewModelFactory {
+        fun factory(
+            repo: EventRepository,
+            imageStorage: ProductImageStorage
+        ) = viewModelFactory {
             initializer<EventDetailViewModel> {
                 EventDetailViewModel(
                     repo = repo,
+                    imageStorage = imageStorage,
                     savedStateHandle = createSavedStateHandle()
                 )
             }
