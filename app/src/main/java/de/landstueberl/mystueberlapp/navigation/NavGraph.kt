@@ -114,7 +114,11 @@ fun NavGraph(
         composable<Screen.AddProduct> {
             AddProductScreen(
                 viewModel = viewModel(
-                    factory = AddProductViewModel.factory(productRepository, imageStorage)
+                    factory = AddProductViewModel.factory(
+                        repo = productRepository,
+                        eventRepository = eventRepository,
+                        imageStorage = imageStorage
+                    )
                 ),
                 onNavigateBack = { showSuccess ->
                     if (showSuccess) {
@@ -263,6 +267,9 @@ fun NavGraph(
                 },
                 onNavigateToEditProduct = { productId ->
                     navController.navigate(Screen.EditProduct(productId))
+                },
+                onNavigateToAddProduct = { eventId ->
+                    navController.navigate(Screen.AddProduct(eventId = eventId))
                 },
                 eventSaved = eventSaved,
                 onEventSavedConsumed = {

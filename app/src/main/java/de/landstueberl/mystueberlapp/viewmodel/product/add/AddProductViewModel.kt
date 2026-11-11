@@ -11,6 +11,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.navigation.Screen
+import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormValues
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductFormViewModel
@@ -20,13 +21,18 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class AddProductViewModel(
     repo: ProductRepository,
+    private val eventRepo: EventRepository,
     imageStorage: ProductImageStorage,
     savedStateHandle: SavedStateHandle
 ) : ProductFormViewModel(repo, imageStorage) {
 
-    private val orderId: Int? = savedStateHandle.toRoute<Screen.AddProduct>().orderId
+    private val route = savedStateHandle.toRoute<Screen.AddProduct>()
+    private val orderId: Int? = route.orderId
 
-    /** Batch creation is sales-area only for now. */
+    /** Set when the products are created for an event. Never together with [orderId]. */
+    private val eventId: Int? = route.eventId
+
+    /** Batch creation is not available for orders. Events allow it. */
     val isForOrder: Boolean = orderId != null
 
     // ── Quantity ───────────────────────────────
@@ -42,6 +48,17 @@ class AddProductViewModel(
     fun decrementQuantity() = onQuantityChange(_quantity.value - 1)
 
     override suspend fun persist(values: ProductFormValues) {
+        val event = eventId
+        if (event == null) {
+            insertProducts(values)
+        } else {
+            // Creating and linking happen together, or not at all.
+            eventRepo.createProductsForEvent(event) { insertProducts(values) }
+        }
+    }
+
+    /** @return the ids of the created products */
+    private suspend fun insertProducts(values: ProductFormValues): List<Int> {
         val detail = ProductDetail(
             id = 0,
             description = values.description,
@@ -53,17 +70,18 @@ class AddProductViewModel(
 
         val count = if (isForOrder) 1 else _quantity.value
 
-        if (count > 1) {
-            repo.insertProductBatch(
+        return if (count > 1) {
+            val batchId = repo.insertProductBatch(
                 detail = detail,
                 quantity = count,
                 imageFileName = values.imageFileName,
                 materials = values.materials
             )
+            repo.getProductIdsByBatchId(batchId)
         } else {
             // Single products stay out of the batch path: no batchId, and the
             // regular upsert keeps image syncing consistent with editing.
-            repo.upsertProduct(
+            val saved = repo.upsertProduct(
                 Product(
                     details = detail,
                     imageList = values.imageFileName
@@ -72,6 +90,7 @@ class AddProductViewModel(
                     materialList = values.materials
                 )
             )
+            listOf(saved.details.id)
         }
     }
 
@@ -81,11 +100,13 @@ class AddProductViewModel(
 
         fun factory(
             repo: ProductRepository,
+            eventRepository: EventRepository,
             imageStorage: ProductImageStorage
         ) = viewModelFactory {
             initializer<AddProductViewModel> {
                 AddProductViewModel(
                     repo = repo,
+                    eventRepo = eventRepository,
                     imageStorage = imageStorage,
                     savedStateHandle = createSavedStateHandle()
                 )

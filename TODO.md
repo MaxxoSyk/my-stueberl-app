@@ -26,12 +26,11 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
 - [x] 1. Data access: event products (join ordered by `addedAt`, then `ep.rowid`), attachable products, guarded link/unlink, cancel event (sets `cancelledOn`), order picker + `attachProductsToOrder` exclude event products, stand count excludes event products, next-event product count (AVAILABLE only), product IDs in active events; `EventStatus.ACTIVE_NAMES` / `CANCELLABLE_NAMES`; DB version 15; `EventFormViewModel.saveEvent()` uses `base.copy(...)`
 - [x] 2. IN_PREPARATION detail screen: collapsible info card (collapsed by default in IN_PREPARATION), products grouped by batch, "No longer available" section, totals (sales large, purchase small), remove with confirmation (batch / single / no longer available), tap → Edit Product, "Cancel event" in overflow (PLANNED + IN_PREPARATION), "Cancelled on" in footer; new theme-based `EventProductItem` / `EventProductBatchItem`; content is a `LazyColumn`
 - [x] 3. "Existing": `AttachProductDialog` reused (optional `emptyText`); shared `AttachSelection` helper for orders + events; "Existing" button in IN_PREPARATION
-- [ ] 4. "New": `AddProduct(orderId, eventId)`, batches allowed, product + link in one transaction
-  - `EventRepository` (or the product side) gets `db` for the transaction (moved from step 1)
-  - Add the "New" button: `AddProductButtons(onAddNew = …)`
+- [x] 4. "New": `AddProduct(orderId, eventId)`, batches allowed for events, products + links in one transaction (`EventRepository.createProductsForEvent()`, rolled back if the event is no longer IN_PREPARATION); "New" button next to "Existing"; event rows match the product list (purchase first, labels, calculator icon)
 - [ ] 5. Product list: "Event" badge, "Go to event" in bottom sheet, new source filter chip "From event"
   - Event membership isn't on `ProductDetail`: use `getProductIdsInActiveEventsFlow()` → `Set<Int>` in `ProductsViewModel` → `isEventProduct: Boolean = false` on `ProductDisplayItem` / `ProductBatchItem`
   - New theme-based `EventBadge` (`secondary`) next to the existing `OrderBadge`
+  - "Go to event" needs the event ID per product, not just a `Set<Int>`: consider a `Map<productId, eventId>` instead
 - [ ] 6. Home: Events tile counter for AVAILABLE products of the next event (query exists: `getAvailableProductCountFlow()`); products tile unchanged
   - "Available in sales area" already excludes event products (done in step 1)
 
@@ -47,7 +46,7 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
 - [ ] "Start event" (IN_PREPARATION → IN_PROGRESS) with confirmation
 - [ ] Going back a status (possible but rare: overflow menu + confirmation)
   - Leaving CANCELLED must clear `cancelledOn`
-- [ ] No adding/removing products during IN_PROGRESS (already true: remove icons and "Existing" only show in IN_PREPARATION, and link/unlink are guarded in SQL)
+- [ ] No adding/removing products during IN_PROGRESS (already true: remove icons and "New" / "Existing" only show in IN_PREPARATION, and link/unlink are guarded in SQL)
 - [ ] Point-of-sale screen for IN_PROGRESS (basket per customer, total, lock basket, cash given → change)
 - [ ] Mark sales during the event (sale date defaults to the event date)
 - [ ] "Close event" flow (mark sold items, the rest go back to the stand)
@@ -61,25 +60,3 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests (good first candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards)
-- [ ] Undo on delete
-- [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
-- [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove
-- [ ] Hard-coded `'AVAILABLE'` / `'CANCELLED'` literals in SQL: consider passing them as parameters like the event statuses
-- [ ] `KEY_PRODUCT_UPDATED` is set on the event detail screen after Edit Product but never read (harmless; list updates via the database). Optionally show a snackbar there
-- [x] German strings: a few still said "Produkt" instead of "Werkstück" (`products_screen_search_no_results`, `attach_product_confirm`, `gallery_screen_empty`)
-
-## 🟠 Deferred features
-- [ ] Statistics breakdowns
-- [ ] Bulk status actions
-- [ ] Batches in orders
-- [ ] Sales-price calculator
-- [ ] Empty orders surviving process death
-
-## 📦 Pre-release
-- [ ] R8
-- [ ] Real migrations (replace the debug-only destructive migration)
-  - [x] `exportSchema = true` with `app/schemas/` configured; JSON files are generated and checked in
-- [ ] Device pass on hardware
-- [ ] Review backup rules
-- [ ] Play Store icon

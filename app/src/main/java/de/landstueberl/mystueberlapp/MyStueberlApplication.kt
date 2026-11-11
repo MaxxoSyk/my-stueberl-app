@@ -50,8 +50,7 @@ class MyStueberlApplication : Application() {
         GalleryRepository(database.galleryDao())
     }
 
-    val eventRepository by lazy {
-        EventRepository(database.eventDao()) }
+    val eventRepository by lazy { EventRepository(database, database.eventDao()) }
 
     val productImageStorage by lazy { ProductImageStorage(applicationContext) }
 
