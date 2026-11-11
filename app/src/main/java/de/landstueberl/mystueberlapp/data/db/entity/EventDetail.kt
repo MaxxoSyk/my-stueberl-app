@@ -24,6 +24,8 @@ data class EventDetail(
     @Embedded(prefix = "stand_fee_") val standFee: Money? = null,
     val note: String? = null,
     val status: EventStatus = EventStatus.PLANNED,
+    /** Set when the event is cancelled; cleared again if that is ever undone. */
+    val cancelledOn: LocalDate? = null,
     val createdAt: LocalDate = LocalDate.now()
 ) {
     /**

@@ -1,6 +1,7 @@
 package de.landstueberl.mystueberlapp.repository
 
 import androidx.room.withTransaction
+import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.Order
 import de.landstueberl.mystueberlapp.data.OrderDao
 import de.landstueberl.mystueberlapp.data.OrderStatus
@@ -73,7 +74,7 @@ class OrderRepository(
 
     /** Sales-area products available to be attached to an order. */
     fun getAttachableProductsFlow(): Flow<List<Product>> =
-        productDao.getAttachableProductsFlow()
+        productDao.getAttachableProductsFlow(EventStatus.ACTIVE_NAMES)
 
     /**
      * Attaches products to [orderId]. The DAO re-checks that each is still
@@ -81,5 +82,5 @@ class OrderRepository(
      * applied incorrectly.
      */
     suspend fun attachProductsToOrder(productIds: List<Int>, orderId: Int) =
-        productDao.attachProductsToOrder(productIds, orderId)
+        productDao.attachProductsToOrder(productIds, orderId, EventStatus.ACTIVE_NAMES)
 }

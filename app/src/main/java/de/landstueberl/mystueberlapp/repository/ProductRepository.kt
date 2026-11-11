@@ -1,5 +1,6 @@
 package de.landstueberl.mystueberlapp.repository
 
+import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.MaterialSuggestion
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductDao
@@ -39,9 +40,8 @@ class ProductRepository(private val dao: ProductDao) {
         dao.resetToAvailable(id = productId)
     }
 
-    fun getAvailableSalesAreaCountFlow(): Flow<Int> {
-        return dao.getAvailableSalesAreaCountFlow()
-    }
+    fun getAvailableSalesAreaCountFlow(): Flow<Int> =
+        dao.getAvailableSalesAreaCountFlow(EventStatus.ACTIVE_NAMES)
 
     fun getPendingOrderProductsCountFlow(): Flow<Int> =
         dao.getPendingOrderProductsCountFlow()

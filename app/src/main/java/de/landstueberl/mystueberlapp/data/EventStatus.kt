@@ -29,4 +29,18 @@ enum class EventStatus {
      */
     val isActive: Boolean
         get() = this == PLANNED || this == IN_PREPARATION || this == IN_PROGRESS
+
+    /** Only events that haven't started can be cancelled. */
+    val isCancellable: Boolean
+        get() = this == PLANNED || this == IN_PREPARATION
+
+    companion object {
+        /**
+         * Status names for SQL parameters. Queries take these instead of
+         * spelling out literals, so "active" is defined only by [isActive].
+         */
+        val ACTIVE_NAMES: List<String> = entries.filter { it.isActive }.map { it.name }
+
+        val CANCELLABLE_NAMES: List<String> = entries.filter { it.isCancellable }.map { it.name }
+    }
 }

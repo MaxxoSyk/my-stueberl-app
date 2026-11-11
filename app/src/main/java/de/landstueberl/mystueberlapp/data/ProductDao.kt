@@ -112,12 +112,20 @@ interface ProductDao {
     fun getProductCreationDatesFlow(): Flow<List<LocalDate>>
 
     // ── Home Screen Counts ─────────────────────
-    /** Sales-area stock that is still available. Excludes order products by design. */
+    /**
+     * Sales-area stock that is still available. Excludes order products and
+     * products held by an active event: neither is on the stand.
+     */
     @Query("""
         SELECT COUNT(*) FROM ProductDetail
         WHERE status = 'AVAILABLE' AND orderId IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN EventDetail e ON e.id = ep.eventId
+              WHERE ep.productId = ProductDetail.id AND e.status IN (:activeEventStatuses)
+          )
     """)
-    fun getAvailableSalesAreaCountFlow(): Flow<Int>
+    fun getAvailableSalesAreaCountFlow(activeEventStatuses: List<String>): Flow<Int>
 
     /** Products made for orders that have not been resolved yet. */
     @Query("""
@@ -186,17 +194,21 @@ interface ProductDao {
     /**
      * Sales-area products available to be attached to an order.
      *
-     * Guarded to AVAILABLE and unattached: a sold or removed product cannot be
-     * promised to a customer, and one already in an order must not be stolen
-     * from it.
+     * Guarded to AVAILABLE, unattached and not in an active event: a product
+     * promised to a customer can't be taken to a market, and vice versa.
      */
     @Transaction
     @Query("""
         SELECT * FROM ProductDetail
         WHERE status = 'AVAILABLE' AND orderId IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN EventDetail e ON e.id = ep.eventId
+              WHERE ep.productId = ProductDetail.id AND e.status IN (:activeEventStatuses)
+          )
         ORDER BY createdAt DESC, id ASC
     """)
-    fun getAttachableProductsFlow(): Flow<List<Product>>
+    fun getAttachableProductsFlow(activeEventStatuses: List<String>): Flow<List<Product>>
 
     /**
      * Attaches products to [orderId]. Re-checks the guard in SQL so a product
@@ -209,8 +221,17 @@ interface ProductDao {
         WHERE id IN (:productIds)
           AND status = 'AVAILABLE'
           AND orderId IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN EventDetail e ON e.id = ep.eventId
+              WHERE ep.productId = ProductDetail.id AND e.status IN (:activeEventStatuses)
+          )
     """)
-    suspend fun attachProductsToOrder(productIds: List<Int>, orderId: Int)
+    suspend fun attachProductsToOrder(
+        productIds: List<Int>,
+        orderId: Int,
+        activeEventStatuses: List<String>
+    )
 
     @Query("SELECT fileName FROM Image")
     suspend fun getAllImageFileNames(): List<String>
