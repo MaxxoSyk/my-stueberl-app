@@ -329,9 +329,9 @@
     <string name="event_detail_created_at">Erstellt am %1$s</string>
     <string name="event_detail_not_found">Diese Veranstaltung existiert nicht mehr.</string>
     <string name="event_detail_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
-    <string name="event_detail_remove_product">Remove from event</string>
-    <string name="event_detail_remove_batch">Remove all from event</string>
-    <string name="event_detail_purchase_price">Cost: %1$s</string>
+    <string name="event_detail_remove_product">Aus Veranstaltung entfernen</string>
+    <string name="event_detail_remove_batch">Alle aus Veranstaltung entfernen</string>
+    <string name="event_detail_purchase_price">EK: %1$s</string>
     <string name="event_detail_cancel">Veranstaltung absagen</string>
     <string name="event_detail_cancel_dismiss">Beibehalten</string>
     <string name="event_detail_cancel_confirm_title">Veranstaltung absagen?</string>
@@ -348,4 +348,7 @@
         <item quantity="one">Das Werkstück wird aus dieser Veranstaltung entfernt. Es bleibt im Bestand.</item>
         <item quantity="other">%1$d Werkstücke werden aus dieser Veranstaltung entfernt. Sie bleiben im Bestand.</item>
     </plurals>
+    <string name="event_detail_add_new">Neu</string>
+    <string name="event_detail_add_existing">Vorhanden</string>
+    <string name="event_attach_empty">Keine verfügbaren Werkstücke. Alles im Stüberl ist verkauft, entfernt, Teil einer Bestellung oder bereits einer Veranstaltung zugeordnet.</string>
 </resources>

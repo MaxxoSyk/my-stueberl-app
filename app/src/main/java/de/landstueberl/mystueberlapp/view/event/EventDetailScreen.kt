@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
@@ -29,6 +31,7 @@ import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +42,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -70,6 +74,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
+import de.landstueberl.mystueberlapp.view.order.AttachProductDialog
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailUiState
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailViewModel
 import java.io.File
@@ -93,6 +98,8 @@ fun EventDetailScreen(
     val products by viewModel.products.collectAsStateWithLifecycle()
     val isWorking by viewModel.isWorking.collectAsStateWithLifecycle()
     val isError by viewModel.isError.collectAsStateWithLifecycle()
+    val attachableItems by viewModel.attachableItems.collectAsStateWithLifecycle()
+    val selectedForAttach by viewModel.selectedForAttach.collectAsStateWithLifecycle()
 
     var showOverflowMenu by remember { mutableStateOf(false) }
     var showStartConfirmation by rememberSaveable { mutableStateOf(false) }
@@ -100,6 +107,7 @@ fun EventDetailScreen(
     var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
     // IntArray, because it survives configuration changes in rememberSaveable.
     var pendingRemoval by rememberSaveable { mutableStateOf<IntArray?>(null) }
+    var showAttachDialog by rememberSaveable { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val savedMessage = stringResource(R.string.events_screen_success_save)
@@ -120,6 +128,10 @@ fun EventDetailScreen(
     }
 
     val event = (uiState as? EventDetailUiState.Loaded)?.event
+
+    val imageFileOf: (Product) -> File? = remember(viewModel) {
+        { product -> product.imageList.firstOrNull()?.fileName?.let(viewModel::imageFile) }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -246,21 +258,30 @@ fun EventDetailScreen(
                 )
             }
 
-            is EventDetailUiState.Loaded -> EventDetailContent(
-                event = state.event,
-                products = products,
-                imageFileOf = { product ->
-                    product.imageList.firstOrNull()?.fileName?.let(viewModel::imageFile)
-                },
-                onProductClick = onNavigateToEditProduct,
-                // Products can only be removed while preparing.
-                onRemove = if (state.event.status == EventStatus.IN_PREPARATION) {
-                    { ids -> pendingRemoval = ids.toIntArray() }
-                } else {
-                    null
-                },
-                modifier = Modifier.padding(padding)
-            )
+            is EventDetailUiState.Loaded -> {
+                val isPreparing = state.event.status == EventStatus.IN_PREPARATION
+                EventDetailContent(
+                    event = state.event,
+                    products = products,
+                    imageFileOf = imageFileOf,
+                    onProductClick = onNavigateToEditProduct,
+                    // Products can only be added or removed while preparing.
+                    onRemove = if (isPreparing) {
+                        { ids -> pendingRemoval = ids.toIntArray() }
+                    } else {
+                        null
+                    },
+                    onAddExisting = if (isPreparing) {
+                        {
+                            viewModel.clearAttachSelection()
+                            showAttachDialog = true
+                        }
+                    } else {
+                        null
+                    },
+                    modifier = Modifier.padding(padding)
+                )
+            }
         }
     }
 
@@ -323,6 +344,24 @@ fun EventDetailScreen(
             onDismiss = { pendingRemoval = null }
         )
     }
+
+    if (showAttachDialog) {
+        AttachProductDialog(
+            items = attachableItems,
+            selectedIds = selectedForAttach,
+            imageFileOf = imageFileOf,
+            onToggleProduct = viewModel::toggleAttachSelection,
+            onToggleBatch = viewModel::toggleBatchAttachSelection,
+            onConfirm = {
+                viewModel.attachSelectedProducts { showAttachDialog = false }
+            },
+            onDismiss = {
+                viewModel.clearAttachSelection()
+                showAttachDialog = false
+            },
+            emptyText = stringResource(R.string.event_attach_empty)
+        )
+    }
 }
 
 // ── Content ────────────────────────────────────────────────────────────
@@ -333,6 +372,7 @@ private fun EventDetailContent(
     imageFileOf: (Product) -> File?,
     onProductClick: (Int) -> Unit,
     onRemove: ((List<Int>) -> Unit)?,
+    onAddExisting: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     // Keyed by status: collapses by itself when preparation starts.
@@ -373,7 +413,8 @@ private fun EventDetailContent(
                 imageFileOf = imageFileOf,
                 expandedBatchIds = expandedBatchIds,
                 onProductClick = onProductClick,
-                onRemove = onRemove
+                onRemove = onRemove,
+                onAddExisting = onAddExisting
             )
         }
 
@@ -388,7 +429,8 @@ private fun LazyListScope.eventProductSections(
     imageFileOf: (Product) -> File?,
     expandedBatchIds: MutableSet<Int>,
     onProductClick: (Int) -> Unit,
-    onRemove: ((List<Int>) -> Unit)?
+    onRemove: ((List<Int>) -> Unit)?,
+    onAddExisting: (() -> Unit)?
 ) {
     item(key = "header_products") {
         DetailSectionHeader(stringResource(R.string.event_detail_section_products))
@@ -427,6 +469,12 @@ private fun LazyListScope.eventProductSections(
                     }
                 )
             }
+        }
+    }
+
+    if (onAddExisting != null) {
+        item(key = "add_buttons") {
+            AddProductButtons(onAddExisting = onAddExisting)
         }
     }
 
@@ -636,6 +684,58 @@ private fun HintText(text: String) {
             .fillMaxWidth()
             .padding(vertical = 4.dp)
     )
+}
+
+/** "New" follows in the next step; until then "Existing" takes the full width. */
+@Composable
+private fun AddProductButtons(
+    onAddExisting: () -> Unit,
+    onAddNew: (() -> Unit)? = null
+) {
+    val buttonColors = ButtonDefaults.outlinedButtonColors(
+        contentColor = MaterialTheme.colorScheme.secondary
+    )
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (onAddNew != null) {
+            OutlinedButton(
+                onClick = onAddNew,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(10.dp),
+                colors = buttonColors
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.event_detail_add_new),
+                    style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1
+                )
+            }
+        }
+
+        OutlinedButton(
+            onClick = onAddExisting,
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(10.dp),
+            colors = buttonColors
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = stringResource(R.string.event_detail_add_existing),
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1
+            )
+        }
+    }
 }
 
 @Composable
