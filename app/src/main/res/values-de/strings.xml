@@ -355,4 +355,21 @@
     <string name="event_detail_add_new">Neu</string>
     <string name="event_detail_add_existing">Vorhanden</string>
     <string name="event_attach_empty">Keine verfügbaren Werkstücke. Alles im Stüberl ist verkauft, entfernt, Teil einer Bestellung oder bereits einer Veranstaltung zugeordnet.</string>
+    <string name="event_detail_print_labels">Etiketten drucken</string>
+
+    <string name="label_dialog_title">Etiketten drucken</string>
+    <string name="label_dialog_select_all">Alle auswählen</string>
+    <string name="label_dialog_select_none">Keine auswählen</string>
+    <string name="label_dialog_hint">Ein QR-Etikett pro Werkstück. Werkstücke, die vor der Veranstaltung verkauft oder entfernt wurden, bekommen kein Etikett.</string>
+    <string name="label_dialog_batch_selected">%1$d von %2$d ausgewählt</string>
+    <plurals name="label_dialog_confirm">
+        <item quantity="one">%1$d Etikett drucken</item>
+        <item quantity="other">%1$d Etiketten drucken</item>
+    </plurals>
+    <plurals name="label_dialog_pages">
+        <item quantity="one">%1$d Seite (A4)</item>
+        <item quantity="other">%1$d Seiten (A4)</item>
+    </plurals>
+    <string name="label_print_job">Etiketten – %1$s</string>
+    <string name="label_print_failed">Etikettenbogen konnte nicht erstellt werden. Bitte erneut versuchen.</string>
 </resources>

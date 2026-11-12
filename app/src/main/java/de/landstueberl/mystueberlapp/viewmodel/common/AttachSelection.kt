@@ -27,6 +27,11 @@ class AttachSelection {
         if (current.containsAll(ids)) current - ids else current + ids
     }
 
+    /** Replaces the selection, e.g. to preselect everything when a picker opens. */
+    fun replaceWith(productIds: Collection<Int>) {
+        _selectedIds.value = productIds.toSet()
+    }
+
     fun clear() {
         _selectedIds.value = emptySet()
     }

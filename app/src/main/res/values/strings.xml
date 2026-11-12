@@ -355,4 +355,21 @@
     <string name="event_detail_add_new">New</string>
     <string name="event_detail_add_existing">Existing</string>
     <string name="event_attach_empty">No products available. Everything on the stand is sold, removed, part of an order or already assigned to an event.</string>
+    <string name="event_detail_print_labels">Print labels</string>
+
+    <string name="label_dialog_title">Print labels</string>
+    <string name="label_dialog_select_all">Select all</string>
+    <string name="label_dialog_select_none">Select none</string>
+    <string name="label_dialog_hint">One QR label per product. Products sold or removed before the event don\'t get a label.</string>
+    <string name="label_dialog_batch_selected">%1$d of %2$d selected</string>
+    <plurals name="label_dialog_confirm">
+        <item quantity="one">Print %1$d label</item>
+        <item quantity="other">Print %1$d labels</item>
+    </plurals>
+    <plurals name="label_dialog_pages">
+        <item quantity="one">%1$d page (A4)</item>
+        <item quantity="other">%1$d pages (A4)</item>
+    </plurals>
+    <string name="label_print_job">Labels – %1$s</string>
+    <string name="label_print_failed">Could not create the label sheet. Please try again.</string>
 </resources>

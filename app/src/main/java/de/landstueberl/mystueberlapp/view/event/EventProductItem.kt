@@ -311,7 +311,7 @@ private fun PriceRow(
 }
 
 @Composable
-private fun ProductThumbnail(imageFile: File?, size: Dp) {
+internal fun ProductThumbnail(imageFile: File?, size: Dp) {
     Box(
         modifier = Modifier
             .size(size)
@@ -338,7 +338,7 @@ private fun ProductThumbnail(imageFile: File?, size: Dp) {
 }
 
 @Composable
-private fun BatchCountBadge(count: Int) {
+internal fun BatchCountBadge(count: Int) {
     Surface(
         shape = RoundedCornerShape(6.dp),
         color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
