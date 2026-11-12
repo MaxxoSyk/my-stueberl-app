@@ -62,3 +62,11 @@ fun List<Product>.groupByBatch(): List<ProductListItem> {
 
     return result
 }
+
+/** Every product in the list, batch members included, in list order. */
+fun List<ProductListItem>.allProducts(): List<Product> = flatMap { item ->
+    when (item) {
+        is ProductListItem.Single -> listOf(item.product)
+        is ProductListItem.Batch -> item.products
+    }
+}

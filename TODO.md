@@ -31,6 +31,19 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
 - [x] 4. "New": `AddProduct(orderId, eventId)`, batches allowed, products + links in one transaction (`createProductsForEvent()`); event rows match the product list
 - [x] 5. Product list + home tile: "Event" badge, "Go to event" in the bottom sheet, "From event" filter chip (available + in an active event); exhaustive `when` on `ProductSourceFilter`; Events tile counter for AVAILABLE products of the next event; next event's status icon on the tile (`eventStatusIconAndTint()`)
 
+## 🚧 In progress: Events feature (part 3a: QR labels, before "Start event")
+Decisions: code = `STUEBERL:1:<eventId>:<productId>` (label only valid for its event); plain A4 paper, cut by hand; QR only, plus a description caption to match code ↔ product; 4 × 4 cm cells (35 per page) with dashed cut lines; one label per product (batch members too); remember printed labels; printing in IN_PREPARATION and IN_PROGRESS
+- [x] 1. QR format + generator: ZXing core 3.5.3, `ProductLabelCode.encode()` / `decode()`, `QrCodes.matrix()` / `bitmap()`, `Canvas.drawQrCode()`; first unit test `ProductLabelCodeTest`
+  - Smallest QR size (21×21) while both ids together have ≤ 8 digits; beyond that 25×25
+- [x] 2. A4 sheet PDF + printing: `LabelSheetLayout` (pure, tested), `LabelSheetPdf` (`PdfDocument`), `LabelPrinter` (`PrintManager`); `drawQrCode()` draws one path (no seams); `allProducts()` helper
+  - Printout and scan test still open: done together with step 3
+- [ ] 3. Event detail: "Print labels" (AVAILABLE products only), selection, print dialog
+  - Also test step 2 here: grid, captions, cut lines, multiple pages, 4 cm cells at 100 %, scan result
+- [ ] 4. Remember printed labels: `EventProductDetail.labelPrintedAt` (per link, so relinking to a new event resets it), "only new ones" preselected; DB version bump
+- Note: labels printed before a destructive migration become invalid (IDs restart); reprint after schema changes during development
+- Note: print at 100 % / actual size; printers with a large unprintable edge may scale the page slightly
+- POS later: scan via `GmsBarcodeScanning`; `ProductLabelCode.decode()`, then check event ID = running event and product linked + AVAILABLE
+
 ## 🗓️ Events feature (part 3+, not started)
 - [ ] Sale channel: `ProductDetail.soldAtEventId` (decided: option A)
   - Set by POS / "Close event"; stand sales (incl. before the event and after DONE/CANCELLED) stay `null`
@@ -43,41 +56,4 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
   - Decide per status whether edit stays available (currently allowed in every status)
 - [ ] "Start event" (IN_PREPARATION → IN_PROGRESS) with confirmation
 - [ ] Going back a status (possible but rare: overflow menu + confirmation)
-  - Leaving CANCELLED must clear `cancelledOn`
-- [ ] No adding/removing products during IN_PROGRESS (already true: remove icons and "New" / "Existing" only show in IN_PREPARATION, and link/unlink are guarded in SQL)
-- [ ] Point-of-sale screen for IN_PROGRESS (basket per customer, total, lock basket, cash given → change)
-- [ ] Mark sales during the event (sale date defaults to the event date)
-- [ ] "Close event" flow (mark sold items, the rest go back to the stand)
-- [ ] Statistics per event (revenue, stand fee, profit); event sales as their own channel next to sales area / orders
-- [ ] Duplicate event for recurring markets
-
-## 🟡 Cleanup
-- [ ] Status icon/tint duplication (3 files)
-  - `EventStatusBadge` and `OrderStatusBadge` share the same layout; consider one shared theme-based `StatusBadge` (events already use `eventStatusIconAndTint()`)
-- [x] Extract date picker dialog (done as Events step 3)
-- [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
-- [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
-- [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests (good first candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback and the source groups in `getFilteredProductsFlow`)
-- [ ] Undo on delete
-- [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
-- [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove
-- [ ] Hard-coded `'AVAILABLE'` / `'CANCELLED'` literals in SQL: consider passing them as parameters like the event statuses
-- [ ] `KEY_PRODUCT_UPDATED` / `KEY_PRODUCT_SAVED` are set on the event detail screen after Edit / Add Product but never read (harmless; list updates via the database). Optionally show a snackbar there
-- [ ] Accessibility (optional): `HomeTileRow` icons have no content description, so the next event's status isn't announced by screen readers
-- [x] German strings: a few still said "Produkt" instead of "Werkstück" (`products_screen_search_no_results`, `attach_product_confirm`, `gallery_screen_empty`)
-
-## 🟠 Deferred features
-- [ ] Statistics breakdowns
-- [ ] Bulk status actions
-- [ ] Batches in orders
-- [ ] Sales-price calculator
-- [ ] Empty orders surviving process death
-
-## 📦 Pre-release
-- [ ] R8
-- [ ] Real migrations (replace the debug-only destructive migration)
-  - [x] `exportSchema = true` with `app/schemas/` configured; JSON files are generated and checked in
-- [ ] Device pass on hardware
-- [ ] Review backup rules
-- [ ] Play Store icon
+  -
