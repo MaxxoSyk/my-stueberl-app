@@ -34,6 +34,10 @@ enum class EventStatus {
     val isCancellable: Boolean
         get() = this == PLANNED || this == IN_PREPARATION
 
+    /** Labels are printed while preparing, or at the market to replace a lost one. */
+    val canPrintLabels: Boolean
+        get() = this == IN_PREPARATION || this == IN_PROGRESS
+
     companion object {
         /**
          * Status names for SQL parameters. Queries take these instead of

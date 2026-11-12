@@ -1,5 +1,6 @@
 package de.landstueberl.mystueberlapp.view.event
 
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,12 +55,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -72,14 +75,18 @@ import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.format
+import de.landstueberl.mystueberlapp.data.label.LabelPrinter
+import de.landstueberl.mystueberlapp.data.label.LabelSheetLayout
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.view.order.AttachProductDialog
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailUiState
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailViewModel
+import kotlinx.coroutines.launch
 import java.io.File
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import kotlin.coroutines.cancellation.CancellationException
 
 private val FOOTER_DATE_FORMAT: DateTimeFormatter =
     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
@@ -101,6 +108,7 @@ fun EventDetailScreen(
     val isError by viewModel.isError.collectAsStateWithLifecycle()
     val attachableItems by viewModel.attachableItems.collectAsStateWithLifecycle()
     val selectedForAttach by viewModel.selectedForAttach.collectAsStateWithLifecycle()
+    val selectedForLabels by viewModel.selectedForLabels.collectAsStateWithLifecycle()
 
     var showOverflowMenu by remember { mutableStateOf(false) }
     var showStartConfirmation by rememberSaveable { mutableStateOf(false) }
@@ -109,6 +117,12 @@ fun EventDetailScreen(
     // IntArray, because it survives configuration changes in rememberSaveable.
     var pendingRemoval by rememberSaveable { mutableStateOf<IntArray?>(null) }
     var showAttachDialog by rememberSaveable { mutableStateOf(false) }
+    var showLabelDialog by rememberSaveable { mutableStateOf(false) }
+    var isPrintingLabels by remember { mutableStateOf(false) }
+    // Activity context: PrintManager needs a window. Taken outside the Dialog on purpose.
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val labelErrorMessage = stringResource(R.string.label_print_failed)
 
     val snackbarHostState = remember { SnackbarHostState() }
     val savedMessage = stringResource(R.string.events_screen_success_save)
@@ -175,6 +189,17 @@ fun EventDetailScreen(
                                 expanded = showOverflowMenu,
                                 onDismissRequest = { showOverflowMenu = false }
                             ) {
+                                if (event.status.canPrintLabels && (products?.availableCount ?: 0) > 0) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.event_detail_print_labels)) },
+                                        onClick = {
+                                            showOverflowMenu = false
+                                            viewModel.selectAllForLabels()
+                                            showLabelDialog = true
+                                        }
+                                    )
+                                }
+
                                 if (event.status.isCancellable) {
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.event_detail_cancel)) },
@@ -366,6 +391,46 @@ fun EventDetailScreen(
                 showAttachDialog = false
             },
             emptyText = stringResource(R.string.event_attach_empty)
+        )
+    }
+
+    if (showLabelDialog) {
+        val jobName = stringResource(R.string.label_print_job, event?.name.orEmpty())
+        LabelSelectionDialog(
+            items = products?.items.orEmpty(),
+            selectedIds = selectedForLabels,
+            imageFileOf = imageFileOf,
+            isPrinting = isPrintingLabels,
+            onToggleProduct = viewModel::toggleLabelSelection,
+            onToggleBatch = viewModel::toggleBatchLabelSelection,
+            onSelectAll = viewModel::selectAllForLabels,
+            onSelectNone = viewModel::clearLabelSelection,
+            onPrint = {
+                val labels = viewModel.selectedLabels()
+                if (labels.isNotEmpty() && !isPrintingLabels) {
+                    scope.launch {
+                        isPrintingLabels = true
+                        try {
+                            val pdf = LabelPrinter.createPdf(context, labels)
+                            LabelPrinter.print(
+                                context = context,
+                                pdf = pdf,
+                                pageCount = LabelSheetLayout.pageCount(labels.size),
+                                jobName = jobName
+                            )
+                            showLabelDialog = false
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Log.e("EventDetailScreen", "Failed to create label sheet", e)
+                            scope.launch { snackbarHostState.showSnackbar(labelErrorMessage) }
+                        } finally {
+                            isPrintingLabels = false
+                        }
+                    }
+                }
+            },
+            onDismiss = { showLabelDialog = false }
         )
     }
 }

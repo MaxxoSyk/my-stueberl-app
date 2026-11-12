@@ -12,9 +12,12 @@ import de.landstueberl.mystueberlapp.data.EventProducts
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
+import de.landstueberl.mystueberlapp.data.allProducts
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.label.ProductLabel
+import de.landstueberl.mystueberlapp.data.label.ProductLabelCode
 import de.landstueberl.mystueberlapp.data.toEventProducts
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.EventRepository
@@ -112,6 +115,36 @@ class EventDetailViewModel(
 
     private val currentEvent: EventDetail?
         get() = (uiState.value as? EventDetailUiState.Loaded)?.event
+
+    // ── Label Printing ─────────────────────────
+    /** Separate from the attach selection, so the two pickers never share ticks. */
+    private val labelSelection = AttachSelection()
+    val selectedForLabels: StateFlow<Set<Int>> = labelSelection.selectedIds
+
+    fun toggleLabelSelection(productId: Int) = labelSelection.toggle(productId)
+
+    fun toggleBatchLabelSelection(productIds: List<Int>) = labelSelection.toggleBatch(productIds)
+
+    fun clearLabelSelection() = labelSelection.clear()
+
+    /** Preselects every available product. Step 4 narrows this to unprinted ones. */
+    fun selectAllForLabels() {
+        labelSelection.replaceWith(availableProducts().map { it.details.id })
+    }
+
+    /**
+     * Labels for the ticked products that are still available, in list order.
+     * A product sold while the dialog was open is simply left out.
+     */
+    fun selectedLabels(): List<ProductLabel> {
+        val selected = labelSelection.current
+        return availableProducts()
+            .filter { it.details.id in selected }
+            .map { ProductLabel(ProductLabelCode(eventId, it.details.id), it.details.description) }
+    }
+
+    private fun availableProducts(): List<Product> =
+        products.value?.items.orEmpty().allProducts()
 
     // ── UI State ───────────────────────────────
     private val _isWorking = MutableStateFlow(false)
