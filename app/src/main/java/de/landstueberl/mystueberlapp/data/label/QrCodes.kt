@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import androidx.core.graphics.createBitmap
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -43,24 +44,38 @@ object QrCodes {
 /**
  * Draws [matrix] into a square at ([left], [top]) of [size], including the
  * quiet zone. Works the same on a bitmap and on a PDF page.
+ *
+ * The dark modules go into one path of horizontal runs: fewer shapes in the
+ * PDF, and no hairline seams between neighbouring squares in PDF viewers.
  */
 fun Canvas.drawQrCode(matrix: BitMatrix, left: Float, top: Float, size: Float) {
-    val modules = matrix.width + 2 * QrCodes.QUIET_ZONE_MODULES
-    val moduleSize = size / modules
-
-    val paint = Paint().apply { isAntiAlias = false }
+    val quiet = QrCodes.QUIET_ZONE_MODULES
+    val moduleSize = size / (matrix.width + 2 * quiet)
+    val paint = Paint().apply {
+        isAntiAlias = false
+        style = Paint.Style.FILL
+    }
 
     paint.color = Color.WHITE
     drawRect(left, top, left + size, top + size, paint)
 
-    paint.color = Color.BLACK
+    val path = Path()
     for (y in 0 until matrix.height) {
-        for (x in 0 until matrix.width) {
-            if (matrix[x, y]) {
-                val l = left + (x + QrCodes.QUIET_ZONE_MODULES) * moduleSize
-                val t = top + (y + QrCodes.QUIET_ZONE_MODULES) * moduleSize
-                drawRect(l, t, l + moduleSize, t + moduleSize, paint)
+        var x = 0
+        while (x < matrix.width) {
+            if (!matrix[x, y]) {
+                x++
+                continue
             }
+            val start = x
+            while (x < matrix.width && matrix[x, y]) x++
+
+            val l = left + (start + quiet) * moduleSize
+            val t = top + (y + quiet) * moduleSize
+            path.addRect(l, t, l + (x - start) * moduleSize, t + moduleSize, Path.Direction.CW)
         }
     }
+
+    paint.color = Color.BLACK
+    drawPath(path, paint)
 }
