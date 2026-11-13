@@ -5,12 +5,14 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,7 +32,6 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,6 +48,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -234,11 +236,8 @@ fun EventDetailScreen(
             )
         },
         bottomBar = {
-            if (event?.status == EventStatus.PLANNED) {
-                BottomAppBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentPadding = PaddingValues(horizontal = 16.dp)
-                ) {
+            when (event?.status) {
+                EventStatus.PLANNED -> EventBottomBar {
                     Button(
                         onClick = { showStartConfirmation = true },
                         enabled = !isWorking,
@@ -260,6 +259,21 @@ fun EventDetailScreen(
                         )
                     }
                 }
+
+                // Fixed at the bottom, so it stays reachable with long product lists.
+                EventStatus.IN_PREPARATION -> EventBottomBar {
+                    AddProductButtons(
+                        onAddNew = { onNavigateToAddProduct(event.id) },
+                        onAddExisting = {
+                            viewModel.clearAttachSelection()
+                            showAttachDialog = true
+                        },
+                        enabled = !isWorking
+                    )
+                    // "Start event" will be added here as a second row.
+                }
+
+                else -> Unit
             }
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -299,19 +313,6 @@ fun EventDetailScreen(
                     // Products can only be added or removed while preparing.
                     onRemove = if (isPreparing) {
                         { ids -> pendingRemoval = ids.toIntArray() }
-                    } else {
-                        null
-                    },
-                    onAddExisting = if (isPreparing) {
-                        {
-                            viewModel.clearAttachSelection()
-                            showAttachDialog = true
-                        }
-                    } else {
-                        null
-                    },
-                    onAddNew = if (isPreparing) {
-                        { onNavigateToAddProduct(state.event.id) }
                     } else {
                         null
                     },
@@ -470,8 +471,6 @@ private fun EventDetailContent(
     imageFileOf: (Product) -> File?,
     onProductClick: (Int) -> Unit,
     onRemove: ((List<Int>) -> Unit)?,
-    onAddExisting: (() -> Unit)?,
-    onAddNew: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     // Keyed by status: collapses by itself when preparation starts.
@@ -512,9 +511,7 @@ private fun EventDetailContent(
                 imageFileOf = imageFileOf,
                 expandedBatchIds = expandedBatchIds,
                 onProductClick = onProductClick,
-                onRemove = onRemove,
-                onAddExisting = onAddExisting,
-                onAddNew = onAddNew
+                onRemove = onRemove
             )
         }
 
@@ -529,9 +526,7 @@ private fun LazyListScope.eventProductSections(
     imageFileOf: (Product) -> File?,
     expandedBatchIds: MutableSet<Int>,
     onProductClick: (Int) -> Unit,
-    onRemove: ((List<Int>) -> Unit)?,
-    onAddExisting: (() -> Unit)?,
-    onAddNew: (() -> Unit)?
+    onRemove: ((List<Int>) -> Unit)?
 ) {
     item(key = "header_products") {
         DetailSectionHeader(stringResource(R.string.event_detail_section_products))
@@ -570,12 +565,6 @@ private fun LazyListScope.eventProductSections(
                     }
                 )
             }
-        }
-    }
-
-    if (onAddExisting != null) {
-        item(key = "add_buttons") {
-            AddProductButtons(onAddExisting = onAddExisting, onAddNew = onAddNew)
         }
     }
 
@@ -790,8 +779,9 @@ private fun HintText(text: String) {
 /** "New" and "Existing", side by side. */
 @Composable
 private fun AddProductButtons(
+    onAddNew: () -> Unit,
     onAddExisting: () -> Unit,
-    onAddNew: (() -> Unit)? = null
+    enabled: Boolean = true
 ) {
     val buttonColors = ButtonDefaults.outlinedButtonColors(
         contentColor = MaterialTheme.colorScheme.secondary
@@ -801,26 +791,30 @@ private fun AddProductButtons(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        if (onAddNew != null) {
-            OutlinedButton(
-                onClick = onAddNew,
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp),
-                colors = buttonColors
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = stringResource(R.string.event_detail_add_new),
-                    style = MaterialTheme.typography.labelMedium,
-                    maxLines = 1
-                )
-            }
+        OutlinedButton(
+            onClick = onAddNew,
+            enabled = enabled,
+            modifier = Modifier
+                .weight(1f)
+                .height(44.dp),
+            shape = RoundedCornerShape(10.dp),
+            colors = buttonColors
+        ) {
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = stringResource(R.string.event_detail_add_new),
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1
+            )
         }
 
         OutlinedButton(
             onClick = onAddExisting,
-            modifier = Modifier.weight(1f),
+            enabled = enabled,
+            modifier = Modifier
+                .weight(1f)
+                .height(44.dp),
             shape = RoundedCornerShape(10.dp),
             colors = buttonColors
         ) {
@@ -836,6 +830,27 @@ private fun AddProductButtons(
                 maxLines = 1
             )
         }
+    }
+}
+
+/**
+ * Bottom bar that sizes itself to its content (BottomAppBar is fixed at
+ * 80 dp, too small for two rows) and keeps clear of the navigation bar.
+ */
+@Composable
+private fun EventBottomBar(content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 3.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            content = content
+        )
     }
 }
 
