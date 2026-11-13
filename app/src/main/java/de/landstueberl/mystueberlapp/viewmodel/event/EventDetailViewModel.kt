@@ -188,6 +188,17 @@ class EventDetailViewModel(
         launchWorking { repo.updateStatus(eventId, EventStatus.IN_PREPARATION) }
     }
 
+    /** IN_PREPARATION → IN_PROGRESS. Needs at least one available product (guarded in SQL too). */
+    fun startEvent() {
+        if (currentEvent?.status != EventStatus.IN_PREPARATION) return
+        if ((products.value?.availableCount ?: 0) == 0) return
+
+        launchWorking {
+            // A failed guard (e.g. the last product was sold meanwhile) shows the error snackbar.
+            check(repo.startEvent(eventId)) { "Event $eventId could not be started" }
+        }
+    }
+
     /** Links stay as history; the products are free again. Guarded in SQL as well. */
     fun cancelEvent() {
         if (currentEvent?.status?.isCancellable != true) return

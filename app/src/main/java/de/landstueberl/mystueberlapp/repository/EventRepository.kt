@@ -123,4 +123,12 @@ class EventRepository(
             printableStatuses = EventStatus.LABEL_PRINTABLE_NAMES
         )
     }
+
+    /** @return false if the event wasn't in preparation or had no available products */
+    suspend fun startEvent(eventId: Int): Boolean =
+        dao.startEvent(
+            id = eventId,
+            inPreparation = EventStatus.IN_PREPARATION.name,
+            inProgress = EventStatus.IN_PROGRESS.name
+        ) > 0
 }

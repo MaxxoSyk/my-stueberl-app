@@ -382,4 +382,15 @@
     </plurals>
     <string name="label_print_confirm_yes">Yes, mark as printed</string>
     <string name="label_print_confirm_no">No</string>
+
+    <string name="event_detail_start_event">Start event</string>
+    <string name="event_detail_start_event_needs_products">Add products before starting the event.</string>
+    <string name="event_detail_start_event_confirm_title">Start event?</string>
+    <string name="event_detail_start_event_confirm_message">The event moves to \"In progress\". Products can no longer be added or removed.</string>
+    <string name="event_detail_start_event_early">The event only begins on %1$s.</string>
+    <plurals name="event_detail_start_event_unlabeled">
+        <item quantity="one">%1$d product has no printed label yet.</item>
+        <item quantity="other">%1$d products have no printed label yet.</item>
+    </plurals>
+    <string name="event_detail_in_progress_hint">The event is running. Products can no longer be added or removed.</string>
 </resources>

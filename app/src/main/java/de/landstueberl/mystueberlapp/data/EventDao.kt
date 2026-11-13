@@ -216,4 +216,21 @@ interface EventDao {
         date: LocalDate,
         printableStatuses: List<String>
     )
+
+    /**
+     * Starts the event, but only from [inPreparation] and only if it has at
+     * least one available product. @return the number of updated rows (0 or 1)
+     */
+    @Query("""
+        UPDATE EventDetail
+        SET status = :inProgress
+        WHERE id = :id
+          AND status = :inPreparation
+          AND EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN ProductDetail p ON p.id = ep.productId
+              WHERE ep.eventId = :id AND p.status = 'AVAILABLE'
+          )
+    """)
+    suspend fun startEvent(id: Int, inPreparation: String, inProgress: String): Int
 }

@@ -382,4 +382,15 @@
     </plurals>
     <string name="label_print_confirm_yes">Ja, als gedruckt markieren</string>
     <string name="label_print_confirm_no">Nein</string>
+
+    <string name="event_detail_start_event">Veranstaltung starten</string>
+    <string name="event_detail_start_event_needs_products">Füge zuerst Werkstücke hinzu, bevor du die Veranstaltung startest.</string>
+    <string name="event_detail_start_event_confirm_title">Veranstaltung starten?</string>
+    <string name="event_detail_start_event_confirm_message">Die Veranstaltung wechselt auf „Läuft“. Werkstücke können dann nicht mehr hinzugefügt oder entfernt werden.</string>
+    <string name="event_detail_start_event_early">Die Veranstaltung beginnt erst am %1$s.</string>
+    <plurals name="event_detail_start_event_unlabeled">
+        <item quantity="one">%1$d Werkstück hat noch kein gedrucktes Etikett.</item>
+        <item quantity="other">%1$d Werkstücke haben noch kein gedrucktes Etikett.</item>
+    </plurals>
+    <string name="event_detail_in_progress_hint">Die Veranstaltung läuft. Werkstücke können nicht mehr hinzugefügt oder entfernt werden.</string>
 </resources>
