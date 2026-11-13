@@ -22,10 +22,10 @@
 
 ## 🔧 Events: improvements
 - [x] IN_PREPARATION detail screen: "New" / "Existing" fixed in the bottom bar (`EventBottomBar`, shared with PLANNED), always visible with long product lists
-- [ ] Home screen: make a currently running event (IN_PROGRESS) clearly visible — design to discuss
-  - Today the Events tile only shows it if it's the nearest event, with a small status icon
-  - An IN_PROGRESS event past its last day (not closed yet) drops off the tile, because `getNextEventFlow()` filters by date
-  - Ideas to discuss: highlighted tile / banner "Event running", quick access to the POS once it exists
+- [x] Home screen: running event clearly visible — animated frame on the Events tile (`Modifier.runningBorder()`, 5 s per lap, highlight 20 %); `getNextEventFlow()` lists IN_PROGRESS events first, even past their last day; "Still running" / "Läuft noch" via `EventTiming.StillRunning`
+- [ ] Optional polish for the running frame
+  - Static frame (no moving highlight) when system animations are turned off
+  - Constant speed along the frame (currently slightly faster on the short edges)
 
 ## 🗓️ Events feature (part 3+, not started)
 - [x] "Start event" (IN_PREPARATION → IN_PROGRESS): second row in the bottom bar with confirmation (notes for a future start date and unprinted labels); blocked without available products (guarded in SQL via `EventDao.startEvent()`); afterwards products read-only, info card collapsed, in-progress hint, "Print labels" stays
@@ -42,6 +42,7 @@
   - Leaving CANCELLED must clear `cancelledOn`
 - [ ] Point-of-sale screen for IN_PROGRESS (basket per customer, total, lock basket, cash given → change; scan product labels)
   - Scanning via `GmsBarcodeScanning`; `ProductLabelCode.decode()`, then check event ID = running event and product linked + AVAILABLE
+  - Quick access to the POS from the Events tile while an event is running
 - [ ] Mark sales during the event (sale date defaults to the event date)
 - [ ] "Close event" flow (mark sold items, the rest go back to the stand)
 - [ ] Statistics per event (revenue, stand fee, profit); event sales as their own channel next to sales area / orders
@@ -54,7 +55,7 @@
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests: first unit tests exist (`ProductLabelCodeTest`, `LabelSheetLayoutTest`). Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow`, the `markLabelsPrinted` guard and the `startEvent` guard
+- [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout` and `eventTiming()`. Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow`, the `markLabelsPrinted` guard, the `startEvent` guard and the `getNextEventFlow()` ordering
 - [ ] Undo on delete
 - [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
 - [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove

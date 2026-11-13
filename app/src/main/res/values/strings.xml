@@ -42,6 +42,7 @@
         <item quantity="other">In %1$d days</item>
     </plurals>
     <string name="home_screen_events_products">Products assigned</string>
+    <string name="home_screen_events_still_running">Still running</string>
 
     <!-- Products Screen -->
     <string name="products_screen_title">Products</string>

@@ -54,18 +54,26 @@ interface EventDao {
     suspend fun getEventById(id: Int): EventDetail?
 
     /**
-     * The nearest event that isn't over yet, skipping cancelled ones. A
-     * multi-day event counts until its last day. Dates are epoch days, so
-     * COALESCE and >= compare numerically.
+     * The event for the home tile: a running event first (even past its last
+     * day, until it's closed), otherwise the nearest one that isn't over yet.
+     * Cancelled events are skipped. Dates are epoch days, so the comparison is
+     * numeric.
      */
     @Query("""
         SELECT * FROM EventDetail
-        WHERE status != 'CANCELLED'
-          AND COALESCE(endDate, eventDate) >= :today
-        ORDER BY eventDate ASC, id ASC
+        WHERE status != :cancelled
+          AND (COALESCE(endDate, eventDate) >= :today OR status = :inProgress)
+        ORDER BY
+            CASE WHEN status = :inProgress THEN 0 ELSE 1 END,
+            eventDate ASC,
+            id ASC
         LIMIT 1
     """)
-    fun getNextEventFlow(today: LocalDate): Flow<EventDetail?>
+    fun getNextEventFlow(
+        today: LocalDate,
+        cancelled: String,
+        inProgress: String
+    ): Flow<EventDetail?>
 
     /** Every location entered so far, newest first. Grouped in Kotlin. */
     @Query("SELECT location FROM EventDetail WHERE location IS NOT NULL ORDER BY id DESC")

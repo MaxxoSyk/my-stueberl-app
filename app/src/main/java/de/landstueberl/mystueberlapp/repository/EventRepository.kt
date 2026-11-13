@@ -36,7 +36,11 @@ class EventRepository(
     suspend fun getEventById(eventId: Int): EventDetail? = dao.getEventById(eventId)
 
     fun getNextEventFlow(today: LocalDate = LocalDate.now()): Flow<EventDetail?> =
-        dao.getNextEventFlow(today)
+        dao.getNextEventFlow(
+            today = today,
+            cancelled = EventStatus.CANCELLED.name,
+            inProgress = EventStatus.IN_PROGRESS.name
+        )
 
     /**
      * Previously used locations, most used first, newest first on a tie.
