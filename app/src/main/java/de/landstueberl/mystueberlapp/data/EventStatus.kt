@@ -46,5 +46,7 @@ enum class EventStatus {
         val ACTIVE_NAMES: List<String> = entries.filter { it.isActive }.map { it.name }
 
         val CANCELLABLE_NAMES: List<String> = entries.filter { it.isCancellable }.map { it.name }
+
+        val LABEL_PRINTABLE_NAMES: List<String> = entries.filter { it.canPrintLabels }.map { it.name }
     }
 }

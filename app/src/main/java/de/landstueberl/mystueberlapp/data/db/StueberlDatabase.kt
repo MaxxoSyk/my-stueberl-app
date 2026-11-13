@@ -26,7 +26,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
         EventDetail::class,
         EventProductDetail::class
     ],
-    version = 15,
+    version = 16,
     exportSchema = true
 )
 @TypeConverters(

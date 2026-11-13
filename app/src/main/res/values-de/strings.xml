@@ -360,7 +360,7 @@
     <string name="label_dialog_title">Etiketten drucken</string>
     <string name="label_dialog_select_all">Alle auswählen</string>
     <string name="label_dialog_select_none">Keine auswählen</string>
-    <string name="label_dialog_hint">Ein QR-Etikett pro Werkstück. Werkstücke, die vor der Veranstaltung verkauft oder entfernt wurden, bekommen kein Etikett.</string>
+    <string name="label_dialog_hint">Ein QR-Etikett pro Werkstück. Bereits gedruckte Etiketten sind nicht vorausgewählt; zum Nachdrucken einfach ankreuzen.</string>
     <string name="label_dialog_batch_selected">%1$d von %2$d ausgewählt</string>
     <plurals name="label_dialog_confirm">
         <item quantity="one">%1$d Etikett drucken</item>
@@ -372,4 +372,14 @@
     </plurals>
     <string name="label_print_job">Etiketten – %1$s</string>
     <string name="label_print_failed">Etikettenbogen konnte nicht erstellt werden. Bitte erneut versuchen.</string>
+    <string name="label_dialog_all_printed">Alle Etiketten dieser Veranstaltung sind gedruckt. Kreuze ein Werkstück an, um sein Etikett nachzudrucken.</string>
+    <string name="label_dialog_printed_on">Gedruckt am %1$s</string>
+    <string name="label_dialog_batch_printed">%1$d von %2$d gedruckt</string>
+    <string name="label_print_confirm_title">Wurden die Etiketten richtig gedruckt?</string>
+    <plurals name="label_print_confirm_message">
+        <item quantity="one">Das Etikett wird als gedruckt markiert und beim nächsten Mal nicht vorausgewählt.</item>
+        <item quantity="other">%1$d Etiketten werden als gedruckt markiert und beim nächsten Mal nicht vorausgewählt.</item>
+    </plurals>
+    <string name="label_print_confirm_yes">Ja, als gedruckt markieren</string>
+    <string name="label_print_confirm_no">Nein</string>
 </resources>

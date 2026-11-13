@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
+import java.time.LocalDate
 import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface EventDetailUiState {
@@ -141,6 +142,27 @@ class EventDetailViewModel(
         return availableProducts()
             .filter { it.details.id in selected }
             .map { ProductLabel(ProductLabelCode(eventId, it.details.id), it.details.description) }
+    }
+
+    /** Observed live, so the dialog shows "Printed on …" right after confirming. */
+    val labelPrintedOn: StateFlow<Map<Int, LocalDate>> = repo.getLabelPrintDatesFlow(eventId)
+        .catch { e ->
+            Log.e(TAG, "Failed to observe label prints of event $eventId", e)
+            emit(emptyMap())
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyMap())
+
+    /** Used when the dialog opens: only products that don't have a label yet. */
+    fun preselectUnprintedLabels() {
+        val printed = labelPrintedOn.value
+        labelSelection.replaceWith(
+            availableProducts().map { it.details.id }.filter { it !in printed }
+        )
+    }
+
+    /** Called only after the user confirmed the printout. */
+    fun markLabelsPrinted(productIds: List<Int>) = launchWorking {
+        repo.markLabelsPrinted(eventId, productIds)
     }
 
     private fun availableProducts(): List<Product> =

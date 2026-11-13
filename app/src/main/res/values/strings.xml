@@ -360,7 +360,7 @@
     <string name="label_dialog_title">Print labels</string>
     <string name="label_dialog_select_all">Select all</string>
     <string name="label_dialog_select_none">Select none</string>
-    <string name="label_dialog_hint">One QR label per product. Products sold or removed before the event don\'t get a label.</string>
+    <string name="label_dialog_hint">One QR label per product. Products whose label was already printed aren\'t preselected; tick them to reprint.</string>
     <string name="label_dialog_batch_selected">%1$d of %2$d selected</string>
     <plurals name="label_dialog_confirm">
         <item quantity="one">Print %1$d label</item>
@@ -372,4 +372,14 @@
     </plurals>
     <string name="label_print_job">Labels – %1$s</string>
     <string name="label_print_failed">Could not create the label sheet. Please try again.</string>
+    <string name="label_dialog_all_printed">All labels for this event have been printed. Tick a product to reprint its label.</string>
+    <string name="label_dialog_printed_on">Printed %1$s</string>
+    <string name="label_dialog_batch_printed">%1$d of %2$d printed</string>
+    <string name="label_print_confirm_title">Did the labels print correctly?</string>
+    <plurals name="label_print_confirm_message">
+        <item quantity="one">The label will be marked as printed and won\'t be preselected next time.</item>
+        <item quantity="other">%1$d labels will be marked as printed and won\'t be preselected next time.</item>
+    </plurals>
+    <string name="label_print_confirm_yes">Yes, mark as printed</string>
+    <string name="label_print_confirm_no">No</string>
 </resources>
