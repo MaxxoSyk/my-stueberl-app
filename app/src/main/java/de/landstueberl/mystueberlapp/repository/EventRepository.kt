@@ -108,4 +108,19 @@ class EventRepository(
             linkProducts(eventId, createProducts())
         }
     }
+
+    /** productId → date the label was confirmed as printed. */
+    fun getLabelPrintDatesFlow(eventId: Int): Flow<Map<Int, LocalDate>> =
+        dao.getLabelPrintsFlow(eventId)
+            .map { prints -> prints.associate { it.productId to it.labelPrintedAt } }
+
+    suspend fun markLabelsPrinted(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        dao.markLabelsPrinted(
+            eventId = eventId,
+            productIds = productIds,
+            date = LocalDate.now(),
+            printableStatuses = EventStatus.LABEL_PRINTABLE_NAMES
+        )
+    }
 }

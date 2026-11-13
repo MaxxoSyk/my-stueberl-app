@@ -31,18 +31,19 @@ Rules: link/unlink only in IN_PREPARATION; one active event per product; exclusi
 - [x] 4. "New": `AddProduct(orderId, eventId)`, batches allowed, products + links in one transaction (`createProductsForEvent()`); event rows match the product list
 - [x] 5. Product list + home tile: "Event" badge, "Go to event" in the bottom sheet, "From event" filter chip (available + in an active event); exhaustive `when` on `ProductSourceFilter`; Events tile counter for AVAILABLE products of the next event; next event's status icon on the tile (`eventStatusIconAndTint()`)
 
-## 🚧 In progress: Events feature (part 3a: QR labels, before "Start event")
+## ✅ Done: Events feature (part 3a: QR labels)
 Decisions: code = `STUEBERL:1:<eventId>:<productId>` (label only valid for its event); plain A4 paper, cut by hand; QR only, plus a description caption to match code ↔ product; 4 × 4 cm cells (35 per page) with dashed cut lines; one label per product (batch members too); remember printed labels; printing in IN_PREPARATION and IN_PROGRESS
 - [x] 1. QR format + generator: ZXing core 3.5.3, `ProductLabelCode.encode()` / `decode()`, `QrCodes.matrix()` / `bitmap()`, `Canvas.drawQrCode()`; first unit test `ProductLabelCodeTest`
   - Smallest QR size (21×21) while both ids together have ≤ 8 digits; beyond that 25×25
 - [x] 2. A4 sheet PDF + printing: `LabelSheetLayout` (pure, tested), `LabelSheetPdf` (`PdfDocument`), `LabelPrinter` (`PrintManager`); `drawQrCode()` draws one path (no seams); `allProducts()` helper; printout and scan tested
-- [x] 3. "Print labels" in the overflow menu (IN_PREPARATION / IN_PROGRESS, only with available products); theme-based `LabelSelectionDialog` (everything preselected, tri-state batch checkbox, select all / none, page count); `EventStatus.canPrintLabels`; `AttachSelection.replaceWith()`
-- [ ] 4. Remember printed labels: `EventProductDetail.labelPrintedAt` (per link, so relinking to a new event resets it), "only new ones" preselected; DB version bump
-  - `selectAllForLabels()` is the hook: preselect only unprinted products
-  - Decide: mark as printed when the print dialog opens, or ask after printing ("Did the labels print?")
+- [x] 3. "Print labels" in the overflow menu (IN_PREPARATION / IN_PROGRESS, only with available products); theme-based `LabelSelectionDialog` (tri-state batch checkbox, select all / none, page count); `EventStatus.canPrintLabels`; `AttachSelection.replaceWith()`
+- [x] 4. Remember printed labels: `EventProductDetail.labelPrintedAt` (per link, so relinking resets it); DB version 16; "Did the labels print correctly?" after the print screen (only "Yes" marks them); dialog preselects only unprinted products, shows "Printed on …" and "x of y printed" for batches; `markLabelsPrinted` guarded by `EventStatus.LABEL_PRINTABLE_NAMES`
 - Note: labels printed before a destructive migration become invalid (IDs restart); reprint after schema changes during development
 - Note: print at 100 % / actual size; printers with a large unprintable edge may scale the page slightly
 - POS later: scan via `GmsBarcodeScanning`; `ProductLabelCode.decode()`, then check event ID = running event and product linked + AVAILABLE
+
+## 🔧 Events: improvements
+- [ ] IN_PREPARATION detail screen: "New" / "Existing" buttons fixed at the bottom (in the `bottomBar`, like "Start preparation" in PLANNED), so they stay visible with long product lists; remove the `add_buttons` item from the list
 
 ## 🗓️ Events feature (part 3+, not started)
 - [ ] Sale channel: `ProductDetail.soldAtEventId` (decided: option A)
@@ -55,6 +56,7 @@ Decisions: code = `STUEBERL:1:<eventId>:<productId>` (label only valid for its e
 - [ ] Detail screens for IN_PROGRESS / DONE / CANCELLED
   - Decide per status whether edit stays available (currently allowed in every status)
 - [ ] "Start event" (IN_PREPARATION → IN_PROGRESS) with confirmation
+  - Bottom bar in IN_PREPARATION will then hold "New" / "Existing" and "Start event": plan the layout together with the improvement above
 - [ ] Going back a status (possible but rare: overflow menu + confirmation)
   - Leaving CANCELLED must clear `cancelledOn`
 - [ ] No adding/removing products during IN_PROGRESS (already true: remove icons and "New" / "Existing" only show in IN_PREPARATION, and link/unlink are guarded in SQL)
@@ -71,7 +73,7 @@ Decisions: code = `STUEBERL:1:<eventId>:<productId>` (label only valid for its e
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests: first unit tests exist (`ProductLabelCodeTest`, `LabelSheetLayoutTest`). Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback and the source groups in `getFilteredProductsFlow`
+- [ ] Tests: first unit tests exist (`ProductLabelCodeTest`, `LabelSheetLayoutTest`). Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow` and the `markLabelsPrinted` guard
 - [ ] Undo on delete
 - [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
 - [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove

@@ -109,6 +109,7 @@ fun EventDetailScreen(
     val attachableItems by viewModel.attachableItems.collectAsStateWithLifecycle()
     val selectedForAttach by viewModel.selectedForAttach.collectAsStateWithLifecycle()
     val selectedForLabels by viewModel.selectedForLabels.collectAsStateWithLifecycle()
+    val labelPrintedOn by viewModel.labelPrintedOn.collectAsStateWithLifecycle()
 
     var showOverflowMenu by remember { mutableStateOf(false) }
     var showStartConfirmation by rememberSaveable { mutableStateOf(false) }
@@ -119,6 +120,10 @@ fun EventDetailScreen(
     var showAttachDialog by rememberSaveable { mutableStateOf(false) }
     var showLabelDialog by rememberSaveable { mutableStateOf(false) }
     var isPrintingLabels by remember { mutableStateOf(false) }
+
+    // Products of the last print job, waiting for "Did it print?"
+    var pendingPrintedIds by rememberSaveable { mutableStateOf<IntArray?>(null) }
+
     // Activity context: PrintManager needs a window. Taken outside the Dialog on purpose.
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -194,7 +199,7 @@ fun EventDetailScreen(
                                         text = { Text(stringResource(R.string.event_detail_print_labels)) },
                                         onClick = {
                                             showOverflowMenu = false
-                                            viewModel.selectAllForLabels()
+                                            viewModel.preselectUnprintedLabels()
                                             showLabelDialog = true
                                         }
                                     )
@@ -399,6 +404,7 @@ fun EventDetailScreen(
         LabelSelectionDialog(
             items = products?.items.orEmpty(),
             selectedIds = selectedForLabels,
+            printedOn = labelPrintedOn,
             imageFileOf = imageFileOf,
             isPrinting = isPrintingLabels,
             onToggleProduct = viewModel::toggleLabelSelection,
@@ -418,6 +424,9 @@ fun EventDetailScreen(
                                 pageCount = LabelSheetLayout.pageCount(labels.size),
                                 jobName = jobName
                             )
+                            // The print screen covers the app; this question is
+                            // waiting when the user comes back from it.
+                            pendingPrintedIds = labels.map { it.code.productId }.toIntArray()
                             showLabelDialog = false
                         } catch (e: CancellationException) {
                             throw e
@@ -431,6 +440,24 @@ fun EventDetailScreen(
                 }
             },
             onDismiss = { showLabelDialog = false }
+        )
+    }
+
+    pendingPrintedIds?.let { ids ->
+        StueberlConfirmationDialog(
+            title = stringResource(R.string.label_print_confirm_title),
+            message = pluralStringResource(
+                R.plurals.label_print_confirm_message,
+                ids.size,
+                ids.size
+            ),
+            confirmLabel = stringResource(R.string.label_print_confirm_yes),
+            dismissLabel = stringResource(R.string.label_print_confirm_no),
+            onConfirm = {
+                pendingPrintedIds = null
+                viewModel.markLabelsPrinted(ids.toList())
+            },
+            onDismiss = { pendingPrintedIds = null }
         )
     }
 }

@@ -5,6 +5,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.label.LabelPrint
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -191,4 +192,28 @@ interface EventDao {
     /** Single-column read for guards inside transactions. Null if the event is gone. */
     @Query("SELECT status FROM EventDetail WHERE id = :id")
     suspend fun getEventStatus(id: Int): EventStatus?
+
+    /** Products of the event whose label was confirmed as printed. */
+    @Query("""
+        SELECT productId, labelPrintedAt FROM EventProductDetail
+        WHERE eventId = :eventId AND labelPrintedAt IS NOT NULL
+    """)
+    fun getLabelPrintsFlow(eventId: Int): Flow<List<LabelPrint>>
+
+    /** Only while labels can be printed for the event (guarded like linking). */
+    @Query("""
+        UPDATE EventProductDetail
+        SET labelPrintedAt = :date
+        WHERE eventId = :eventId
+          AND productId IN (:productIds)
+          AND EXISTS (
+              SELECT 1 FROM EventDetail WHERE id = :eventId AND status IN (:printableStatuses)
+          )
+    """)
+    suspend fun markLabelsPrinted(
+        eventId: Int,
+        productIds: List<Int>,
+        date: LocalDate,
+        printableStatuses: List<String>
+    )
 }

@@ -35,5 +35,10 @@ import java.time.LocalDate
 data class EventProductDetail(
     val eventId: Int,
     val productId: Int,
-    val addedAt: LocalDate = LocalDate.now()
+    val addedAt: LocalDate = LocalDate.now(),
+    /**
+     * When this product's QR label for this event was confirmed as printed.
+     * Null = no label yet. Per link, so relinking to another event resets it.
+     */
+    val labelPrintedAt: LocalDate? = null
 )

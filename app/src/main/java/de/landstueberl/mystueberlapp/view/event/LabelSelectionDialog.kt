@@ -58,6 +58,12 @@ import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.label.LabelSheetLayout
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+private val PRINTED_DATE_FORMAT: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
 
 /**
  * Picks which of an event's available products get a QR label.
@@ -68,6 +74,7 @@ import java.io.File
 fun LabelSelectionDialog(
     items: List<ProductListItem>,
     selectedIds: Set<Int>,
+    printedOn: Map<Int, LocalDate>,
     imageFileOf: (Product) -> File?,
     isPrinting: Boolean,
     onToggleProduct: (Int) -> Unit,
@@ -178,8 +185,11 @@ fun LabelSelectionDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item(key = "hint") {
+                    val allPrinted = allIds.isNotEmpty() && allIds.all { it in printedOn }
                     Text(
-                        text = stringResource(R.string.label_dialog_hint),
+                        text = stringResource(
+                            if (allPrinted) R.string.label_dialog_all_printed else R.string.label_dialog_hint
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colorScheme.onSurfaceVariant
                     )
@@ -190,7 +200,8 @@ fun LabelSelectionDialog(
                             product = item.product,
                             imageFile = imageFileOf(item.product),
                             checked = item.product.details.id in selectedIds,
-                            onToggle = { onToggleProduct(item.product.details.id) }
+                            onToggle = { onToggleProduct(item.product.details.id) },
+                            printedOn = printedOn[item.product.details.id],
                         )
 
                         is ProductListItem.Batch -> LabelBatchGroup(
@@ -202,7 +213,8 @@ fun LabelSelectionDialog(
                                 if (!expandedBatchIds.add(item.batchId)) expandedBatchIds.remove(item.batchId)
                             },
                             onToggleBatch = { onToggleBatch(item.products.map { it.details.id }) },
-                            onToggleProduct = onToggleProduct
+                            onToggleProduct = onToggleProduct,
+                            printedOn = printedOn,
                         )
                     }
                 }
@@ -217,7 +229,8 @@ private fun LabelProductRow(
     product: Product,
     imageFile: File?,
     checked: Boolean,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    printedOn: LocalDate? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
     Card(
@@ -249,6 +262,13 @@ private fun LabelProductRow(
                     style = MaterialTheme.typography.labelMedium,
                     color = colorScheme.tertiary
                 )
+                printedOn?.let { date ->
+                    Text(
+                        text = stringResource(R.string.label_dialog_printed_on, date.format(PRINTED_DATE_FORMAT)),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorScheme.secondary
+                    )
+                }
             }
         }
     }
@@ -263,7 +283,8 @@ private fun LabelBatchGroup(
     isExpanded: Boolean,
     onToggleExpanded: () -> Unit,
     onToggleBatch: () -> Unit,
-    onToggleProduct: (Int) -> Unit
+    onToggleProduct: (Int) -> Unit,
+    printedOn: Map<Int, LocalDate>
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val selectedCount = batch.products.count { it.details.id in selectedIds }
@@ -312,6 +333,14 @@ private fun LabelBatchGroup(
                         style = MaterialTheme.typography.bodySmall,
                         color = colorScheme.onSurfaceVariant
                     )
+                    val printedCount = batch.products.count { it.details.id in printedOn }
+                    if (printedCount > 0) {
+                        Text(
+                            text = stringResource(R.string.label_dialog_batch_printed, printedCount, batch.count),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colorScheme.secondary
+                        )
+                    }
                 }
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -336,7 +365,8 @@ private fun LabelBatchGroup(
                         product = product,
                         imageFile = imageFileOf(product),
                         checked = product.details.id in selectedIds,
-                        onToggle = { onToggleProduct(product.details.id) }
+                        onToggle = { onToggleProduct(product.details.id) },
+                        printedOn = printedOn[product.details.id]
                     )
                 }
             }
