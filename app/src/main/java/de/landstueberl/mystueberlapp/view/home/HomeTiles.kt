@@ -25,23 +25,27 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.EventTiming
 import de.landstueberl.mystueberlapp.data.NextEvent
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.view.common.runningBorder
 import de.landstueberl.mystueberlapp.view.event.eventDateText
 import de.landstueberl.mystueberlapp.view.event.eventStatusIconAndTint
 import java.time.LocalDate
@@ -81,7 +85,7 @@ private fun TileRow(
         Text(
             text = value,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = colorScheme.onSurface,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -103,7 +107,7 @@ fun StatisticsTile(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = colorScheme.surface
         )
     ) {
         Column(
@@ -169,7 +173,7 @@ fun ProductsTile(
         modifier = modifier.fillMaxHeight(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = colorScheme.surface
         )
     ) {
         Column(
@@ -235,7 +239,7 @@ fun OrdersTile(
         modifier = modifier.fillMaxHeight(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = colorScheme.surface
         )
     ) {
         Column(
@@ -299,12 +303,26 @@ fun EventsTile(
     modifier: Modifier = Modifier
 ) {
     val placeholder = stringResource(R.string.home_screen_events_no_next)
+    val isRunning = nextEvent?.event?.status == EventStatus.IN_PROGRESS
+    val colorScheme = colorScheme
 
     HomeTile(
         icon = Icons.Default.Festival,
         title = stringResource(R.string.home_screen_tile_events),
         onClick = onClick,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (isRunning) {
+                    Modifier.runningBorder(
+                        color = colorScheme.secondary,
+                        // Derived from the theme, so it works in dark mode too.
+                        highlight = lerp(colorScheme.secondary, Color.White, 0.7f)
+                    )
+                } else {
+                    Modifier
+                }
+            )
     ) {
         if (nextEvent == null) {
             HomeTileRow(
@@ -346,6 +364,7 @@ private fun eventTimingText(timing: EventTiming): String = when (timing) {
         R.string.home_screen_events_runs_until,
         timing.lastDay.format(TILE_DATE_FORMAT)
     )
+    EventTiming.StillRunning -> stringResource(R.string.home_screen_events_still_running)
 }
 
 // ── Gallery Tile ───────────────────────────────────────────────────────
@@ -359,7 +378,7 @@ fun GalleryTile(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = colorScheme.surface
         )
     ) {
         Row(

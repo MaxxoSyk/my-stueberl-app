@@ -11,6 +11,8 @@ sealed interface EventTiming {
     data class InDays(val days: Int) : EventTiming
     /** A multi-day event that has started and isn't on its last day yet. */
     data class RunsUntil(val lastDay: LocalDate) : EventTiming
+    /** Past its last day but not closed yet: still IN_PROGRESS. */
+    data object StillRunning : EventTiming
 }
 
 data class NextEvent(
@@ -21,14 +23,18 @@ data class NextEvent(
 )
 
 /**
- * Expects an event that isn't over yet (`lastDay >= today`), which
- * [EventDao.getNextEventFlow] guarantees. Pure, so it can be unit tested.
+ * Pure, so it can be unit tested.
+ *
+ * [EventDao.getNextEventFlow] only returns an event past its last day while
+ * it's still IN_PROGRESS, so a past last day always means "still running".
  */
-fun eventTiming(event: EventDetail, today: LocalDate): EventTiming =
-    if (!event.eventDate.isAfter(today)) {
+fun eventTiming(event: EventDetail, today: LocalDate): EventTiming = when {
+    event.lastDay.isBefore(today) -> EventTiming.StillRunning
+    !event.eventDate.isAfter(today) ->
         // Already started: today is its only or last day, or it keeps running.
         if (event.lastDay == today) EventTiming.Today else EventTiming.RunsUntil(event.lastDay)
-    } else {
+    else -> {
         val days = ChronoUnit.DAYS.between(today, event.eventDate).toInt()
         if (days == 1) EventTiming.Tomorrow else EventTiming.InDays(days)
     }
+}
