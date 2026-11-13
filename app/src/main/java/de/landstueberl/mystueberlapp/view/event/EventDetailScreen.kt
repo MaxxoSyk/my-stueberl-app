@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -75,6 +76,7 @@ import de.landstueberl.mystueberlapp.data.EventProducts
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
+import de.landstueberl.mystueberlapp.data.allProducts
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.label.LabelPrinter
@@ -86,6 +88,7 @@ import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailUiState
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailViewModel
 import kotlinx.coroutines.launch
 import java.io.File
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import kotlin.coroutines.cancellation.CancellationException
@@ -125,6 +128,8 @@ fun EventDetailScreen(
 
     // Products of the last print job, waiting for "Did it print?"
     var pendingPrintedIds by rememberSaveable { mutableStateOf<IntArray?>(null) }
+
+    var showStartEventConfirmation by rememberSaveable { mutableStateOf(false) }
 
     // Activity context: PrintManager needs a window. Taken outside the Dialog on purpose.
     val context = LocalContext.current
@@ -270,7 +275,38 @@ fun EventDetailScreen(
                         },
                         enabled = !isWorking
                     )
-                    // "Start event" will be added here as a second row.
+
+                    val hasAvailable = (products?.availableCount ?: 0) > 0
+                    if (products != null && !hasAvailable) {
+                        Text(
+                            text = stringResource(R.string.event_detail_start_event_needs_products),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Button(
+                        onClick = { showStartEventConfirmation = true },
+                        enabled = hasAvailable && !isWorking,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = StueberlDefaults.primaryButtonColors()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Storefront,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.event_detail_start_event),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
                 }
 
                 else -> Unit
@@ -333,6 +369,42 @@ fun EventDetailScreen(
                 viewModel.startPreparation()
             },
             onDismiss = { showStartConfirmation = false }
+        )
+    }
+
+    if (showStartEventConfirmation && event != null) {
+        val today = remember { LocalDate.now() }
+        val unlabeledCount = products?.items.orEmpty().allProducts()
+            .count { it.details.id !in labelPrintedOn }
+
+        val base = stringResource(R.string.event_detail_start_event_confirm_message)
+        val earlyNote = if (event.eventDate.isAfter(today)) {
+            stringResource(
+                R.string.event_detail_start_event_early,
+                event.eventDate.format(FOOTER_DATE_FORMAT)
+            )
+        } else {
+            null
+        }
+        val labelNote = if (unlabeledCount > 0) {
+            pluralStringResource(
+                R.plurals.event_detail_start_event_unlabeled,
+                unlabeledCount,
+                unlabeledCount
+            )
+        } else {
+            null
+        }
+
+        StueberlConfirmationDialog(
+            title = stringResource(R.string.event_detail_start_event_confirm_title),
+            message = listOfNotNull(base, earlyNote, labelNote).joinToString("\n\n"),
+            confirmLabel = stringResource(R.string.event_detail_start_event),
+            onConfirm = {
+                showStartEventConfirmation = false
+                viewModel.startEvent()
+            },
+            onDismiss = { showStartEventConfirmation = false }
         )
     }
 
@@ -473,9 +545,12 @@ private fun EventDetailContent(
     onRemove: ((List<Int>) -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    // Keyed by status: collapses by itself when preparation starts.
+    // Keyed by status: collapses by itself when preparation or the event starts,
+    // so the product list is in view.
     var isInfoExpanded by rememberSaveable(event.status) {
-        mutableStateOf(event.status != EventStatus.IN_PREPARATION)
+        mutableStateOf(
+            event.status != EventStatus.IN_PREPARATION && event.status != EventStatus.IN_PROGRESS
+        )
     }
     val expandedBatchIds = remember { mutableStateSetOf<Int>() }
 
@@ -506,6 +581,11 @@ private fun EventDetailContent(
                 HintText(stringResource(R.string.event_detail_planned_hint))
             }
         } else if (products != null) {
+            if (event.status == EventStatus.IN_PROGRESS) {
+                item(key = "in_progress_hint") {
+                    HintText(stringResource(R.string.event_detail_in_progress_hint))
+                }
+            }
             eventProductSections(
                 products = products,
                 imageFileOf = imageFileOf,

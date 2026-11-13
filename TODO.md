@@ -22,14 +22,13 @@
 
 ## 🔧 Events: improvements
 - [x] IN_PREPARATION detail screen: "New" / "Existing" fixed in the bottom bar (`EventBottomBar`, shared with PLANNED), always visible with long product lists
+- [ ] Home screen: make a currently running event (IN_PROGRESS) clearly visible — design to discuss
+  - Today the Events tile only shows it if it's the nearest event, with a small status icon
+  - An IN_PROGRESS event past its last day (not closed yet) drops off the tile, because `getNextEventFlow()` filters by date
+  - Ideas to discuss: highlighted tile / banner "Event running", quick access to the POS once it exists
 
 ## 🗓️ Events feature (part 3+, not started)
-- [ ] "Start event" (IN_PREPARATION → IN_PROGRESS) — decided:
-  - Full-width button as a second row in the IN_PREPARATION bottom bar, below "New" / "Existing"; confirmation first
-  - Allowed before the event date; the confirmation then shows the start date
-  - Confirmation warns about products without a printed label (doesn't block)
-  - Blocked when the event has no available products (button disabled + hint)
-  - After starting: products read-only, "Print labels" stays available; POS follows later
+- [x] "Start event" (IN_PREPARATION → IN_PROGRESS): second row in the bottom bar with confirmation (notes for a future start date and unprinted labels); blocked without available products (guarded in SQL via `EventDao.startEvent()`); afterwards products read-only, info card collapsed, in-progress hint, "Print labels" stays
 - [ ] Sale channel: `ProductDetail.soldAtEventId` (decided: option A)
   - Set by POS / "Close event"; stand sales (incl. before the event and after DONE/CANCELLED) stay `null`
   - "Reset to available" clears it
@@ -41,7 +40,6 @@
   - Decide per status whether edit stays available (currently allowed in every status)
 - [ ] Going back a status (possible but rare: overflow menu + confirmation)
   - Leaving CANCELLED must clear `cancelledOn`
-- [ ] No adding/removing products during IN_PROGRESS (already true: remove icons and "New" / "Existing" only show in IN_PREPARATION, and link/unlink are guarded in SQL)
 - [ ] Point-of-sale screen for IN_PROGRESS (basket per customer, total, lock basket, cash given → change; scan product labels)
   - Scanning via `GmsBarcodeScanning`; `ProductLabelCode.decode()`, then check event ID = running event and product linked + AVAILABLE
 - [ ] Mark sales during the event (sale date defaults to the event date)
@@ -56,7 +54,7 @@
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests: first unit tests exist (`ProductLabelCodeTest`, `LabelSheetLayoutTest`). Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow` and the `markLabelsPrinted` guard
+- [ ] Tests: first unit tests exist (`ProductLabelCodeTest`, `LabelSheetLayoutTest`). Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `eventTiming()`, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow`, the `markLabelsPrinted` guard and the `startEvent` guard
 - [ ] Undo on delete
 - [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
 - [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove
