@@ -176,21 +176,21 @@ interface ProductDao {
     // ── Status Transitions (sales-area products) ──
     @Query("""
         UPDATE ProductDetail
-        SET status = 'SOLD', soldOn = :date, removedOn = NULL
+        SET status = 'SOLD', soldOn = :date, removedOn = NULL, eventSaleId = NULL
         WHERE id = :id
     """)
     suspend fun markAsSold(id: Int, date: LocalDate)
 
     @Query("""
         UPDATE ProductDetail
-        SET status = 'REMOVED', removedOn = :date, soldOn = NULL
+        SET status = 'REMOVED', removedOn = :date, soldOn = NULL, eventSaleId = NULL
         WHERE id = :id
     """)
     suspend fun markAsRemoved(id: Int, date: LocalDate)
 
     @Query("""
         UPDATE ProductDetail
-        SET status = 'AVAILABLE', soldOn = NULL, removedOn = NULL
+        SET status = 'AVAILABLE', soldOn = NULL, removedOn = NULL, eventSaleId = NULL
         WHERE id = :id
     """)
     suspend fun resetToAvailable(id: Int)

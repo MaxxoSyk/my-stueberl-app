@@ -4,14 +4,17 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import de.landstueberl.mystueberlapp.data.EventDao
+import de.landstueberl.mystueberlapp.data.EventSaleDao
 import de.landstueberl.mystueberlapp.data.GalleryDao
 import de.landstueberl.mystueberlapp.data.OrderDao
 import de.landstueberl.mystueberlapp.data.ProductDao
 import de.landstueberl.mystueberlapp.data.StatisticsDao
 import de.landstueberl.mystueberlapp.data.converter.DateConverters
 import de.landstueberl.mystueberlapp.data.converter.MoneyConverters
+import de.landstueberl.mystueberlapp.data.db.entity.EventBasketItem
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.db.entity.EventProductDetail
+import de.landstueberl.mystueberlapp.data.db.entity.EventSale
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
@@ -24,9 +27,11 @@ import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
         OrderDetail::class,
         ProductMaterialDetail::class,
         EventDetail::class,
-        EventProductDetail::class
+        EventProductDetail::class,
+        EventSale::class,
+        EventBasketItem::class
     ],
-    version = 16,
+    version = 17,
     exportSchema = true
 )
 @TypeConverters(
@@ -39,4 +44,5 @@ abstract class StueberlDatabase : RoomDatabase() {
     abstract fun statisticsDao(): StatisticsDao
     abstract fun galleryDao(): GalleryDao
     abstract fun eventDao(): EventDao
+    abstract fun eventSaleDao(): EventSaleDao
 }

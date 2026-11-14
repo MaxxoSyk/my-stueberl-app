@@ -1,6 +1,7 @@
 package de.landstueberl.mystueberlapp.data.converter
 
 import androidx.room.TypeConverter
+import java.time.Instant
 import java.time.LocalDate
 
 class DateConverters {
@@ -21,4 +22,11 @@ class DateConverters {
 
     @TypeConverter
     fun epochDayToLocalDate(value: Long?): LocalDate? = value?.let { LocalDate.ofEpochDay(it) }
+
+    /** Points in time (e.g. when a sale happened) as epoch milliseconds. */
+    @TypeConverter
+    fun instantToEpochMilli(value: Instant?): Long? = value?.toEpochMilli()
+
+    @TypeConverter
+    fun epochMilliToInstant(value: Long?): Instant? = value?.let(Instant::ofEpochMilli)
 }

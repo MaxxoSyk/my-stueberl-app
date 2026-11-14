@@ -16,12 +16,19 @@ import java.time.LocalDate
             parentColumns = ["id"],
             childColumns = ["orderId"],
             onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = EventSale::class,
+            parentColumns = ["id"],
+            childColumns = ["eventSaleId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
         Index("orderId"),
         Index("status"),
-        Index("batchId")
+        Index("batchId"),
+        Index("eventSaleId")
     ]
 )
 data class ProductDetail(
@@ -34,5 +41,7 @@ data class ProductDetail(
     val batchId: Int? = null,
     val createdAt: LocalDate = LocalDate.now(),
     val soldOn: LocalDate? = null,
-    val removedOn: LocalDate? = null
+    val removedOn: LocalDate? = null,
+    /** Set when sold at an event's till; null for stand and order sales. */
+    val eventSaleId: Int? = null
 )
