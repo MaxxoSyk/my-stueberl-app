@@ -7,7 +7,7 @@
   - Quick first candidate: cost calculator (`CostCalculatorDialog`, `MaterialPositionRow`, price chips)
   - Home tiles: `HomeTile` / `HomeTileRow` now exist (`view/home/HomeTile.kt`); move `StatisticsTile`, `ProductsTile`, `OrdersTile`, `GalleryTile` onto them and delete the private `TileRow`
   - Home screen top bar: switch to `StueberlDefaults.topAppBarColors()`
-  - `StueberlConfirmationDialog`: switch to `StueberlDefaults.primaryButtonColors()` / `destructiveButtonColors()` (also used by the event detail screen)
+  - `StueberlConfirmationDialog`: switch to `StueberlDefaults.primaryButtonColors()` / `destructiveButtonColors()` (also used by the event detail and till screens)
   - `AttachProductDialog`: theme-based colors (reused by orders and events)
   - `FilterBottomSheet`: theme-based chip and button colors
   - `ProductPriceField`: theme-based version (the event form's stand fee field already shows the pattern)
@@ -30,9 +30,8 @@
 ## 🚧 In progress: Events feature (part 3b: point of sale)
 Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closable payment panel (nothing can be added while it's open); cash only, sales price is always the price; undo any sale of the event, only while IN_PROGRESS; one tap per scan; header figures: revenue, items sold, customers
 - [x] 1. Data model: `EventSale` (snapshot of total + item count, `RESTRICT` on event), `EventBasketItem` (keyed by product), `ProductDetail.eventSaleId`, `Instant` converter; `EventSaleDao` + `EventSaleRepository` (`addToBasket` → `BasketAddResult`, `completeSale` compares with the shown basket → `BasketChanged`, `undoSale` only while IN_PROGRESS); stand actions clear `eventSaleId`; DB version 17
-- [ ] 2. Till screen + basket: "Open till" on the IN_PROGRESS detail screen, add by hand (list + search), remove, total, header figures (calculated from `getSalesFlow()`)
-  - Event detail: products sold at the till currently land in "No longer available"; show them as "Sold at this event" instead
-- [ ] 3. Payment panel + complete: cash given, quick buttons (exact / 5 / 10 / 20 / 50 €), change; handle `BasketChanged`
+- [x] 2. Till screen + basket: `Screen.EventTill`; "Open till" in the IN_PROGRESS bottom bar; `EventTillViewModel` (basket, total, figures, addable items with search, `TillMessage`); `EventTillScreen` (figures card, basket with remove, empty basket with confirmation, not-running hint); `TillAddSheet` (search, batches as one row adding the next member, stays open); `TillFigures`; detail screen section "Sold at this event" (matched by the event's own sale IDs)
+- [ ] 3. Payment panel + complete: "Pay" in the till's bottom bar opens a closable panel; cash given, quick buttons (exact / 5 / 10 / 20 / 50 €), change; one transaction via `completeSale()`; handle `BasketChanged` / `EmptyBasket` / `EventNotRunning`
 - [ ] 4. Scanning: `GmsBarcodeScanning`, validation + error messages (foreign code, other event, plus the `BasketAddResult` cases), vibration, preload the module when the event starts (offline at the market)
 - [ ] 5. Recent sales + undo, keep screen on, "Open till" shortcut on the Events tile
 
@@ -60,7 +59,7 @@ Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closa
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout` and `eventTiming()`. Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split + totals, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow`, the `markLabelsPrinted` guard, the `startEvent` guard, the `getNextEventFlow()` ordering, and the till (`addToBasket` results, `completeSale` incl. `BasketChanged`, `undoSale`)
+- [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout` and `eventTiming()`. Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split (incl. sold at this event vs. elsewhere) + totals, `toTillFigures()`, `AttachSelection` toggling; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow`, the `markLabelsPrinted` guard, the `startEvent` guard, the `getNextEventFlow()` ordering, and the till (`addToBasket` results, `completeSale` incl. `BasketChanged`, `undoSale`)
 - [ ] Undo on delete
 - [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
 - [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove
@@ -68,6 +67,7 @@ Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closa
 - [ ] `KEY_PRODUCT_UPDATED` / `KEY_PRODUCT_SAVED` are set on the event detail screen after Edit / Add Product but never read (harmless; list updates via the database). Optionally show a snackbar there
 - [ ] Accessibility (optional): `HomeTileRow` icons have no content description, so the next event's status isn't announced by screen readers
 - [ ] Label sheets in `cacheDir/labels` are overwritten on each print, never deleted (one small file; optionally clear on app start like the camera temp)
+- [ ] `EventDetailScreen.kt` is getting large; consider moving shared building blocks (`EventBottomBar`, `DetailSectionHeader`, `HintText`) into their own file (now `internal` for the till screen)
 - [x] German strings: a few still said "Produkt" instead of "Werkstück" (`products_screen_search_no_results`, `attach_product_confirm`, `gallery_screen_empty`)
 
 ## 🟠 Deferred features

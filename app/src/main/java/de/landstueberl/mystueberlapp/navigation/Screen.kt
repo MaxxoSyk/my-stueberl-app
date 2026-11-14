@@ -49,4 +49,8 @@ sealed interface Screen {
 
     @Serializable
     data class EventDetail(val eventId: Int) : Screen
+
+    /** The till of a running event. */
+    @Serializable
+    data class EventTill(val eventId: Int) : Screen
 }

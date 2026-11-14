@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -104,6 +105,7 @@ fun EventDetailScreen(
     onNavigateToEdit: (eventId: Int) -> Unit,
     onNavigateToEditProduct: (productId: Int) -> Unit,
     onNavigateToAddProduct: (eventId: Int) -> Unit,
+    onNavigateToTill: (eventId: Int) -> Unit,
     eventSaved: Boolean = false,
     onEventSavedConsumed: () -> Unit = {}
 ) {
@@ -304,6 +306,28 @@ fun EventDetailScreen(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = stringResource(R.string.event_detail_start_event),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
+
+                EventStatus.IN_PROGRESS -> EventBottomBar {
+                    Button(
+                        onClick = { onNavigateToTill(event.id) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = StueberlDefaults.primaryButtonColors()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PointOfSale,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.event_detail_open_till),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
@@ -613,8 +637,11 @@ private fun LazyListScope.eventProductSections(
     }
 
     if (products.items.isEmpty()) {
-        item(key = "no_products") {
-            HintText(stringResource(R.string.event_detail_no_products))
+        // All sold at the till is not "no products": the section below shows them.
+        if (products.soldAtEvent.isEmpty()) {
+            item(key = "no_products") {
+                HintText(stringResource(R.string.event_detail_no_products))
+            }
         }
     } else {
         item(key = "totals") {
@@ -645,6 +672,27 @@ private fun LazyListScope.eventProductSections(
                     }
                 )
             }
+        }
+    }
+
+    if (products.soldAtEvent.isNotEmpty()) {
+        item(key = "header_sold") {
+            DetailSectionHeader(
+                text = stringResource(R.string.event_detail_section_sold_at_event),
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+        items(
+            items = products.soldAtEvent,
+            key = { "sold_${it.details.id}" }
+        ) { product ->
+            // Never removable: a till sale is reversed with undo, not by unlinking.
+            EventProductItem(
+                product = product,
+                imageFile = imageFileOf(product),
+                onClick = { onProductClick(product.details.id) },
+                showStatus = true
+            )
         }
     }
 
@@ -825,7 +873,7 @@ private fun EventTotals(products: EventProducts) {
 }
 
 @Composable
-private fun DetailSectionHeader(text: String, modifier: Modifier = Modifier) {
+internal fun DetailSectionHeader(text: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -844,7 +892,7 @@ private fun DetailSectionHeader(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun HintText(text: String) {
+internal fun HintText(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium,
@@ -918,7 +966,7 @@ private fun AddProductButtons(
  * 80 dp, too small for two rows) and keeps clear of the navigation bar.
  */
 @Composable
-private fun EventBottomBar(content: @Composable ColumnScope.() -> Unit) {
+internal fun EventBottomBar(content: @Composable ColumnScope.() -> Unit) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 3.dp
