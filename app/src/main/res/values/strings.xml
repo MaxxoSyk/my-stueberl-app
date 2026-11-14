@@ -422,4 +422,19 @@
     <string name="till_msg_not_in_event">This product isn\'t part of this event.</string>
     <string name="till_msg_not_available">This product is already sold or removed.</string>
     <string name="till_msg_already_in_basket">This product is already in the basket.</string>
+
+    <string name="till_pay">Pay</string>
+    <string name="pay_sheet_title">Payment</string>
+    <plurals name="pay_sheet_items">
+        <item quantity="one">%1$d product</item>
+        <item quantity="other">%1$d products</item>
+    </plurals>
+    <string name="pay_cash_given">Cash received</string>
+    <string name="pay_exact">Exact</string>
+    <string name="pay_change">Change</string>
+    <string name="pay_missing">Missing: %1$s</string>
+    <string name="pay_complete">Complete sale</string>
+    <string name="pay_back">Back to basket</string>
+    <string name="till_msg_sold">Sold: %1$s</string>
+    <string name="till_msg_basket_changed">The basket changed. Nothing was sold – please check the total again.</string>
 </resources>

@@ -422,4 +422,19 @@
     <string name="till_msg_not_in_event">Dieses Werkstück gehört nicht zu dieser Veranstaltung.</string>
     <string name="till_msg_not_available">Dieses Werkstück ist bereits verkauft oder entfernt.</string>
     <string name="till_msg_already_in_basket">Dieses Werkstück ist bereits im Warenkorb.</string>
+
+    <string name="till_pay">Bezahlen</string>
+    <string name="pay_sheet_title">Bezahlung</string>
+    <plurals name="pay_sheet_items">
+        <item quantity="one">%1$d Werkstück</item>
+        <item quantity="other">%1$d Werkstücke</item>
+    </plurals>
+    <string name="pay_cash_given">Erhalten</string>
+    <string name="pay_exact">Passend</string>
+    <string name="pay_change">Rückgeld</string>
+    <string name="pay_missing">Es fehlen %1$s</string>
+    <string name="pay_complete">Verkauf abschließen</string>
+    <string name="pay_back">Zurück zum Warenkorb</string>
+    <string name="till_msg_sold">Verkauft: %1$s</string>
+    <string name="till_msg_basket_changed">Der Warenkorb hat sich geändert. Es wurde nichts verkauft – bitte Summe erneut prüfen.</string>
 </resources>

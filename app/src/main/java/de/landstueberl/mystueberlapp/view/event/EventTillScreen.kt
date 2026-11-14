@@ -20,6 +20,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -76,6 +78,7 @@ fun EventTillScreen(
     val message by viewModel.message.collectAsStateWithLifecycle()
 
     var showAddSheet by rememberSaveable { mutableStateOf(false) }
+    var showPaySheet by rememberSaveable { mutableStateOf(false) }
     var showClearConfirmation by rememberSaveable { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -86,6 +89,13 @@ fun EventTillScreen(
             messageText?.let { snackbarHostState.showSnackbar(it) }
             viewModel.resetMessage()
         }
+    }
+
+    // Close both sheets if the event stops running or the basket empties, so
+    // they don't pop up again by themselves later.
+    LaunchedEffect(isRunning, basket.isEmpty()) {
+        if (!isRunning) showAddSheet = false
+        if (!isRunning || basket.isEmpty()) showPaySheet = false
     }
 
     val imageFileOf: (Product) -> File? = remember(viewModel) {
@@ -157,22 +167,44 @@ fun EventTillScreen(
                         )
                     }
 
-                    // Step 3 adds "Pay", step 4 "Scan" here.
-                    OutlinedButton(
-                        onClick = { showAddSheet = true },
-                        enabled = isRunning,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = colorScheme.secondary)
+                    // Step 4 adds "Scan" here.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = stringResource(R.string.till_add),
-                            style = MaterialTheme.typography.labelLarge
-                        )
+                        OutlinedButton(
+                            onClick = { showAddSheet = true },
+                            enabled = isRunning,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = colorScheme.secondary)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.till_add),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+
+                        Button(
+                            onClick = { showPaySheet = true },
+                            enabled = isRunning && basket.isNotEmpty() && !isWorking,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = StueberlDefaults.primaryButtonColors()
+                        ) {
+                            Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = stringResource(R.string.till_pay),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
                     }
                 }
             }
@@ -228,8 +260,8 @@ fun EventTillScreen(
         }
     }
 
-    // Closes by itself if the event stops running.
-    if (showAddSheet && isRunning) {
+    // Closed by the LaunchedEffect above when the event stops running.
+    if (showAddSheet) {
         TillAddSheet(
             items = addableItems,
             query = searchQuery,
@@ -240,6 +272,21 @@ fun EventTillScreen(
                 showAddSheet = false
                 viewModel.onSearchQueryChange("")
             }
+        )
+    }
+
+    if (showPaySheet) {
+        PaymentSheet(
+            total = basketTotal,
+            itemCount = basket.size,
+            isWorking = isWorking,
+            onComplete = {
+                // Exactly what the customer saw; the repository refuses any difference.
+                viewModel.completeSale(basket.mapTo(HashSet()) { it.details.id }) {
+                    showPaySheet = false
+                }
+            },
+            onDismiss = { showPaySheet = false }
         )
     }
 
@@ -366,6 +413,9 @@ private fun BasketItemRow(
 @Composable
 private fun tillMessageText(message: TillMessage): String? = when (message) {
     TillMessage.Failed -> stringResource(R.string.till_msg_failed)
+    is TillMessage.Sold -> stringResource(R.string.till_msg_sold, message.total.format())
+    TillMessage.BasketChanged -> stringResource(R.string.till_msg_basket_changed)
+    TillMessage.SaleNotRunning -> stringResource(R.string.till_msg_not_running)
     is TillMessage.NotAdded -> when (message.reason) {
         BasketAddResult.Added -> null
         BasketAddResult.EventNotRunning -> stringResource(R.string.till_msg_not_running)

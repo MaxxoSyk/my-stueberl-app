@@ -15,6 +15,7 @@ import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.data.SaleResult
 import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.groupByBatch
@@ -40,6 +41,11 @@ import kotlin.coroutines.cancellation.CancellationException
 sealed interface TillMessage {
     /** Adding didn't work; the reason is shown to the user. */
     data class NotAdded(val reason: BasketAddResult) : TillMessage
+    /** saleId keeps two sales with the same total apart, so both are shown. */
+    data class Sold(val saleId: Int, val total: Money) : TillMessage
+    /** Nothing was sold: the basket differed from what was shown. */
+    data object BasketChanged : TillMessage
+    data object SaleNotRunning : TillMessage
     data object Failed : TillMessage
 }
 
@@ -144,6 +150,22 @@ class EventTillViewModel(
 
     fun clearBasket() = launchWorking {
         saleRepo.clearBasket(eventId)
+    }
+
+    /**
+     * Sells exactly the products the customer saw. [onFinished] runs for every
+     * result, so the panel closes; on a database error it stays open.
+     */
+    fun completeSale(expectedProductIds: Set<Int>, onFinished: () -> Unit) = launchWorking {
+        when (val result = saleRepo.completeSale(eventId, expectedProductIds)) {
+            is SaleResult.Completed ->
+                _message.value = TillMessage.Sold(result.sale.id, result.sale.total)
+            SaleResult.BasketChanged -> _message.value = TillMessage.BasketChanged
+            SaleResult.EventNotRunning -> _message.value = TillMessage.SaleNotRunning
+            // Can't happen from the panel (it needs items); nothing to report.
+            SaleResult.EmptyBasket -> Unit
+        }
+        onFinished()
     }
 
     /**
