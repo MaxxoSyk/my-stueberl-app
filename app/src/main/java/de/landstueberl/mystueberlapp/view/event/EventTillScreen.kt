@@ -1,5 +1,6 @@
 package de.landstueberl.mystueberlapp.view.event
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +22,14 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +48,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,11 +61,16 @@ import de.landstueberl.mystueberlapp.data.BasketAddResult
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.format
+import de.landstueberl.mystueberlapp.data.label.ProductScanner
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.viewmodel.event.EventTillViewModel
 import de.landstueberl.mystueberlapp.viewmodel.event.TillMessage
+import kotlinx.coroutines.launch
 import java.io.File
+
+/** FAB (56 dp) plus its margin and some air, so the last basket item stays tappable. */
+private val FAB_CLEARANCE = 88.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,19 +86,34 @@ fun EventTillScreen(
     val addableItems by viewModel.addableItems.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isWorking by viewModel.isWorking.collectAsStateWithLifecycle()
-    val message by viewModel.message.collectAsStateWithLifecycle()
 
     var showAddSheet by rememberSaveable { mutableStateOf(false) }
     var showPaySheet by rememberSaveable { mutableStateOf(false) }
     var showClearConfirmation by rememberSaveable { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val messageText = message?.let { tillMessageText(it) }
 
-    LaunchedEffect(message) {
-        if (message != null) {
-            messageText?.let { snackbarHostState.showSnackbar(it) }
-            viewModel.resetMessage()
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    val scanner = remember(context) { ProductScanner.client(context) }
+    var isScanning by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        ProductScanner.preload(context.applicationContext)
+    }
+
+    LaunchedEffect(viewModel) {
+        // Named, so the launch below clearly uses the effect's scope: snackbars
+        // are cancelled with it when the till screen leaves.
+        val effectScope = this
+        viewModel.messages.collect { message ->
+            haptic.performHapticFeedback(
+                if (message.isSuccess) HapticFeedbackType.Confirm else HapticFeedbackType.Reject
+            )
+            val text = tillMessageText(context, message) ?: return@collect
+            // Newest message first, instead of queueing behind the previous one.
+            snackbarHostState.currentSnackbarData?.dismiss()
+            effectScope.launch { snackbarHostState.showSnackbar(text) }
         }
     }
 
@@ -167,7 +193,6 @@ fun EventTillScreen(
                         )
                     }
 
-                    // Step 4 adds "Scan" here.
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -209,6 +234,32 @@ fun EventTillScreen(
                 }
             }
         },
+        floatingActionButton = {
+            if (event != null && isRunning) {
+                FloatingActionButton(
+                    onClick = {
+                        // One scanner at a time, even on a double tap.
+                        if (!isScanning) {
+                            isScanning = true
+                            scanner.startScan()
+                                .addOnSuccessListener { barcode ->
+                                    viewModel.onScanned(barcode.rawValue.orEmpty())
+                                }
+                                .addOnFailureListener(viewModel::onScannerFailed)
+                                // Also runs when the user backs out of the scanner.
+                                .addOnCompleteListener { isScanning = false }
+                        }
+                    },
+                    containerColor = colorScheme.primary,
+                    contentColor = colorScheme.onPrimary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = stringResource(R.string.till_scan)
+                    )
+                }
+            }
+        },
         containerColor = colorScheme.background
     ) { padding ->
         if (event == null) {
@@ -225,7 +276,7 @@ fun EventTillScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = FAB_CLEARANCE),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 if (!isRunning) {
@@ -409,18 +460,25 @@ private fun BasketItemRow(
     }
 }
 
-// ── Messages ───────────────────────────────────────────────────────────
-@Composable
-private fun tillMessageText(message: TillMessage): String? = when (message) {
-    TillMessage.Failed -> stringResource(R.string.till_msg_failed)
-    is TillMessage.Sold -> stringResource(R.string.till_msg_sold, message.total.format())
-    TillMessage.BasketChanged -> stringResource(R.string.till_msg_basket_changed)
-    TillMessage.SaleNotRunning -> stringResource(R.string.till_msg_not_running)
+private val TillMessage.isSuccess: Boolean
+    get() = this is TillMessage.Added || this is TillMessage.Sold
+
+private fun tillMessageText(context: Context, message: TillMessage): String? = when (message) {
+    is TillMessage.Added ->
+        if (message.description.isBlank()) context.getString(R.string.till_msg_added_generic)
+        else context.getString(R.string.till_msg_added, message.description)
+    TillMessage.ForeignCode -> context.getString(R.string.till_msg_foreign_code)
+    TillMessage.OtherEvent -> context.getString(R.string.till_msg_other_event)
+    TillMessage.ScannerUnavailable -> context.getString(R.string.till_msg_scanner_unavailable)
+    is TillMessage.Sold -> context.getString(R.string.till_msg_sold, message.total.format())
+    TillMessage.BasketChanged -> context.getString(R.string.till_msg_basket_changed)
+    TillMessage.SaleNotRunning -> context.getString(R.string.till_msg_not_running)
+    TillMessage.Failed -> context.getString(R.string.till_msg_failed)
     is TillMessage.NotAdded -> when (message.reason) {
         BasketAddResult.Added -> null
-        BasketAddResult.EventNotRunning -> stringResource(R.string.till_msg_not_running)
-        BasketAddResult.NotInEvent -> stringResource(R.string.till_msg_not_in_event)
-        BasketAddResult.NotAvailable -> stringResource(R.string.till_msg_not_available)
-        BasketAddResult.AlreadyInBasket -> stringResource(R.string.till_msg_already_in_basket)
+        BasketAddResult.EventNotRunning -> context.getString(R.string.till_msg_not_running)
+        BasketAddResult.NotInEvent -> context.getString(R.string.till_msg_not_in_event)
+        BasketAddResult.NotAvailable -> context.getString(R.string.till_msg_not_available)
+        BasketAddResult.AlreadyInBasket -> context.getString(R.string.till_msg_already_in_basket)
     }
 }

@@ -437,4 +437,11 @@
     <string name="pay_back">Zurück zum Warenkorb</string>
     <string name="till_msg_sold">Verkauft: %1$s</string>
     <string name="till_msg_basket_changed">Der Warenkorb hat sich geändert. Es wurde nichts verkauft – bitte Summe erneut prüfen.</string>
+
+    <string name="till_scan">Etikett scannen</string>
+    <string name="till_msg_added">Hinzugefügt: %1$s</string>
+    <string name="till_msg_added_generic">Zum Warenkorb hinzugefügt</string>
+    <string name="till_msg_foreign_code">Das ist kein Etikett aus dieser App.</string>
+    <string name="till_msg_other_event">Dieses Etikett gehört zu einer anderen Veranstaltung.</string>
+    <string name="till_msg_scanner_unavailable">Der Scanner ist nicht verfügbar. Beim ersten Mal wird eine Internetverbindung benötigt.</string>
 </resources>

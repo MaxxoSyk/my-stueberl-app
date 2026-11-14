@@ -82,6 +82,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.label.LabelPrinter
 import de.landstueberl.mystueberlapp.data.label.LabelSheetLayout
+import de.landstueberl.mystueberlapp.data.label.ProductScanner
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.view.order.AttachProductDialog
@@ -157,6 +158,13 @@ fun EventDetailScreen(
     }
 
     val event = (uiState as? EventDetailUiState.Loaded)?.event
+
+    // Download the scanner before the market, while there's still Wi-Fi.
+    LaunchedEffect(event?.status) {
+        if (event?.status == EventStatus.IN_PREPARATION || event?.status == EventStatus.IN_PROGRESS) {
+            ProductScanner.preload(context.applicationContext)
+        }
+    }
 
     val imageFileOf: (Product) -> File? = remember(viewModel) {
         { product -> product.imageList.firstOrNull()?.fileName?.let(viewModel::imageFile) }

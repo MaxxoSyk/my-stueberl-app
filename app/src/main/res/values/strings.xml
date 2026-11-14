@@ -437,4 +437,11 @@
     <string name="pay_back">Back to basket</string>
     <string name="till_msg_sold">Sold: %1$s</string>
     <string name="till_msg_basket_changed">The basket changed. Nothing was sold – please check the total again.</string>
+
+    <string name="till_scan">Scan label</string>
+    <string name="till_msg_added">Added: %1$s</string>
+    <string name="till_msg_added_generic">Added to basket</string>
+    <string name="till_msg_foreign_code">This isn\'t one of your product labels.</string>
+    <string name="till_msg_other_event">This label belongs to another event.</string>
+    <string name="till_msg_scanner_unavailable">The scanner isn\'t available. It needs an internet connection the first time.</string>
 </resources>
