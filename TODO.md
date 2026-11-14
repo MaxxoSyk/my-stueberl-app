@@ -28,11 +28,11 @@
   - Constant speed along the frame (currently slightly faster on the short edges)
 
 ## 🚧 In progress: Events feature (part 3b: point of sale)
-Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closable payment panel (nothing can be added while it's open); cash only, sales price is always the price; undo any sale of the event, only while IN_PROGRESS; one tap per scan; header figures: revenue, items sold, customers; snackbar "Sold: …" after each sale
+Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closable payment panel (nothing can be added while it's open); cash only, sales price is always the price; undo any sale of the event, only while IN_PROGRESS; one tap per scan via a QR FAB (no extra bottom-bar button); header figures: revenue, items sold, customers; snackbar "Sold: …" after each sale
 - [x] 1. Data model: `EventSale` (snapshot of total + item count, `RESTRICT` on event), `EventBasketItem` (keyed by product), `ProductDetail.eventSaleId`, `Instant` converter; `EventSaleDao` + `EventSaleRepository` (`addToBasket` → `BasketAddResult`, `completeSale` compares with the shown basket → `BasketChanged`, `undoSale` only while IN_PROGRESS); stand actions clear `eventSaleId`; DB version 17
 - [x] 2. Till screen + basket: `Screen.EventTill`; "Open till" in the IN_PROGRESS bottom bar; `EventTillViewModel`; `EventTillScreen` (figures card, basket with remove, empty basket with confirmation, not-running hint); `TillAddSheet` (search, batches as one row adding the next member, stays open); `TillFigures`; detail screen section "Sold at this event"
-- [x] 3. Payment + complete: "Pay" next to "Add"; `PaymentSheet` (total, cash received, "Exact" + notes above the total, change / missing, "Back to basket"); `completeSale()` with the shown basket; snackbar "Sold: …", `BasketChanged` / `SaleNotRunning` messages; sheets close by themselves when the event stops or the basket empties; product list: "From event" includes till sales, "From sales area" excludes them, badge + "Go to event" for till-sold products
-- [ ] 4. Scanning: `GmsBarcodeScanning`, validation + error messages (foreign code, other event, plus the `BasketAddResult` cases), vibration, preload the module when the event starts (offline at the market)
+- [x] 3. Payment + complete: "Pay" next to "Add"; `PaymentSheet` (total, cash received, "Exact" + notes above the total, change / missing, "Back to basket"); `completeSale()` with the shown basket; snackbar "Sold: …", `BasketChanged` / `SaleNotRunning` messages; sheets close by themselves; product list: "From event" includes till sales, badge + "Go to event" for till-sold products
+- [x] 4. Scanning: Google code scanner (`play-services-code-scanner` 16.1.0, QR only, auto-zoom) via a QR FAB in the till; `ProductScanner.preload()` on the detail screen (IN_PREPARATION / IN_PROGRESS) and in the till for offline use; `onScanned()` rejects foreign codes and labels of other events, then `addToBasket()`; messages via a `Channel` (no lost duplicates), vibration Confirm / Reject, newest snackbar first; "Added: …" with the product name
 - [ ] 5. Recent sales + undo, keep screen on, "Open till" shortcut on the Events tile
   - Bottom sheet: block "Reset" / "Removed" for products sold at the till (undo the sale instead), so sale totals stay correct
 
@@ -58,7 +58,7 @@ Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closa
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout` and `eventTiming()`. Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split (incl. sold at this event vs. elsewhere) + totals, `toTillFigures()`, `AttachSelection` toggling, change calculation in the payment panel; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow` (incl. till sales), the `markLabelsPrinted` guard, the `startEvent` guard, the `getNextEventFlow()` ordering, and the till (`addToBasket` results, `completeSale` incl. `BasketChanged`, `undoSale`)
+- [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout` and `eventTiming()`. Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split (incl. sold at this event vs. elsewhere) + totals, `toTillFigures()`, `AttachSelection` toggling, change calculation in the payment panel, `EventTillViewModel.onScanned()` (foreign code, other event, added); Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow` (incl. till sales), the `markLabelsPrinted` guard, the `startEvent` guard, the `getNextEventFlow()` ordering, and the till (`addToBasket` results, `completeSale` incl. `BasketChanged`, `undoSale`)
 - [ ] Undo on delete
 - [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
 - [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove
@@ -78,9 +78,11 @@ Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closa
 
 ## 📦 Pre-release
 - [ ] R8
+  - Check that the code scanner and ZXing still work in a minified release build
 - [ ] Real migrations (replace the debug-only destructive migration)
   - [x] `exportSchema = true` with `app/schemas/` configured; JSON files are generated and checked in
   - Until then: every DB version bump wipes the data and restarts IDs, so printed QR labels become invalid and must be reprinted
 - [ ] Device pass on hardware
+  - Scanning needs Google Play Services; test offline scanning on the phone you'll use at the market
 - [ ] Review backup rules
 - [ ] Play Store icon

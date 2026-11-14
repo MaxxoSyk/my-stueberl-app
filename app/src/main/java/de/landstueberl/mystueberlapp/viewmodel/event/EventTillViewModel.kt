@@ -20,11 +20,14 @@ import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.label.ProductLabelCode
 import de.landstueberl.mystueberlapp.data.salesTotal
 import de.landstueberl.mystueberlapp.data.toTillFigures
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.EventSaleRepository
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,18 +35,25 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
-/** One-shot messages for the till's snackbar. */
+/** One-shot messages for the till: a snackbar, plus a vibration for scans and sales. */
 sealed interface TillMessage {
+    /** A scanned product went into the basket. */
+    data class Added(val description: String) : TillMessage
     /** Adding didn't work; the reason is shown to the user. */
     data class NotAdded(val reason: BasketAddResult) : TillMessage
-    /** saleId keeps two sales with the same total apart, so both are shown. */
+    /** Not one of our labels. */
+    data object ForeignCode : TillMessage
+    /** One of our labels, but for another event. */
+    data object OtherEvent : TillMessage
+    /** Module missing (no internet yet) or no Play Services. */
+    data object ScannerUnavailable : TillMessage
     data class Sold(val saleId: Int, val total: Money) : TillMessage
-    /** Nothing was sold: the basket differed from what was shown. */
     data object BasketChanged : TillMessage
     data object SaleNotRunning : TillMessage
     data object Failed : TillMessage
@@ -101,13 +111,16 @@ class EventTillViewModel(
         _searchQuery.value = query
     }
 
+    private val eventProducts: StateFlow<List<Product>> = eventRepo.getEventProductsFlow(eventId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+
     /**
      * Event products that can still go into the basket, filtered by the search
      * and grouped by batch. A batch row adds its next member, so identical
      * items don't need one row each.
      */
     val addableItems: StateFlow<List<ProductListItem>> = combine(
-        eventRepo.getEventProductsFlow(eventId),
+        eventProducts,
         basket,
         _searchQuery
     ) { products, basketItems, query ->
@@ -126,11 +139,13 @@ class EventTillViewModel(
     private val _isWorking = MutableStateFlow(false)
     val isWorking: StateFlow<Boolean> = _isWorking.asStateFlow()
 
-    private val _message = MutableStateFlow<TillMessage?>(null)
-    val message: StateFlow<TillMessage?> = _message.asStateFlow()
+    private val _messages = Channel<TillMessage>(Channel.BUFFERED)
 
-    fun resetMessage() {
-        _message.value = null
+    /** Every message is delivered once, even two identical ones in a row. */
+    val messages: Flow<TillMessage> = _messages.receiveAsFlow()
+
+    private fun send(message: TillMessage) {
+        _messages.trySend(message)
     }
 
     fun imageFile(fileName: String): File = imageStorage.fileFor(fileName)
@@ -140,7 +155,7 @@ class EventTillViewModel(
     fun addToBasket(productId: Int) = launchWorking {
         val result = saleRepo.addToBasket(eventId, productId)
         if (result != BasketAddResult.Added) {
-            _message.value = TillMessage.NotAdded(result)
+            send(TillMessage.NotAdded(result))
         }
     }
 
@@ -159,34 +174,62 @@ class EventTillViewModel(
     fun completeSale(expectedProductIds: Set<Int>, onFinished: () -> Unit) = launchWorking {
         when (val result = saleRepo.completeSale(eventId, expectedProductIds)) {
             is SaleResult.Completed ->
-                _message.value = TillMessage.Sold(result.sale.id, result.sale.total)
-            SaleResult.BasketChanged -> _message.value = TillMessage.BasketChanged
-            SaleResult.EventNotRunning -> _message.value = TillMessage.SaleNotRunning
+                send(TillMessage.Sold(result.sale.id, result.sale.total))
+            SaleResult.BasketChanged -> send(TillMessage.BasketChanged)
+            SaleResult.EventNotRunning -> send(TillMessage.SaleNotRunning)
             // Can't happen from the panel (it needs items); nothing to report.
             SaleResult.EmptyBasket -> Unit
         }
         onFinished()
     }
 
-    /**
-     * Ignores a tap while the previous action is still running. A basket write
-     * takes milliseconds, and it keeps two quick taps on a batch row from
-     * both picking the same member.
-     */
+    // ── Scanning ───────────────────────────────
+    /** Checks the label, then adds it like a manual add. */
+    fun onScanned(raw: String) {
+        val code = ProductLabelCode.decode(raw)
+        when {
+            code == null -> send(TillMessage.ForeignCode)
+            code.eventId != eventId -> send(TillMessage.OtherEvent)
+            else -> launchCatching {
+                when (val result = saleRepo.addToBasket(eventId, code.productId)) {
+                    BasketAddResult.Added -> send(TillMessage.Added(descriptionOf(code.productId)))
+                    else -> send(TillMessage.NotAdded(result))
+                }
+            }
+        }
+    }
+
+    fun onScannerFailed(e: Exception) {
+        Log.w(TAG, "Scanner failed", e)
+        send(TillMessage.ScannerUnavailable)
+    }
+
+    private fun descriptionOf(productId: Int): String =
+        eventProducts.value.firstOrNull { it.details.id == productId }?.details?.description.orEmpty()
+
+    /** Ignores a tap while the previous action runs (keeps quick taps on a batch row apart). */
     private fun launchWorking(block: suspend () -> Unit) {
         if (_isWorking.value) return
-
-        viewModelScope.launch {
+        launchCatching {
             _isWorking.value = true
+            try {
+                block()
+            } finally {
+                _isWorking.value = false
+            }
+        }
+    }
+
+    /** No tap guard: scans arrive one at a time and must never be dropped silently. */
+    private fun launchCatching(block: suspend () -> Unit) {
+        viewModelScope.launch {
             try {
                 block()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Till action failed", e)
-                _message.value = TillMessage.Failed
-            } finally {
-                _isWorking.value = false
+                send(TillMessage.Failed)
             }
         }
     }
