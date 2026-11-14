@@ -6,6 +6,7 @@ import androidx.room.Room
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.EventRepository
+import de.landstueberl.mystueberlapp.repository.EventSaleRepository
 import de.landstueberl.mystueberlapp.repository.GalleryRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
@@ -50,9 +51,13 @@ class MyStueberlApplication : Application() {
         GalleryRepository(database.galleryDao())
     }
 
+    val productImageStorage by lazy { ProductImageStorage(applicationContext) }
+
     val eventRepository by lazy { EventRepository(database, database.eventDao()) }
 
-    val productImageStorage by lazy { ProductImageStorage(applicationContext) }
+    val eventSaleRepository by lazy {
+        EventSaleRepository(database, database.eventSaleDao())
+    }
 
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
