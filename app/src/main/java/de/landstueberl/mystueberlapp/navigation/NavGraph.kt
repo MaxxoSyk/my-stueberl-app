@@ -9,12 +9,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.EventRepository
+import de.landstueberl.mystueberlapp.repository.EventSaleRepository
 import de.landstueberl.mystueberlapp.repository.GalleryRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.repository.StatisticsRepository
 import de.landstueberl.mystueberlapp.view.event.EventDetailScreen
 import de.landstueberl.mystueberlapp.view.event.EventFormScreen
+import de.landstueberl.mystueberlapp.view.event.EventTillScreen
 import de.landstueberl.mystueberlapp.view.event.EventsScreen
 import de.landstueberl.mystueberlapp.view.gallery.GalleryScreen
 import de.landstueberl.mystueberlapp.view.home.HomeScreen
@@ -27,6 +29,7 @@ import de.landstueberl.mystueberlapp.view.product.edit.EditProductScreen
 import de.landstueberl.mystueberlapp.view.statistics.StatisticsScreen
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailViewModel
 import de.landstueberl.mystueberlapp.viewmodel.event.EventFormViewModel
+import de.landstueberl.mystueberlapp.viewmodel.event.EventTillViewModel
 import de.landstueberl.mystueberlapp.viewmodel.event.EventsViewModel
 import de.landstueberl.mystueberlapp.viewmodel.gallery.GalleryViewModel
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
@@ -50,6 +53,7 @@ fun NavGraph(
     productRepository: ProductRepository,
     orderRepository: OrderRepository,
     eventRepository: EventRepository,
+    eventSaleRepository: EventSaleRepository,
     statisticsRepository: StatisticsRepository,
     galleryRepository: GalleryRepository,
     imageStorage: ProductImageStorage,
@@ -266,7 +270,11 @@ fun NavGraph(
 
             EventDetailScreen(
                 viewModel = viewModel(
-                    factory = EventDetailViewModel.factory(eventRepository, imageStorage)
+                    factory = EventDetailViewModel.factory(
+                        repo = eventRepository,
+                        saleRepo = eventSaleRepository,
+                        imageStorage = imageStorage
+                    )
                 ),
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToEdit = { eventId ->
@@ -278,10 +286,26 @@ fun NavGraph(
                 onNavigateToAddProduct = { eventId ->
                     navController.navigate(Screen.AddProduct(eventId = eventId))
                 },
+                onNavigateToTill = { eventId ->
+                    navController.navigate(Screen.EventTill(eventId))
+                },
                 eventSaved = eventSaved,
                 onEventSavedConsumed = {
                     backStackEntry.savedStateHandle[KEY_EVENT_SAVED] = false
                 }
+            )
+        }
+
+        composable<Screen.EventTill> {
+            EventTillScreen(
+                viewModel = viewModel(
+                    factory = EventTillViewModel.factory(
+                        eventRepository = eventRepository,
+                        eventSaleRepository = eventSaleRepository,
+                        imageStorage = imageStorage
+                    )
+                ),
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

@@ -21,6 +21,7 @@ import de.landstueberl.mystueberlapp.data.label.ProductLabelCode
 import de.landstueberl.mystueberlapp.data.toEventProducts
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.EventRepository
+import de.landstueberl.mystueberlapp.repository.EventSaleRepository
 import de.landstueberl.mystueberlapp.viewmodel.common.AttachSelection
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,6 +44,7 @@ sealed interface EventDetailUiState {
 
 class EventDetailViewModel(
     private val repo: EventRepository,
+    saleRepo: EventSaleRepository,
     private val imageStorage: ProductImageStorage,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -72,11 +74,15 @@ class EventDetailViewModel(
             )
 
     /**
-     * The event's products, observed live: linking, unlinking and a product
-     * being sold elsewhere all show up immediately. Null while loading.
+     * The event's products, observed live: linking, unlinking, selling at the
+     * till and selling elsewhere all show up immediately. Null while loading.
      */
-    val products: StateFlow<EventProducts?> = repo.getEventProductsFlow(eventId)
-        .map { it.toEventProducts() }
+    val products: StateFlow<EventProducts?> = combine(
+        repo.getEventProductsFlow(eventId),
+        saleRepo.getSalesFlow(eventId).map { sales -> sales.mapTo(HashSet()) { it.id } }
+    ) { list, saleIds ->
+        list.toEventProducts(saleIds)
+    }
         .catch { e ->
             Log.e(TAG, "Failed to observe products of event $eventId", e)
             emit(emptyList<Product>().toEventProducts())
@@ -247,11 +253,13 @@ class EventDetailViewModel(
 
         fun factory(
             repo: EventRepository,
+            saleRepo: EventSaleRepository,
             imageStorage: ProductImageStorage
         ) = viewModelFactory {
             initializer<EventDetailViewModel> {
                 EventDetailViewModel(
                     repo = repo,
+                    saleRepo = saleRepo,
                     imageStorage = imageStorage,
                     savedStateHandle = createSavedStateHandle()
                 )

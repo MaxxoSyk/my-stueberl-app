@@ -394,4 +394,32 @@
         <item quantity="other">%1$d Werkstücke haben noch kein gedrucktes Etikett.</item>
     </plurals>
     <string name="event_detail_in_progress_hint">Die Veranstaltung läuft. Werkstücke können nicht mehr hinzugefügt oder entfernt werden.</string>
+    <string name="event_detail_section_sold_at_event">Bei dieser Veranstaltung verkauft</string>
+    <string name="event_detail_open_till">Kasse öffnen</string>
+
+    <string name="till_title">Kasse</string>
+    <string name="till_total">Gesamt</string>
+    <string name="till_add">Hinzufügen</string>
+    <string name="till_basket">Warenkorb (%1$d)</string>
+    <string name="till_basket_empty">Der Warenkorb ist leer. Füge die Werkstücke hinzu, die der Kunde ausgewählt hat.</string>
+    <string name="till_remove_item">Aus Warenkorb entfernen</string>
+    <string name="till_clear_basket">Warenkorb leeren</string>
+    <string name="till_clear_confirm_title">Warenkorb leeren?</string>
+    <string name="till_clear_confirm_message">Alle Werkstücke werden aus dem Warenkorb entfernt. Es wird nichts verkauft.</string>
+    <string name="till_not_running">Die Veranstaltung läuft nicht. Es kann nichts verkauft werden.</string>
+
+    <string name="till_figure_revenue">Umsatz</string>
+    <string name="till_figure_items">Verkauft</string>
+    <string name="till_figure_customers">Kunden</string>
+
+    <string name="till_add_sheet_title">Werkstücke hinzufügen</string>
+    <string name="till_search_hint">Beschreibung suchen…</string>
+    <string name="till_add_empty">Alle verfügbaren Werkstücke sind im Warenkorb oder verkauft.</string>
+    <string name="till_add_no_results">Keine Werkstücke entsprechen deiner Suche.</string>
+
+    <string name="till_msg_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="till_msg_not_running">Die Veranstaltung läuft nicht mehr.</string>
+    <string name="till_msg_not_in_event">Dieses Werkstück gehört nicht zu dieser Veranstaltung.</string>
+    <string name="till_msg_not_available">Dieses Werkstück ist bereits verkauft oder entfernt.</string>
+    <string name="till_msg_already_in_basket">Dieses Werkstück ist bereits im Warenkorb.</string>
 </resources>

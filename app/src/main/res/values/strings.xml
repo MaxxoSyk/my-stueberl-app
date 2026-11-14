@@ -394,4 +394,32 @@
         <item quantity="other">%1$d products have no printed label yet.</item>
     </plurals>
     <string name="event_detail_in_progress_hint">The event is running. Products can no longer be added or removed.</string>
+    <string name="event_detail_section_sold_at_event">Sold at this event</string>
+    <string name="event_detail_open_till">Open till</string>
+
+    <string name="till_title">Till</string>
+    <string name="till_total">Total</string>
+    <string name="till_add">Add</string>
+    <string name="till_basket">Basket (%1$d)</string>
+    <string name="till_basket_empty">The basket is empty. Add the products the customer picked.</string>
+    <string name="till_remove_item">Remove from basket</string>
+    <string name="till_clear_basket">Empty basket</string>
+    <string name="till_clear_confirm_title">Empty basket?</string>
+    <string name="till_clear_confirm_message">All products are removed from the basket. Nothing is sold.</string>
+    <string name="till_not_running">The event isn\'t running. Products can\'t be sold.</string>
+
+    <string name="till_figure_revenue">Revenue</string>
+    <string name="till_figure_items">Items sold</string>
+    <string name="till_figure_customers">Customers</string>
+
+    <string name="till_add_sheet_title">Add products</string>
+    <string name="till_search_hint">Search description…</string>
+    <string name="till_add_empty">All available products are in the basket or sold.</string>
+    <string name="till_add_no_results">No products match your search.</string>
+
+    <string name="till_msg_failed">Action failed. Please try again.</string>
+    <string name="till_msg_not_running">The event isn\'t running anymore.</string>
+    <string name="till_msg_not_in_event">This product isn\'t part of this event.</string>
+    <string name="till_msg_not_available">This product is already sold or removed.</string>
+    <string name="till_msg_already_in_basket">This product is already in the basket.</string>
 </resources>

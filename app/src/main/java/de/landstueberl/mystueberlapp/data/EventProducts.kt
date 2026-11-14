@@ -4,33 +4,47 @@ package de.landstueberl.mystueberlapp.data
  * An event's products, prepared for the detail screen.
  *
  * Only AVAILABLE products are taken along: they make up [items] and the totals.
- * Products sold or removed before the event stay linked (as history) but are
- * listed separately in [noLongerAvailable].
+ * Products sold at this event's till are listed in [soldAtEvent]; anything sold
+ * or removed elsewhere stays linked as history in [noLongerAvailable].
  */
 data class EventProducts(
     /** Available products, grouped by batch, in assignment order. */
     val items: List<ProductListItem>,
-    /** Sold or removed before the event, in assignment order. */
+    /** Sold at this event's till, in assignment order. */
+    val soldAtEvent: List<Product>,
+    /** Sold or removed elsewhere (e.g. at the stand before the event). */
     val noLongerAvailable: List<Product>,
     val availableCount: Int,
     val salesTotal: Money,
     val purchaseTotal: Money
 ) {
     val isEmpty: Boolean
-        get() = items.isEmpty() && noLongerAvailable.isEmpty()
+        get() = items.isEmpty() && soldAtEvent.isEmpty() && noLongerAvailable.isEmpty()
 }
 
-/** Pure, so it can be unit tested. Keeps the receiver's (assignment) order. */
-fun List<Product>.toEventProducts(): EventProducts {
+/**
+ * Pure, so it can be unit tested. Keeps the receiver's (assignment) order.
+ *
+ * @param eventSaleIds ids of this event's sales: a product counts as sold here
+ *   only if its sale belongs to this event
+ */
+fun List<Product>.toEventProducts(eventSaleIds: Set<Int> = emptySet()): EventProducts {
     val (available, gone) = partition { it.details.status == ProductStatus.AVAILABLE }
+    val (soldHere, elsewhere) = gone.partition { product ->
+        product.details.eventSaleId?.let { it in eventSaleIds } == true
+    }
     return EventProducts(
         items = available.groupByBatch(),
-        noLongerAvailable = gone,
+        soldAtEvent = soldHere,
+        noLongerAvailable = elsewhere,
         availableCount = available.size,
-        salesTotal = available.sumMoney { it.details.salesPrice },
+        salesTotal = available.salesTotal(),
         purchaseTotal = available.sumMoney { it.details.purchasePrice }
     )
 }
+
+/** Sum of the sales prices, e.g. a basket's total. */
+fun List<Product>.salesTotal(): Money = sumMoney { it.details.salesPrice }
 
 /** Every amount has scale 2, so the sum does too and satisfies Money's check. */
 private inline fun List<Product>.sumMoney(selector: (Product) -> Money): Money =
