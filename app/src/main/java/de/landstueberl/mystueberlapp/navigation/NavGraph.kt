@@ -77,6 +77,9 @@ fun NavGraph(
                 onNavigateToProducts = { navController.navigate(Screen.Products) },
                 onNavigateToOrders = { navController.navigate(Screen.Orders) },
                 onNavigateToEvents = { navController.navigate(Screen.Events) },
+                onNavigateToTill = { eventId ->
+                    navController.navigate(Screen.EventTill(eventId))
+                },
                 onNavigateToStatistics = { navController.navigate(Screen.Statistics) },
                 onNavigateToGallery = { navController.navigate(Screen.Gallery) }
             )

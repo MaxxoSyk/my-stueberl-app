@@ -145,12 +145,22 @@ fun ProductBottomSheet(
                         )
                     }
                     ProductStatus.SOLD, ProductStatus.REMOVED -> {
-                        BottomSheetItem(
-                            icon = Icons.Default.Refresh,
-                            iconTint = AccentGold,
-                            label = stringResource(R.string.product_bottom_sheet_reset),
-                            onClick = { dismissThen(onResetToAvailable) }
-                        )
+                        if (details.eventSaleId != null) {
+                            // Sold at an event's till: reversed by undoing the sale there.
+                            Text(
+                                text = stringResource(R.string.product_bottom_sheet_till_sale),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                            )
+                        } else {
+                            BottomSheetItem(
+                                icon = Icons.Default.Refresh,
+                                iconTint = AccentGold,
+                                label = stringResource(R.string.product_bottom_sheet_reset),
+                                onClick = { dismissThen(onResetToAvailable) }
+                            )
+                        }
                     }
                 }
             }

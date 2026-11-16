@@ -1,5 +1,8 @@
 package de.landstueberl.mystueberlapp.view.event
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,10 +22,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,13 +37,23 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.format
@@ -46,19 +62,41 @@ import java.io.File
 
 /**
  * Adds event products to the basket by hand. Stays open, so several items can
- * be added in a row. A batch row adds its next member.
+ * be added in a row. A batch row adds its next member; the basket bar at the
+ * bottom confirms every add, since the till's snackbar is hidden behind the sheet.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TillAddSheet(
     items: List<ProductListItem>,
     query: String,
+    basket: List<Product>,
+    basketTotal: Money,
     imageFileOf: (Product) -> File?,
     onQueryChange: (String) -> Unit,
     onAdd: (productId: Int) -> Unit,
+    onRemove: (productId: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val haptic = LocalHapticFeedback.current
+
+    // How many members of each batch are in the basket, and the newest one
+    // (the basket is oldest first, so associate keeps the last = newest).
+    val inBasketByBatch = remember(basket) {
+        basket.mapNotNull { it.details.batchId }.groupingBy { it }.eachCount()
+    }
+    val newestInBasketByBatch = remember(basket) {
+        basket.filter { it.details.batchId != null }
+            .associate { it.details.batchId!! to it.details.id }
+    }
+
+    // Vibrate only when an item actually landed in the basket.
+    var lastBasketSize by remember { mutableIntStateOf(basket.size) }
+    LaunchedEffect(basket.size) {
+        if (basket.size > lastBasketSize) haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+        lastBasketSize = basket.size
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -72,12 +110,21 @@ fun TillAddSheet(
                 .padding(horizontal = 16.dp)
                 .imePadding()
         ) {
-            Text(
-                text = stringResource(R.string.till_add_sheet_title),
-                style = MaterialTheme.typography.titleLarge,
-                color = colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.till_add_sheet_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.common_close))
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
 
             OutlinedTextField(
                 value = query,
@@ -87,10 +134,7 @@ fun TillAddSheet(
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { onQueryChange("") }) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = stringResource(R.string.common_cancel)
-                            )
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.common_cancel))
                         }
                     }
                 },
@@ -120,46 +164,106 @@ fun TillAddSheet(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(bottom = 16.dp),
+                    contentPadding = PaddingValues(bottom = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(items = items, key = { it.key }) { item ->
-                        when (item) {
-                            is ProductListItem.Single -> TillAddRow(
-                                product = item.product,
-                                imageFile = imageFileOf(item.product),
-                                onAdd = { onAdd(item.product.details.id) }
-                            )
-
-                            is ProductListItem.Batch -> TillAddRow(
-                                product = item.representative,
-                                imageFile = imageFileOf(item.representative),
-                                count = item.count,
-                                // Members are identical; take the next one.
-                                onAdd = { onAdd(item.products.first().details.id) }
-                            )
+                        val product = when (item) {
+                            is ProductListItem.Single -> item.product
+                            is ProductListItem.Batch -> item.representative
                         }
+                        // Also for the last member left, which is shown as a single row.
+                        val batchId = product.details.batchId
+                        val inBasket = batchId?.let { inBasketByBatch[it] } ?: 0
+
+                        TillAddRow(
+                            product = product,
+                            imageFile = imageFileOf(product),
+                            count = (item as? ProductListItem.Batch)?.count,
+                            inBasketCount = inBasket,
+                            // Members are identical; take the next one.
+                            onAdd = {
+                                onAdd(
+                                    when (item) {
+                                        is ProductListItem.Single -> item.product.details.id
+                                        is ProductListItem.Batch -> item.products.first().details.id
+                                    }
+                                )
+                            },
+                            onRemoveOne = batchId
+                                ?.let { newestInBasketByBatch[it] }
+                                ?.let { id -> { onRemove(id) } }
+                        )
                     }
                 }
             }
+
+            BasketBar(itemCount = basket.size, total = basketTotal)
         }
     }
 }
 
+// ── Basket Bar ─────────────────────────────────────────────────────────
+/** Always visible, so every add is confirmed even while the sheet covers the till. */
+@Composable
+private fun BasketBar(itemCount: Int, total: Money) {
+    val colorScheme = MaterialTheme.colorScheme
+    HorizontalDivider(color = colorScheme.primary.copy(alpha = 0.3f))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AnimatedContent(targetState = itemCount, label = "basketCount") { count ->
+            Text(
+                text = pluralStringResource(R.plurals.till_add_sheet_basket, count, count),
+                style = MaterialTheme.typography.titleSmall,
+                color = colorScheme.onSurface
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        AnimatedContent(targetState = total, label = "basketTotal") { value ->
+            Text(
+                text = value.format(),
+                style = MaterialTheme.typography.titleLarge,
+                color = colorScheme.tertiary
+            )
+        }
+    }
+}
+
+// ── Row ────────────────────────────────────────────────────────────────
 @Composable
 private fun TillAddRow(
     product: Product,
     imageFile: File?,
+    inBasketCount: Int,
     onAdd: () -> Unit,
+    onRemoveOne: (() -> Unit)?,
     count: Int? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
+
+    // Short highlight when one more of this product went into the basket.
+    val flash = remember { Animatable(0f) }
+    var previousCount by remember { mutableIntStateOf(inBasketCount) }
+    LaunchedEffect(inBasketCount) {
+        if (inBasketCount > previousCount) {
+            flash.snapTo(1f)
+            flash.animateTo(0f, tween(durationMillis = 700))
+        }
+        previousCount = inBasketCount
+    }
+
     Card(
         onClick = onAdd,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
+        colors = CardDefaults.cardColors(
+            containerColor = lerp(colorScheme.surface, colorScheme.secondaryContainer, flash.value)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -189,6 +293,22 @@ private fun TillAddRow(
                     style = MaterialTheme.typography.labelMedium,
                     color = colorScheme.tertiary
                 )
+                if (inBasketCount > 0) {
+                    Text(
+                        text = stringResource(R.string.till_add_sheet_in_basket, inBasketCount),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colorScheme.secondary
+                    )
+                }
+            }
+            if (onRemoveOne != null) {
+                IconButton(onClick = onRemoveOne) {
+                    Icon(
+                        imageVector = Icons.Default.RemoveCircleOutline,
+                        contentDescription = stringResource(R.string.till_add_sheet_remove_one),
+                        tint = colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Icon(
                 imageVector = Icons.Default.AddCircle,

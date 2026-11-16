@@ -20,25 +20,22 @@
 
 ## ✅ Done: Events feature (part 3a: QR labels)
 
+## ✅ Done: Events feature (part 3b: point of sale)
+
 ## 🔧 Events: improvements
 - [x] IN_PREPARATION detail screen: "New" / "Existing" fixed in the bottom bar (`EventBottomBar`, shared with PLANNED), always visible with long product lists
 - [x] Home screen: running event clearly visible — animated frame on the Events tile (`Modifier.runningBorder()`, 5 s per lap, highlight 20 %); `getNextEventFlow()` lists IN_PROGRESS events first, even past their last day; "Still running" / "Läuft noch" via `EventTiming.StillRunning`
 - [ ] Optional polish for the running frame
   - Static frame (no moving highlight) when system animations are turned off
   - Constant speed along the frame (currently slightly faster on the short edges)
-
-## 🚧 In progress: Events feature (part 3b: point of sale)
-Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closable payment panel (nothing can be added while it's open); cash only, sales price is always the price; undo any sale of the event, only while IN_PROGRESS; one tap per scan via a QR FAB (no extra bottom-bar button); header figures: revenue, items sold, customers; snackbar "Sold: …" after each sale
-- [x] 1. Data model: `EventSale` (snapshot of total + item count, `RESTRICT` on event), `EventBasketItem` (keyed by product), `ProductDetail.eventSaleId`, `Instant` converter; `EventSaleDao` + `EventSaleRepository` (`addToBasket` → `BasketAddResult`, `completeSale` compares with the shown basket → `BasketChanged`, `undoSale` only while IN_PROGRESS); stand actions clear `eventSaleId`; DB version 17
-- [x] 2. Till screen + basket: `Screen.EventTill`; "Open till" in the IN_PROGRESS bottom bar; `EventTillViewModel`; `EventTillScreen` (figures card, basket with remove, empty basket with confirmation, not-running hint); `TillAddSheet` (search, batches as one row adding the next member, stays open); `TillFigures`; detail screen section "Sold at this event"
-- [x] 3. Payment + complete: "Pay" next to "Add"; `PaymentSheet` (total, cash received, "Exact" + notes above the total, change / missing, "Back to basket"); `completeSale()` with the shown basket; snackbar "Sold: …", `BasketChanged` / `SaleNotRunning` messages; sheets close by themselves; product list: "From event" includes till sales, badge + "Go to event" for till-sold products
-- [x] 4. Scanning: Google code scanner (`play-services-code-scanner` 16.1.0, QR only, auto-zoom) via a QR FAB in the till; `ProductScanner.preload()` on the detail screen (IN_PREPARATION / IN_PROGRESS) and in the till for offline use; `onScanned()` rejects foreign codes and labels of other events, then `addToBasket()`; messages via a `Channel` (no lost duplicates), vibration Confirm / Reject, newest snackbar first; "Added: …" with the product name
-- [ ] 5. Recent sales + undo, keep screen on, "Open till" shortcut on the Events tile
-  - Bottom sheet: block "Reset" / "Removed" for products sold at the till (undo the sale instead), so sale totals stay correct
+- [ ] Optional privacy during an event
+  - Hide sale totals in the till's sales sheet the same way ("••••", tap to reveal)
+  - Protect the statistics screen while an event runs
 
 ## 🗓️ Events feature (part 3+, not started)
 - [x] "Start event" (IN_PREPARATION → IN_PROGRESS): second row in the bottom bar with confirmation (notes for a future start date and unprinted labels); blocked without available products (guarded in SQL via `EventDao.startEvent()`); afterwards products read-only, info card collapsed, in-progress hint, "Print labels" stays
-- [ ] Sale channel follow-ups (`eventSaleId`, part 3b)
+- [ ] "Close event" flow (IN_PROGRESS → DONE; remaining products go back to the stand; open basket must be empty)
+- [ ] Sale channel follow-ups (`eventSaleId`)
   - Deleting an event with sales currently fails with a constraint error (safety net); block it in the UI with a message
   - Statistics: stand sales = `orderId IS NULL AND eventSaleId IS NULL`; event revenue as its own channel
 - [ ] Deleting events (decided): blocked for IN_PROGRESS / DONE events that have sales; PLANNED / IN_PREPARATION / CANCELLED and events without sales stay deletable
@@ -46,7 +43,6 @@ Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closa
   - Decide per status whether edit stays available (currently allowed in every status)
 - [ ] Going back a status (possible but rare: overflow menu + confirmation)
   - Leaving CANCELLED must clear `cancelledOn`
-- [ ] "Close event" flow (IN_PROGRESS → DONE; remaining products go back to the stand; open basket must be empty)
 - [ ] Statistics per event (revenue, stand fee, profit, customers, average basket); event sales as their own channel next to sales area / orders
 - [ ] Duplicate event for recurring markets
 - [ ] Optional: continuous scanning (CameraX + ML Kit)
@@ -58,7 +54,7 @@ Decisions: one basket at a time, saved in the DB; no "lock": "Pay" opens a closa
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice`
-- [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout` and `eventTiming()`. Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split (incl. sold at this event vs. elsewhere) + totals, `toTillFigures()`, `AttachSelection` toggling, change calculation in the payment panel, `EventTillViewModel.onScanned()` (foreign code, other event, added); Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow` (incl. till sales), the `markLabelsPrinted` guard, the `startEvent` guard, the `getNextEventFlow()` ordering, and the till (`addToBasket` results, `completeSale` incl. `BasketChanged`, `undoSale`)
+- [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout` and `eventTiming()`. Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()`, `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split (incl. sold at this event vs. elsewhere) + totals, `toTillFigures()`, `groupSales()`, `AttachSelection` toggling, change calculation in the payment panel, `EventTillViewModel.onScanned()` (foreign code, other event, added); Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow` (incl. till sales), the `markLabelsPrinted` guard, the `startEvent` guard, the `getNextEventFlow()` ordering, and the till (`addToBasket` results, `completeSale` incl. `BasketChanged`, `undoSale`, `resetToAvailable` skipping till sales)
 - [ ] Undo on delete
 - [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
 - [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove

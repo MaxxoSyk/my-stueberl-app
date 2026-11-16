@@ -16,9 +16,11 @@ import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.SaleResult
+import de.landstueberl.mystueberlapp.data.SaleWithProducts
 import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.groupByBatch
+import de.landstueberl.mystueberlapp.data.groupSales
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.data.label.ProductLabelCode
 import de.landstueberl.mystueberlapp.data.salesTotal
@@ -57,6 +59,8 @@ sealed interface TillMessage {
     data object BasketChanged : TillMessage
     data object SaleNotRunning : TillMessage
     data object Failed : TillMessage
+    /** A sale was undone; its products are available again. */
+    data class Undone(val saleId: Int, val total: Money) : TillMessage
 }
 
 class EventTillViewModel(
@@ -102,6 +106,25 @@ class EventTillViewModel(
             SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
             emptyList<de.landstueberl.mystueberlapp.data.db.entity.EventSale>().toTillFigures()
         )
+
+    // ── Recent Sales ───────────────────────────
+    /** Newest first, each with its products. */
+    val recentSales: StateFlow<List<SaleWithProducts>> = combine(
+        saleRepo.getSalesFlow(eventId),
+        saleRepo.getSoldProductsFlow(eventId),
+        ::groupSales
+    ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+
+    /** Only while the event is running; the repository checks that too. */
+    fun undoSale(saleId: Int) = launchWorking {
+        val sale = recentSales.value.firstOrNull { it.sale.id == saleId }?.sale
+            ?: return@launchWorking
+        if (saleRepo.undoSale(sale.id)) {
+            send(TillMessage.Undone(sale.id, sale.total))
+        } else {
+            send(TillMessage.SaleNotRunning)
+        }
+    }
 
     // ── Adding by Hand ─────────────────────────
     private val _searchQuery = MutableStateFlow("")

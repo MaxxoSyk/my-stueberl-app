@@ -92,4 +92,14 @@ interface EventSaleDao {
     /** Newest first, for "recent sales" and the header figures. */
     @Query("SELECT * FROM EventSale WHERE eventId = :eventId ORDER BY soldAt DESC, id DESC")
     fun getSalesFlow(eventId: Int): Flow<List<EventSale>>
+
+    /** Products sold at this event's till, for listing what each sale contained. */
+    @Transaction
+    @Query("""
+        SELECT p.* FROM ProductDetail p
+        INNER JOIN EventSale s ON s.id = p.eventSaleId
+        WHERE s.eventId = :eventId
+        ORDER BY p.id ASC
+    """)
+    fun getSoldProductsFlow(eventId: Int): Flow<List<Product>>
 }

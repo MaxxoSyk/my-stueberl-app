@@ -135,6 +135,7 @@
     <string name="product_bottom_sheet_mark_sold_confirm">Verkauft</string>
     <string name="product_bottom_sheet_removed_date_title">Entnahmedatum</string>
     <string name="product_bottom_sheet_mark_removed_confirm">Entfernt</string>
+    <string name="product_bottom_sheet_till_sale">An der Veranstaltungskasse verkauft. Zum Rückgängigmachen den Verkauf in der Kasse stornieren.</string>
 
     <!-- Edit Product Screen -->
     <string name="edit_product_screen_title">Werkstück bearbeiten</string>
@@ -408,6 +409,9 @@
     <string name="till_clear_confirm_message">Alle Werkstücke werden aus dem Warenkorb entfernt. Es wird nichts verkauft.</string>
     <string name="till_not_running">Die Veranstaltung läuft nicht. Es kann nichts verkauft werden.</string>
 
+    <string name="till_figures_show">Zahlen anzeigen</string>
+    <string name="till_figures_hide">Zahlen ausblenden</string>
+
     <string name="till_figure_revenue">Umsatz</string>
     <string name="till_figure_items">Verkauft</string>
     <string name="till_figure_customers">Kunden</string>
@@ -416,6 +420,12 @@
     <string name="till_search_hint">Beschreibung suchen…</string>
     <string name="till_add_empty">Alle verfügbaren Werkstücke sind im Warenkorb oder verkauft.</string>
     <string name="till_add_no_results">Keine Werkstücke entsprechen deiner Suche.</string>
+    <plurals name="till_add_sheet_basket">
+        <item quantity="one">%1$d Werkstück im Warenkorb</item>
+        <item quantity="other">%1$d Werkstücke im Warenkorb</item>
+    </plurals>
+    <string name="till_add_sheet_in_basket">%1$d im Warenkorb</string>
+    <string name="till_add_sheet_remove_one">Eins zurücklegen</string>
 
     <string name="till_msg_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
     <string name="till_msg_not_running">Die Veranstaltung läuft nicht mehr.</string>
@@ -444,4 +454,13 @@
     <string name="till_msg_foreign_code">Das ist kein Etikett aus dieser App.</string>
     <string name="till_msg_other_event">Dieses Etikett gehört zu einer anderen Veranstaltung.</string>
     <string name="till_msg_scanner_unavailable">Der Scanner ist nicht verfügbar. Beim ersten Mal wird eine Internetverbindung benötigt.</string>
+
+    <string name="till_sales_title">Verkäufe</string>
+    <string name="till_undo">Stornieren</string>
+    <string name="till_undo_confirm_title">Verkauf stornieren?</string>
+    <plurals name="till_undo_confirm_message">
+        <item quantity="one">Das Werkstück kommt zurück in die Veranstaltung. Der Umsatz sinkt um %2$s.</item>
+        <item quantity="other">Die %1$d Werkstücke kommen zurück in die Veranstaltung. Der Umsatz sinkt um %2$s.</item>
+    </plurals>
+    <string name="till_msg_undone">Storniert: %1$s</string>
 </resources>

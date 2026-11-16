@@ -1,6 +1,7 @@
 package de.landstueberl.mystueberlapp.view.event
 
 import android.content.Context
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +19,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -40,6 +44,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +56,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -64,6 +71,7 @@ import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.label.ProductScanner
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
+import de.landstueberl.mystueberlapp.view.common.rememberTimedReveal
 import de.landstueberl.mystueberlapp.viewmodel.event.EventTillViewModel
 import de.landstueberl.mystueberlapp.viewmodel.event.TillMessage
 import kotlinx.coroutines.launch
@@ -86,10 +94,18 @@ fun EventTillScreen(
     val addableItems by viewModel.addableItems.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isWorking by viewModel.isWorking.collectAsStateWithLifecycle()
+    val recentSales by viewModel.recentSales.collectAsStateWithLifecycle()
 
     var showAddSheet by rememberSaveable { mutableStateOf(false) }
     var showPaySheet by rememberSaveable { mutableStateOf(false) }
     var showClearConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showSalesSheet by rememberSaveable { mutableStateOf(false) }
+    var saleToUndo by rememberSaveable { mutableStateOf<Int?>(null) }
+
+    // Figures are hidden by default: the screen stays on, and anyone at the
+    // stand could read them. Plain remember, so they're hidden again whenever
+    // the till is reopened.
+    var figuresRevealed by rememberTimedReveal()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -122,6 +138,17 @@ fun EventTillScreen(
     LaunchedEffect(isRunning, basket.isEmpty()) {
         if (!isRunning) showAddSheet = false
         if (!isRunning || basket.isEmpty()) showPaySheet = false
+    }
+
+    LaunchedEffect(recentSales.isEmpty()) {
+        if (recentSales.isEmpty()) showSalesSheet = false
+    }
+
+    // The till is used all day at the stand: don't let the screen time out.
+    val view = LocalView.current
+    DisposableEffect(view, isRunning) {
+        view.keepScreenOn = isRunning
+        onDispose { view.keepScreenOn = false }
     }
 
     val imageFileOf: (Product) -> File? = remember(viewModel) {
@@ -158,6 +185,14 @@ fun EventTillScreen(
                     }
                 },
                 actions = {
+                    if (recentSales.isNotEmpty()) {
+                        IconButton(onClick = { showSalesSheet = true }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
+                                contentDescription = stringResource(R.string.till_sales_title)
+                            )
+                        }
+                    }
                     if (basket.isNotEmpty() && isRunning) {
                         IconButton(
                             onClick = { showClearConfirmation = true },
@@ -283,7 +318,13 @@ fun EventTillScreen(
                     item(key = "not_running") { HintText(stringResource(R.string.till_not_running)) }
                 }
 
-                item(key = "figures") { TillFiguresCard(figures = figures) }
+                item(key = "figures") {
+                    TillFiguresCard(
+                        figures = figures,
+                        isRevealed = figuresRevealed,
+                        onToggle = { figuresRevealed = !figuresRevealed }
+                    )
+                }
 
                 item(key = "basket_header") {
                     DetailSectionHeader(
@@ -316,9 +357,12 @@ fun EventTillScreen(
         TillAddSheet(
             items = addableItems,
             query = searchQuery,
+            basket = basket,
+            basketTotal = basketTotal,
             imageFileOf = imageFileOf,
             onQueryChange = viewModel::onSearchQueryChange,
             onAdd = viewModel::addToBasket,
+            onRemove = viewModel::removeFromBasket,
             onDismiss = {
                 showAddSheet = false
                 viewModel.onSearchQueryChange("")
@@ -341,6 +385,44 @@ fun EventTillScreen(
         )
     }
 
+    if (showSalesSheet) {
+        TillSalesSheet(
+            sales = recentSales,
+            isWorking = isWorking,
+            // Undo only while the event is running.
+            onUndo = if (isRunning) { saleId -> saleToUndo = saleId } else null,
+            onDismiss = { showSalesSheet = false }
+        )
+    }
+
+    saleToUndo?.let { saleId ->
+        val entry = recentSales.firstOrNull { it.sale.id == saleId }
+        if (entry == null) {
+            // Undone or gone meanwhile: nothing to confirm.
+            LaunchedEffect(saleId) { saleToUndo = null }
+        } else {
+            StueberlConfirmationDialog(
+                title = stringResource(R.string.till_undo_confirm_title),
+                message = pluralStringResource(
+                    R.plurals.till_undo_confirm_message,
+                    entry.sale.itemCount,
+                    entry.sale.itemCount,
+                    entry.sale.total.format()
+                ),
+                confirmLabel = stringResource(R.string.till_undo),
+                isDestructive = true,
+                onConfirm = {
+                    saleToUndo = null
+                    // Undoing several sales in a row is rare: back to the till,
+                    // where the "Undone: …" snackbar is visible.
+                    showSalesSheet = false
+                    viewModel.undoSale(saleId)
+                },
+                onDismiss = { saleToUndo = null }
+            )
+        }
+    }
+
     if (showClearConfirmation) {
         StueberlConfirmationDialog(
             title = stringResource(R.string.till_clear_confirm_title),
@@ -357,30 +439,50 @@ fun EventTillScreen(
 }
 
 // ── Figures ────────────────────────────────────────────────────────────
+/** Placeholder while hidden; same text style, so the card doesn't jump. */
+private const val HIDDEN_VALUE = "••••"
+
 @Composable
-private fun TillFiguresCard(figures: TillFigures) {
+private fun TillFiguresCard(
+    figures: TillFigures,
+    isRevealed: Boolean,
+    onToggle: () -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
     Card(
+        onClick = onToggle,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
     ) {
-        Row(modifier = Modifier.padding(vertical = 12.dp)) {
+        Row(
+            modifier = Modifier.padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             FigureCell(
-                value = figures.revenue.format(),
+                value = if (isRevealed) figures.revenue.format() else HIDDEN_VALUE,
                 label = stringResource(R.string.till_figure_revenue),
                 highlight = true,
                 modifier = Modifier.weight(1f)
             )
             FigureCell(
-                value = figures.itemsSold.toString(),
+                value = if (isRevealed) figures.itemsSold.toString() else HIDDEN_VALUE,
                 label = stringResource(R.string.till_figure_items),
                 modifier = Modifier.weight(1f)
             )
             FigureCell(
-                value = figures.customers.toString(),
+                value = if (isRevealed) figures.customers.toString() else HIDDEN_VALUE,
                 label = stringResource(R.string.till_figure_customers),
                 modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = if (isRevealed) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                contentDescription = stringResource(
+                    if (isRevealed) R.string.till_figures_hide else R.string.till_figures_show
+                ),
+                tint = colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 12.dp)
             )
         }
     }
@@ -395,12 +497,14 @@ private fun FigureCell(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge,
-            color = if (highlight) colorScheme.tertiary else colorScheme.onSurface,
-            maxLines = 1
-        )
+        AnimatedContent(targetState = value, label = "figure") { text ->
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleLarge,
+                color = if (highlight) colorScheme.tertiary else colorScheme.onSurface,
+                maxLines = 1
+            )
+        }
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
@@ -461,7 +565,7 @@ private fun BasketItemRow(
 }
 
 private val TillMessage.isSuccess: Boolean
-    get() = this is TillMessage.Added || this is TillMessage.Sold
+    get() = this is TillMessage.Added || this is TillMessage.Sold || this is TillMessage.Undone
 
 private fun tillMessageText(context: Context, message: TillMessage): String? = when (message) {
     is TillMessage.Added ->
@@ -481,4 +585,5 @@ private fun tillMessageText(context: Context, message: TillMessage): String? = w
         BasketAddResult.NotAvailable -> context.getString(R.string.till_msg_not_available)
         BasketAddResult.AlreadyInBasket -> context.getString(R.string.till_msg_already_in_basket)
     }
+    is TillMessage.Undone -> context.getString(R.string.till_msg_undone, message.total.format())
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.NextEvent
 import de.landstueberl.mystueberlapp.data.StatisticsTileFigures
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
@@ -14,11 +15,13 @@ import de.landstueberl.mystueberlapp.repository.ProductRepository
 import de.landstueberl.mystueberlapp.repository.StatisticsRepository
 import de.landstueberl.mystueberlapp.util.todayFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 
 class HomeViewModel(
@@ -64,17 +67,9 @@ class HomeViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
     // ── Events ─────────────────────────────────
-    /**
-     * The nearest event that isn't over yet (cancelled ones skipped), with the
-     * number of available products assigned to it. Null while loading or when
-     * there is none; the tile shows "–" for both.
-     *
-     * Re-queried at midnight, so a finished event drops off on its own. The
-     * count follows whichever event is next, and updates live as products are
-     * assigned, removed or sold.
-     */
+    /** Shared, so the tile and isEventRunning don't run the queries twice. */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val nextEvent: StateFlow<NextEvent?> = todayFlow()
+    private val nextEventFlow: SharedFlow<NextEvent?> = todayFlow()
         .flatMapLatest { today ->
             eventRepo.getNextEventFlow(today).flatMapLatest { event ->
                 if (event == null) {
@@ -90,6 +85,17 @@ class HomeViewModel(
                 }
             }
         }
+        .shareIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), replay = 1)
+
+    val nextEvent: StateFlow<NextEvent?> = nextEventFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
+
+    /**
+     * Whether an event is running, or null while still loading. The statistics
+     * tile stays hidden while null, so the figures never flash up at a market.
+     */
+    val isEventRunning: StateFlow<Boolean?> = nextEventFlow
+        .map { it?.event?.status == EventStatus.IN_PROGRESS }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), null)
 
     companion object {

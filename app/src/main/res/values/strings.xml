@@ -135,6 +135,7 @@
     <string name="product_bottom_sheet_mark_sold_confirm">Sold</string>
     <string name="product_bottom_sheet_removed_date_title">Removal date</string>
     <string name="product_bottom_sheet_mark_removed_confirm">Removed</string>
+    <string name="product_bottom_sheet_till_sale">Sold at an event till. To reverse it, undo the sale in the till.</string>
 
     <!-- Edit Product Screen -->
     <string name="edit_product_screen_title">Edit Product</string>
@@ -408,6 +409,9 @@
     <string name="till_clear_confirm_message">All products are removed from the basket. Nothing is sold.</string>
     <string name="till_not_running">The event isn\'t running. Products can\'t be sold.</string>
 
+    <string name="till_figures_show">Show figures</string>
+    <string name="till_figures_hide">Hide figures</string>
+
     <string name="till_figure_revenue">Revenue</string>
     <string name="till_figure_items">Items sold</string>
     <string name="till_figure_customers">Customers</string>
@@ -416,6 +420,12 @@
     <string name="till_search_hint">Search description…</string>
     <string name="till_add_empty">All available products are in the basket or sold.</string>
     <string name="till_add_no_results">No products match your search.</string>
+    <plurals name="till_add_sheet_basket">
+        <item quantity="one">%1$d product in the basket</item>
+        <item quantity="other">%1$d products in the basket</item>
+    </plurals>
+    <string name="till_add_sheet_in_basket">%1$d in the basket</string>
+    <string name="till_add_sheet_remove_one">Put one back</string>
 
     <string name="till_msg_failed">Action failed. Please try again.</string>
     <string name="till_msg_not_running">The event isn\'t running anymore.</string>
@@ -444,4 +454,13 @@
     <string name="till_msg_foreign_code">This isn\'t one of your product labels.</string>
     <string name="till_msg_other_event">This label belongs to another event.</string>
     <string name="till_msg_scanner_unavailable">The scanner isn\'t available. It needs an internet connection the first time.</string>
+
+    <string name="till_sales_title">Sales</string>
+    <string name="till_undo">Undo sale</string>
+    <string name="till_undo_confirm_title">Undo sale?</string>
+    <plurals name="till_undo_confirm_message">
+        <item quantity="one">The product goes back to the event. Revenue drops by %2$s.</item>
+        <item quantity="other">The %1$d products go back to the event. Revenue drops by %2$s.</item>
+    </plurals>
+    <string name="till_msg_undone">Undone: %1$s</string>
 </resources>
