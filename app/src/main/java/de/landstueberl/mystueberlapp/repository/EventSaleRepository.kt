@@ -96,4 +96,6 @@ class EventSaleRepository(
         dao.deleteSale(saleId)
         true
     }
+
+    fun getSoldProductsFlow(eventId: Int): Flow<List<Product>> = dao.getSoldProductsFlow(eventId)
 }

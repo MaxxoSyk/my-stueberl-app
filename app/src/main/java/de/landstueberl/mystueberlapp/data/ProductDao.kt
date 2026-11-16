@@ -195,10 +195,14 @@ interface ProductDao {
     """)
     suspend fun markAsRemoved(id: Int, date: LocalDate)
 
+    /**
+     * Products sold at an event's till are skipped: they're reversed by undoing
+     * the sale, so the stored sale total stays correct.
+     */
     @Query("""
         UPDATE ProductDetail
-        SET status = 'AVAILABLE', soldOn = NULL, removedOn = NULL, eventSaleId = NULL
-        WHERE id = :id
+        SET status = 'AVAILABLE', soldOn = NULL, removedOn = NULL
+        WHERE id = :id AND eventSaleId IS NULL
     """)
     suspend fun resetToAvailable(id: Int)
 

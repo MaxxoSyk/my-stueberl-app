@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AttachMoney
@@ -16,14 +17,19 @@ import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Festival
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
@@ -44,7 +50,9 @@ import de.landstueberl.mystueberlapp.data.NextEvent
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
+import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.view.common.HIDDEN_VALUE
 import de.landstueberl.mystueberlapp.view.common.runningBorder
 import de.landstueberl.mystueberlapp.view.event.eventDateText
 import de.landstueberl.mystueberlapp.view.event.eventStatusIconAndTint
@@ -100,7 +108,10 @@ fun StatisticsTile(
     revenueThisYear: String,
     year: Int,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isHidden: Boolean = false,
+    /** Shows the eye icon; null while no event is running. */
+    onToggleReveal: (() -> Unit)? = null
 ) {
     ElevatedCard(
         onClick = onClick,
@@ -114,7 +125,10 @@ fun StatisticsTile(
             modifier = Modifier.padding(16.dp)
         ) {
             // ── Tile Header ──
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                     contentDescription = null,
@@ -124,8 +138,25 @@ fun StatisticsTile(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.home_screen_tile_statistics),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
                 )
+                if (onToggleReveal != null) {
+                    // Handles its own tap, so it doesn't open the statistics screen.
+                    IconButton(
+                        onClick = onToggleReveal,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isHidden) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = stringResource(
+                                if (isHidden) R.string.till_figures_show else R.string.till_figures_hide
+                            ),
+                            tint = colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -137,13 +168,13 @@ fun StatisticsTile(
                 icon = Icons.Default.AttachMoney,
                 iconTint = AccentGold,
                 label = stringResource(R.string.home_screen_stats_revenue_today),
-                value = revenueToday
+                value = if (isHidden) HIDDEN_VALUE else revenueToday
             )
             TileRow(
                 icon = Icons.Default.ShoppingCart,
                 iconTint = SageGreenDark,
                 label = stringResource(R.string.home_screen_stats_sold_today),
-                value = soldToday.toString()
+                value = if (isHidden) HIDDEN_VALUE else soldToday.toString()
             )
             TileRow(
                 icon = Icons.AutoMirrored.Filled.TrendingUp,
@@ -152,7 +183,7 @@ fun StatisticsTile(
                     R.string.home_screen_stats_revenue_year,
                     year
                 ),
-                value = revenueThisYear
+                value = if (isHidden) HIDDEN_VALUE else revenueThisYear
             )
         }
     }
@@ -300,6 +331,7 @@ fun OrdersTile(
 fun EventsTile(
     nextEvent: NextEvent?,
     onClick: () -> Unit,
+    onOpenTill: (eventId: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val placeholder = stringResource(R.string.home_screen_events_no_next)
@@ -348,6 +380,33 @@ fun EventsTile(
             label = stringResource(R.string.home_screen_events_products),
             value = nextEvent?.availableProductCount?.toString() ?: placeholder
         )
+
+        // Straight to the till while the event runs.
+        val runningEventId = nextEvent?.event
+            ?.takeIf { it.status == EventStatus.IN_PROGRESS }
+            ?.id
+        if (runningEventId != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = { onOpenTill(runningEventId) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = StueberlDefaults.primaryButtonColors()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PointOfSale,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.event_detail_open_till),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
     }
 }
 

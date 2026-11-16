@@ -18,8 +18,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,6 +31,7 @@ import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
+import de.landstueberl.mystueberlapp.view.common.rememberTimedReveal
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
 import java.time.LocalDate
 
@@ -42,6 +45,7 @@ fun HomeScreen(
     onNavigateToProducts: () -> Unit,
     onNavigateToOrders: () -> Unit,
     onNavigateToEvents: () -> Unit,
+    onNavigateToTill: (eventId: Int) -> Unit,
     onNavigateToStatistics: () -> Unit,
     onNavigateToGallery: () -> Unit
 ) {
@@ -53,6 +57,13 @@ fun HomeScreen(
     val totalOrdersCurrentYear by viewModel.totalOrdersCurrentYear.collectAsStateWithLifecycle()
     val statisticsFigures by viewModel.statisticsTileFigures.collectAsStateWithLifecycle()
     val nextEvent by viewModel.nextEvent.collectAsStateWithLifecycle()
+    val isEventRunning by viewModel.isEventRunning.collectAsStateWithLifecycle()
+
+    var statisticsRevealed by rememberTimedReveal()
+    // Hide again when the event ends, so the next one starts hidden.
+    LaunchedEffect(isEventRunning) {
+        if (isEventRunning != true) statisticsRevealed = false
+    }
 
     val currentYear = remember { LocalDate.now().year }
 
@@ -87,7 +98,14 @@ fun HomeScreen(
                 soldToday = statisticsFigures?.soldToday ?: 0,
                 revenueThisYear = statisticsFigures?.revenueThisYear?.format() ?: PLACEHOLDER,
                 year = currentYear,
-                onClick = onNavigateToStatistics
+                onClick = onNavigateToStatistics,
+                // Hidden while an event runs, and while that isn't known yet.
+                isHidden = isEventRunning != false && !statisticsRevealed,
+                onToggleReveal = if (isEventRunning == true) {
+                    { statisticsRevealed = !statisticsRevealed }
+                } else {
+                    null
+                }
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -121,7 +139,8 @@ fun HomeScreen(
             // ── Events Tile - Full Width ──
             EventsTile(
                 nextEvent = nextEvent,
-                onClick = onNavigateToEvents
+                onClick = onNavigateToEvents,
+                onOpenTill = onNavigateToTill
             )
 
             // ── Gallery Tile - Full Width ──
