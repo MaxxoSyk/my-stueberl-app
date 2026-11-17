@@ -26,6 +26,8 @@ data class EventDetail(
     val status: EventStatus = EventStatus.PLANNED,
     /** Set when the event is cancelled; cleared again if that is ever undone. */
     val cancelledOn: LocalDate? = null,
+    /** Set when the event is closed (DONE); cleared when it's reopened. */
+    val closedOn: LocalDate? = null,
     val createdAt: LocalDate = LocalDate.now()
 ) {
     /**
@@ -34,4 +36,11 @@ data class EventDetail(
      */
     val lastDay: LocalDate
         get() = endDate ?: eventDate
+
+    /**
+     * A closed event can be reopened until its last day is over. SQL checks
+     * this too, plus that no product was assigned elsewhere meanwhile.
+     */
+    fun canReopen(today: LocalDate): Boolean =
+        status == EventStatus.DONE && !lastDay.isBefore(today)
 }

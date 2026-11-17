@@ -38,9 +38,28 @@ class EventRepository(
     fun getNextEventFlow(today: LocalDate = LocalDate.now()): Flow<EventDetail?> =
         dao.getNextEventFlow(
             today = today,
-            cancelled = EventStatus.CANCELLED.name,
+            skippedStatuses = listOf(EventStatus.CANCELLED.name, EventStatus.DONE.name),
             inProgress = EventStatus.IN_PROGRESS.name
         )
+
+    /** @return false if not running anymore or the basket isn't empty */
+    suspend fun closeEvent(eventId: Int): Boolean =
+        dao.closeEvent(
+            id = eventId,
+            date = LocalDate.now(),
+            inProgress = EventStatus.IN_PROGRESS.name,
+            done = EventStatus.DONE.name
+        ) > 0
+
+    /** @return false if past its last day or a product was assigned elsewhere meanwhile */
+    suspend fun reopenEvent(eventId: Int): Boolean =
+        dao.reopenEvent(
+            id = eventId,
+            today = LocalDate.now(),
+            done = EventStatus.DONE.name,
+            inProgress = EventStatus.IN_PROGRESS.name,
+            activeStatuses = EventStatus.ACTIVE_NAMES
+        ) > 0
 
     /**
      * Previously used locations, most used first, newest first on a tie.

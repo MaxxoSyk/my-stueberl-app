@@ -102,4 +102,12 @@ interface EventSaleDao {
         ORDER BY p.id ASC
     """)
     fun getSoldProductsFlow(eventId: Int): Flow<List<Product>>
+
+    /** Closing is blocked while this is above 0. */
+    @Query("SELECT COUNT(*) FROM EventBasketItem WHERE eventId = :eventId")
+    fun getBasketCountFlow(eventId: Int): Flow<Int>
+
+    /** For the delete guard: an event with sales can't be deleted. */
+    @Query("SELECT EXISTS(SELECT 1 FROM EventSale WHERE eventId = :eventId)")
+    fun hasSalesFlow(eventId: Int): Flow<Boolean>
 }

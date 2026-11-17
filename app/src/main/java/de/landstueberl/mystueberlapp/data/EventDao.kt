@@ -56,12 +56,11 @@ interface EventDao {
     /**
      * The event for the home tile: a running event first (even past its last
      * day, until it's closed), otherwise the nearest one that isn't over yet.
-     * Cancelled events are skipped. Dates are epoch days, so the comparison is
-     * numeric.
+     * Cancelled and closed events are skipped.
      */
     @Query("""
         SELECT * FROM EventDetail
-        WHERE status != :cancelled
+        WHERE status NOT IN (:skippedStatuses)
           AND (COALESCE(endDate, eventDate) >= :today OR status = :inProgress)
         ORDER BY
             CASE WHEN status = :inProgress THEN 0 ELSE 1 END,
@@ -71,7 +70,7 @@ interface EventDao {
     """)
     fun getNextEventFlow(
         today: LocalDate,
-        cancelled: String,
+        skippedStatuses: List<String>,
         inProgress: String
     ): Flow<EventDetail?>
 
@@ -246,4 +245,54 @@ interface EventDao {
           )
     """)
     suspend fun startEvent(id: Int, inPreparation: String, inProgress: String): Int
+
+    /**
+     * Closes a running event, but only with an empty basket, so no products stay
+     * reserved. Remaining products go back to the stand by themselves: a DONE
+     * event is no longer active. @return updated rows (0 or 1)
+     */
+    @Query("""
+        UPDATE EventDetail
+        SET status = :done, closedOn = :date
+        WHERE id = :id
+          AND status = :inProgress
+          AND NOT EXISTS (SELECT 1 FROM EventBasketItem WHERE eventId = :id)
+    """)
+    suspend fun closeEvent(id: Int, date: LocalDate, inProgress: String, done: String): Int
+
+    /**
+     * Reopens a closed event until its last day is over, unless one of its
+     * available products was put into an order or another active event meanwhile.
+     * @return updated rows (0 or 1)
+     */
+    @Query("""
+        UPDATE EventDetail
+        SET status = :inProgress, closedOn = NULL
+        WHERE id = :id
+          AND status = :done
+          AND COALESCE(endDate, eventDate) >= :today
+          AND NOT EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN ProductDetail p ON p.id = ep.productId
+              WHERE ep.eventId = :id
+                AND p.status = 'AVAILABLE'
+                AND (
+                    p.orderId IS NOT NULL
+                    OR EXISTS (
+                        SELECT 1 FROM EventProductDetail other
+                        INNER JOIN EventDetail oe ON oe.id = other.eventId
+                        WHERE other.productId = p.id
+                          AND other.eventId != :id
+                          AND oe.status IN (:activeStatuses)
+                    )
+                )
+          )
+    """)
+    suspend fun reopenEvent(
+        id: Int,
+        today: LocalDate,
+        done: String,
+        inProgress: String,
+        activeStatuses: List<String>
+    ): Int
 }
