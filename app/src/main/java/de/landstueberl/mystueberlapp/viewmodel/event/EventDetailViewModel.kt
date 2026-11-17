@@ -46,8 +46,8 @@ sealed interface EventDetailUiState {
     data class Loaded(val event: EventDetail) : EventDetailUiState
 }
 
-/** Specific reasons a close or reopen was refused, shown as a snackbar. */
-enum class EventNotice { CLOSE_BLOCKED, REOPEN_REFUSED }
+/** Specific reasons an action was refused, shown as a snackbar. */
+enum class EventNotice { CLOSE_BLOCKED, REOPEN_REFUSED, DELETE_BLOCKED }
 
 class EventDetailViewModel(
     private val repo: EventRepository,
@@ -248,22 +248,39 @@ class EventDetailViewModel(
         launchWorking { repo.unlinkProducts(eventId, productIds) }
     }
 
-    /** Product links are removed by CASCADE; the products themselves stay. */
+    /**
+     * Product links are removed by CASCADE; the products themselves stay.
+     * Refused in SQL if the event has sales, e.g. one completed meanwhile.
+     */
     fun deleteEvent(onDeleted: () -> Unit) = launchWorking {
         isDeleting.value = true
-        try {
+        val deleted = try {
             repo.deleteEvent(eventId)
         } catch (e: Exception) {
             isDeleting.value = false
             throw e
         }
-        onDeleted()
+        if (deleted) {
+            onDeleted()
+        } else {
+            // Back to the screen instead of the spinner, with the reason.
+            isDeleting.value = false
+            _notice.value = EventNotice.DELETE_BLOCKED
+        }
     }
 
     // ── Closing ────────────────────────────────
     /** Closing is blocked while products are still in the till's basket. */
     val basketCount: StateFlow<Int> = saleRepo.getBasketCountFlow(eventId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
+
+    /** An event with sales can't be deleted (guarded in SQL too). */
+    val hasSales: StateFlow<Boolean> = saleRepo.hasSalesFlow(eventId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), false)
+
+    fun notifyDeleteBlocked() {
+        _notice.value = EventNotice.DELETE_BLOCKED
+    }
 
     /** Revenue, items and customers for the close summary. */
     val figures: StateFlow<TillFigures> = saleRepo.getSalesFlow(eventId)

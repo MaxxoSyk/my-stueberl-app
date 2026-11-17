@@ -135,6 +135,7 @@ fun EventDetailScreen(
     val selectedForLabels by viewModel.selectedForLabels.collectAsStateWithLifecycle()
     val labelPrintedOn by viewModel.labelPrintedOn.collectAsStateWithLifecycle()
     val basketCount by viewModel.basketCount.collectAsStateWithLifecycle()
+    val hasSales by viewModel.hasSales.collectAsStateWithLifecycle()
     val figures by viewModel.figures.collectAsStateWithLifecycle()
     val notice by viewModel.notice.collectAsStateWithLifecycle()
 
@@ -179,11 +180,13 @@ fun EventDetailScreen(
 
     val closeBlockedMessage = stringResource(R.string.event_detail_close_blocked)
     val reopenRefusedMessage = stringResource(R.string.event_detail_reopen_refused)
+    val deleteBlockedMessage = stringResource(R.string.event_detail_delete_blocked)
 
     LaunchedEffect(notice) {
         val text = when (notice) {
             EventNotice.CLOSE_BLOCKED -> closeBlockedMessage
             EventNotice.REOPEN_REFUSED -> reopenRefusedMessage
+            EventNotice.DELETE_BLOCKED -> deleteBlockedMessage
             null -> null
         }
         if (text != null) {
@@ -281,12 +284,21 @@ fun EventDetailScreen(
                                     text = {
                                         Text(
                                             text = stringResource(R.string.event_detail_delete),
-                                            color = MaterialTheme.colorScheme.error
+                                            // Grey when it can't be deleted; red as a warning otherwise.
+                                            color = if (hasSales) {
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                            } else {
+                                                MaterialTheme.colorScheme.error
+                                            }
                                         )
                                     },
                                     onClick = {
                                         showOverflowMenu = false
-                                        showDeleteConfirmation = true
+                                        if (hasSales) {
+                                            viewModel.notifyDeleteBlocked()
+                                        } else {
+                                            showDeleteConfirmation = true
+                                        }
                                     }
                                 )
                             }

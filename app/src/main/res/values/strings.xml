@@ -482,6 +482,7 @@
     <string name="event_detail_reopen_confirm_title">Reopen event?</string>
     <string name="event_detail_reopen_confirm_message">The event moves back to \"In progress\". The till and undoing sales are available again.</string>
     <string name="event_detail_reopen_refused">The event can\'t be reopened: one of its products was put into an order or another event meanwhile.</string>
+    <string name="event_detail_delete_blocked">This event has sales and can\'t be deleted, so its revenue stays in your figures.</string>
     <string name="event_detail_summary_title">Result</string>
     <string name="event_detail_summary_counts">Items sold: %1$d · Customers: %2$d</string>
     <string name="event_detail_summary_purchase_cost">Purchase cost</string>

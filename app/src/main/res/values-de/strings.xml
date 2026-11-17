@@ -482,6 +482,7 @@
     <string name="event_detail_reopen_confirm_title">Veranstaltung wieder öffnen?</string>
     <string name="event_detail_reopen_confirm_message">Die Veranstaltung wechselt zurück auf „Läuft“. Kasse und Stornieren sind wieder möglich.</string>
     <string name="event_detail_reopen_refused">Die Veranstaltung kann nicht wieder geöffnet werden: Ein Werkstück wurde inzwischen einer Bestellung oder anderen Veranstaltung zugeordnet.</string>
+    <string name="event_detail_delete_blocked">Diese Veranstaltung hat Verkäufe und kann nicht gelöscht werden, damit ihre Umsätze erhalten bleiben.</string>
     <string name="event_detail_summary_title">Ergebnis</string>
     <string name="event_detail_summary_counts">Verkauft: %1$d · Kunden: %2$d</string>
     <string name="event_detail_summary_purchase_cost">Einkaufskosten</string>
