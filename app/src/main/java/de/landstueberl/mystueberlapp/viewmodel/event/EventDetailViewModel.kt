@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -85,9 +86,13 @@ class EventDetailViewModel(
      */
     val products: StateFlow<EventProducts?> = combine(
         repo.getEventProductsFlow(eventId),
-        saleRepo.getSalesFlow(eventId).map { sales -> sales.mapTo(HashSet()) { it.id } }
-    ) { list, saleIds ->
-        list.toEventProducts(saleIds)
+        saleRepo.getSalesFlow(eventId).map { sales -> sales.mapTo(HashSet()) { it.id } },
+        // While preparing, the packing list grows from the top.
+        repo.getEventFlow(eventId)
+            .map { it?.status == EventStatus.IN_PREPARATION }
+            .distinctUntilChanged()
+    ) { list, saleIds, newestFirst ->
+        list.toEventProducts(saleIds, newestFirst)
     }
         .catch { e ->
             Log.e(TAG, "Failed to observe products of event $eventId", e)

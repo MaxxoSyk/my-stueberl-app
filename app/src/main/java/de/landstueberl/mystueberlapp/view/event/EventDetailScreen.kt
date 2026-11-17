@@ -2,6 +2,7 @@ package de.landstueberl.mystueberlapp.view.event
 
 import android.util.Log
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -65,6 +67,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -75,11 +78,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.EventProducts
+import de.landstueberl.mystueberlapp.data.EventResult
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
+import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.allProducts
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.eventResult
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.label.LabelPrinter
 import de.landstueberl.mystueberlapp.data.label.LabelSheetLayout
@@ -99,6 +105,14 @@ import kotlin.coroutines.cancellation.CancellationException
 
 private val FOOTER_DATE_FORMAT: DateTimeFormatter =
     DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+
+private enum class EventSection { PRODUCTS, SOLD, RETURNED }
+
+/** Which sections are open; [onToggle] is null when sections can't be collapsed. */
+private class SectionState(
+    val isExpanded: (EventSection) -> Boolean,
+    val onToggle: ((EventSection) -> Unit)?
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -438,6 +452,7 @@ fun EventDetailScreen(
                 EventDetailContent(
                     event = state.event,
                     products = products,
+                    figures = figures,
                     imageFileOf = imageFileOf,
                     onProductClick = onNavigateToEditProduct,
                     // Products can only be added or removed while preparing.
@@ -678,19 +693,48 @@ fun EventDetailScreen(
 private fun EventDetailContent(
     event: EventDetail,
     products: EventProducts?,
+    figures: TillFigures,
     imageFileOf: (Product) -> File?,
     onProductClick: (Int) -> Unit,
     onRemove: ((List<Int>) -> Unit)?,
     modifier: Modifier = Modifier
 ) {
-    // Keyed by status: collapses by itself when preparation or the event starts,
-    // so the product list is in view.
+    // Keyed by status: only events without products to look at start expanded.
     var isInfoExpanded by rememberSaveable(event.status) {
-        mutableStateOf(
-            event.status != EventStatus.IN_PREPARATION && event.status != EventStatus.IN_PROGRESS
-        )
+        mutableStateOf(event.status == EventStatus.PLANNED || event.status == EventStatus.CANCELLED)
     }
     val expandedBatchIds = remember { mutableStateSetOf<Int>() }
+    // Collapsible while running or afterwards. Keyed by status, so the defaults
+    // apply again when the event moves on:
+    // - running: remaining products collapsed, sales open (that's what changes)
+    // - done: both collapsed (the summary card is what matters then)
+    // productsExpanded is ignored while preparing (not collapsible) and when
+    // done (section not shown), so false only affects running events.
+    val startExpanded = event.status != EventStatus.DONE
+    var productsExpanded by rememberSaveable(event.status) { mutableStateOf(false) }
+    var soldExpanded by rememberSaveable(event.status) { mutableStateOf(startExpanded) }
+    var returnedExpanded by rememberSaveable(event.status) { mutableStateOf(startExpanded) }
+    val collapsible = event.status == EventStatus.IN_PROGRESS || event.status == EventStatus.DONE
+    val sections = SectionState(
+        isExpanded = { section ->
+            !collapsible || when (section) {
+                EventSection.PRODUCTS -> productsExpanded
+                EventSection.SOLD -> soldExpanded
+                EventSection.RETURNED -> returnedExpanded
+            }
+        },
+        onToggle = if (collapsible) {
+            { section ->
+                when (section) {
+                    EventSection.PRODUCTS -> productsExpanded = !productsExpanded
+                    EventSection.SOLD -> soldExpanded = !soldExpanded
+                    EventSection.RETURNED -> returnedExpanded = !returnedExpanded
+                }
+            }
+        } else {
+            null
+        }
+    )
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -714,6 +758,12 @@ private fun EventDetailContent(
             )
         }
 
+        if (event.status == EventStatus.DONE) {
+            item(key = "summary") {
+                EventSummaryCard(result = eventResult(figures, event.standFee))
+            }
+        }
+
         if (event.status == EventStatus.PLANNED) {
             item(key = "planned_hint") {
                 HintText(stringResource(R.string.event_detail_planned_hint))
@@ -726,109 +776,182 @@ private fun EventDetailContent(
             }
             eventProductSections(
                 products = products,
+                status = event.status,
                 imageFileOf = imageFileOf,
                 expandedBatchIds = expandedBatchIds,
                 onProductClick = onProductClick,
-                onRemove = onRemove
+                onRemove = onRemove,
+                sections = sections
             )
         }
 
         item(key = "footer") {
-            EventFooter(event = event)
+            // Slides up with the list when a section above collapses.
+            EventFooter(
+                event = event,
+                modifier = Modifier.animateItem()
+            )
         }
     }
 }
 
 private fun LazyListScope.eventProductSections(
     products: EventProducts,
+    status: EventStatus,
+    sections: SectionState,
     imageFileOf: (Product) -> File?,
     expandedBatchIds: MutableSet<Int>,
     onProductClick: (Int) -> Unit,
     onRemove: ((List<Int>) -> Unit)?
 ) {
-    item(key = "header_products") {
-        DetailSectionHeader(stringResource(R.string.event_detail_section_products))
-    }
+    val toggle = sections.onToggle
 
-    if (products.items.isEmpty()) {
-        // All sold at the till is not "no products": the section below shows them.
-        if (products.soldAtEvent.isEmpty()) {
-            item(key = "no_products") {
-                HintText(stringResource(R.string.event_detail_no_products))
+    if (status == EventStatus.DONE) {
+        // Afterwards, what sold matters most; the rest went back to the stand.
+        soldSection(products, sections, imageFileOf, onProductClick, isFirst = true)
+        if (products.items.isNotEmpty()) {
+            val expanded = sections.isExpanded(EventSection.RETURNED)
+            item(key = "header_returned") {
+                DetailSectionHeader(
+                    text = stringResource(R.string.event_detail_section_returned),
+                    modifier = Modifier
+                        .animateItem()
+                        .padding(top = 8.dp),
+                    count = toggle?.let { products.availableCount },
+                    isExpanded = expanded,
+                    onToggle = toggle?.let { { it(EventSection.RETURNED) } }
+                )
+            }
+            if (expanded) {
+                productItems(products.items, imageFileOf, expandedBatchIds, onProductClick, onRemove = null)
             }
         }
     } else {
-        item(key = "totals") {
-            EventTotals(products = products)
+        val expanded = sections.isExpanded(EventSection.PRODUCTS)
+        item(key = "header_products") {
+            DetailSectionHeader(
+                text = stringResource(R.string.event_detail_section_products),
+                count = toggle?.let { products.availableCount },
+                isExpanded = expanded,
+                onToggle = toggle?.let { { it(EventSection.PRODUCTS) } }
+            )
         }
-        items(items = products.items, key = { it.key }) { item ->
-            when (item) {
-                is ProductListItem.Single -> EventProductItem(
-                    product = item.product,
-                    imageFile = imageFileOf(item.product),
-                    onClick = { onProductClick(item.product.details.id) },
-                    onRemove = onRemove?.let { remove -> { remove(listOf(item.product.details.id)) } }
-                )
-
-                is ProductListItem.Batch -> EventProductBatchItem(
-                    batch = item,
-                    imageFileOf = imageFileOf,
-                    isExpanded = item.batchId in expandedBatchIds,
-                    onToggleExpanded = {
-                        if (!expandedBatchIds.add(item.batchId)) expandedBatchIds.remove(item.batchId)
-                    },
-                    onProductClick = { onProductClick(it.details.id) },
-                    onRemoveBatch = onRemove?.let { remove ->
-                        { remove(item.products.map { it.details.id }) }
-                    },
-                    onRemoveProduct = onRemove?.let { remove ->
-                        { product: Product -> remove(listOf(product.details.id)) }
-                    }
-                )
+        if (expanded) {
+            if (products.items.isEmpty()) {
+                // All sold at the till is not "no products": the section below shows them.
+                if (products.soldAtEvent.isEmpty()) {
+                    item(key = "no_products") { HintText(stringResource(R.string.event_detail_no_products)) }
+                }
+            } else {
+                item(key = "totals") {
+                    EventTotals(products = products, modifier = Modifier.animateItem())
+                }
+                productItems(products.items, imageFileOf, expandedBatchIds, onProductClick, onRemove)
             }
         }
+        soldSection(products, sections, imageFileOf, onProductClick, isFirst = false)
     }
 
-    if (products.soldAtEvent.isNotEmpty()) {
-        item(key = "header_sold") {
-            DetailSectionHeader(
-                text = stringResource(R.string.event_detail_section_sold_at_event),
-                modifier = Modifier.padding(top = 8.dp)
+    goneSection(products, imageFileOf, onProductClick, onRemove)
+}
+
+/** Available products, grouped by batch. */
+private fun LazyListScope.productItems(
+    items: List<ProductListItem>,
+    imageFileOf: (Product) -> File?,
+    expandedBatchIds: MutableSet<Int>,
+    onProductClick: (Int) -> Unit,
+    onRemove: ((List<Int>) -> Unit)?
+) {
+    items(items = items, key = { it.key }) { item ->
+        when (item) {
+            is ProductListItem.Single -> EventProductItem(
+                product = item.product,
+                imageFile = imageFileOf(item.product),
+                onClick = { onProductClick(item.product.details.id) },
+                onRemove = onRemove?.let { remove -> { remove(listOf(item.product.details.id)) } },
+                // Fades in/out when the section collapses, and slides when the list reorders.
+                modifier = Modifier.animateItem()
             )
-        }
-        items(
-            items = products.soldAtEvent,
-            key = { "sold_${it.details.id}" }
-        ) { product ->
-            // Never removable: a till sale is reversed with undo, not by unlinking.
-            EventProductItem(
-                product = product,
-                imageFile = imageFileOf(product),
-                onClick = { onProductClick(product.details.id) },
-                showStatus = true
+
+            is ProductListItem.Batch -> EventProductBatchItem(
+                batch = item,
+                imageFileOf = imageFileOf,
+                isExpanded = item.batchId in expandedBatchIds,
+                onToggleExpanded = {
+                    if (!expandedBatchIds.add(item.batchId)) expandedBatchIds.remove(item.batchId)
+                },
+                onProductClick = { onProductClick(it.details.id) },
+                onRemoveBatch = onRemove?.let { remove ->
+                    { remove(item.products.map { it.details.id }) }
+                },
+                onRemoveProduct = onRemove?.let { remove ->
+                    { product: Product -> remove(listOf(product.details.id)) }
+                },
+                modifier = Modifier.animateItem()
             )
         }
     }
+}
 
-    if (products.noLongerAvailable.isNotEmpty()) {
-        item(key = "header_gone") {
-            DetailSectionHeader(
-                text = stringResource(R.string.event_detail_section_no_longer_available),
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-        items(
-            items = products.noLongerAvailable,
-            key = { "gone_${it.details.id}" }
-        ) { product ->
-            EventProductItem(
-                product = product,
-                imageFile = imageFileOf(product),
-                onClick = { onProductClick(product.details.id) },
-                onRemove = onRemove?.let { remove -> { remove(listOf(product.details.id)) } },
-                showStatus = true
-            )
-        }
+/** Sold at this event's till. Never removable: a till sale is reversed with undo. */
+private fun LazyListScope.soldSection(
+    products: EventProducts,
+    sections: SectionState,
+    imageFileOf: (Product) -> File?,
+    onProductClick: (Int) -> Unit,
+    isFirst: Boolean
+) {
+    if (products.soldAtEvent.isEmpty()) return
+    val toggle = sections.onToggle
+    val expanded = sections.isExpanded(EventSection.SOLD)
+
+    item(key = "header_sold") {
+        DetailSectionHeader(
+            text = stringResource(R.string.event_detail_section_sold_at_event),
+            modifier = Modifier
+                .animateItem()
+                .then(if (isFirst) Modifier else Modifier.padding(top = 8.dp)),
+            count = toggle?.let { products.soldAtEvent.size },
+            isExpanded = expanded,
+            onToggle = toggle?.let { { it(EventSection.SOLD) } }
+        )
+    }
+    if (!expanded) return
+    items(items = products.soldAtEvent, key = { "sold_${it.details.id}" }) { product ->
+        EventProductItem(
+            product = product,
+            imageFile = imageFileOf(product),
+            onClick = { onProductClick(product.details.id) },
+            showStatus = true,
+            modifier = Modifier.animateItem()
+        )
+    }
+}
+
+/** Sold or removed elsewhere (e.g. at the stand before the event). */
+private fun LazyListScope.goneSection(
+    products: EventProducts,
+    imageFileOf: (Product) -> File?,
+    onProductClick: (Int) -> Unit,
+    onRemove: ((List<Int>) -> Unit)?
+) {
+    if (products.noLongerAvailable.isEmpty()) return
+    item(key = "header_gone") {
+        DetailSectionHeader(
+            text = stringResource(R.string.event_detail_section_no_longer_available),
+            Modifier.animateItem().padding(top = 8.dp)
+        )
+    }
+    items(items = products.noLongerAvailable, key = { "gone_${it.details.id}" }) { product ->
+        EventProductItem(
+            product = product,
+            imageFile = imageFileOf(product),
+            onClick = { onProductClick(product.details.id) },
+            onRemove = onRemove?.let { remove -> { remove(listOf(product.details.id)) } },
+            showStatus = true,
+            modifier = Modifier.animateItem()
+        )
     }
 }
 
@@ -946,10 +1069,13 @@ private fun DetailRow(
 // ── Totals, Headers, Footer ────────────────────────────────────────────
 /** Only available products count: what is actually taken along. */
 @Composable
-private fun EventTotals(products: EventProducts) {
+private fun EventTotals(
+    products: EventProducts,
+    modifier: Modifier = Modifier
+) {
     val colorScheme = MaterialTheme.colorScheme
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -986,22 +1112,147 @@ private fun EventTotals(products: EventProducts) {
     }
 }
 
+// ── Summary (DONE) ─────────────────────────────────────────────────────
 @Composable
-internal fun DetailSectionHeader(text: String, modifier: Modifier = Modifier) {
+private fun EventSummaryCard(result: EventResult) {
+    val colorScheme = MaterialTheme.colorScheme
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.event_detail_summary_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = colorScheme.onSurface
+            )
+            Text(
+                text = stringResource(
+                    R.string.event_detail_summary_counts,
+                    result.itemsSold,
+                    result.customers
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = colorScheme.onSurfaceVariant
+            )
+
+            SummaryRow(
+                label = stringResource(R.string.till_figure_revenue),
+                value = result.revenue.format(),
+                valueColor = colorScheme.tertiary
+            )
+            SummaryRow(
+                label = stringResource(R.string.event_detail_summary_purchase_cost),
+                value = "− ${result.purchaseCost.format()}"
+            )
+            val fee = result.standFee
+            SummaryRow(
+                label = stringResource(R.string.event_form_stand_fee),
+                value = when {
+                    fee == null -> stringResource(R.string.event_detail_stand_fee_unknown)
+                    fee.amount.signum() == 0 -> stringResource(R.string.event_detail_stand_fee_free)
+                    else -> "− ${fee.format()}"
+                },
+                valueColor = if (fee == null) colorScheme.onSurfaceVariant else colorScheme.onSurface
+            )
+
+            HorizontalDivider(color = colorScheme.primary.copy(alpha = 0.3f))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(
+                        if (result.includesStandFee) R.string.event_detail_summary_profit
+                        else R.string.event_detail_summary_profit_without_fee
+                    ),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = result.profit.format(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = if (result.profit.amount.signum() < 0) colorScheme.error else colorScheme.secondary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelLarge,
+            color = valueColor
+        )
+    }
+}
+
+/** With [onToggle], the whole header is tappable and shows a chevron. */
+@Composable
+internal fun DetailSectionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+    count: Int? = null,
+    isExpanded: Boolean = true,
+    onToggle: (() -> Unit)? = null
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val label = if (count != null) "$text ($count)" else text
+
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (onToggle != null) {
+                    Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(onClick = onToggle)
+                        .heightIn(min = 40.dp)
+                } else {
+                    Modifier
+                }
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = text.uppercase(),
+            text = label.uppercase(),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.width(8.dp))
         HorizontalDivider(
             modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            color = colorScheme.primary.copy(alpha = 0.3f)
         )
+        if (onToggle != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = stringResource(
+                    if (isExpanded) R.string.event_detail_section_collapse
+                    else R.string.event_detail_section_expand
+                ),
+                tint = colorScheme.secondary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 
@@ -1097,9 +1348,12 @@ internal fun EventBottomBar(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-private fun EventFooter(event: EventDetail) {
+private fun EventFooter(
+    event: EventDetail,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(top = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -1121,6 +1375,17 @@ private fun EventFooter(event: EventDetail) {
                 ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.error
+            )
+        }
+
+        event.closedOn?.let { closedOn ->
+            Text(
+                text = stringResource(
+                    R.string.event_detail_closed_on,
+                    closedOn.format(FOOTER_DATE_FORMAT)
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary
             )
         }
     }
