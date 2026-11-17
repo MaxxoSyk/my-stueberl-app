@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
@@ -108,8 +109,7 @@ fun OrderProductItem(
                 Text(
                     text = stringResource(
                         R.string.order_detail_purchase_price_value,
-                        details.purchasePrice.amount.toPlainString(),
-                        details.purchasePrice.currency.symbol
+                        details.purchasePrice.format()
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
@@ -118,8 +118,7 @@ fun OrderProductItem(
                 Text(
                     text = stringResource(
                         R.string.order_detail_sales_price_value,
-                        details.salesPrice.amount.toPlainString(),
-                        details.salesPrice.currency.symbol
+                        details.salesPrice.format()
                     ),
                     style = MaterialTheme.typography.labelMedium,
                     color = AccentGold

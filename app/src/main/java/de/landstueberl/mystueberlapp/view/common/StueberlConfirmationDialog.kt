@@ -8,19 +8,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.ui.theme.SageGreen
-import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 
 /**
  * Asks the user to confirm an action.
  *
  * Styled to match the app's date pickers: 20dp corners, filled confirm button,
  * muted dismiss. Set [isDestructive] for actions that lose data — the confirm
- * button then uses the error colour.
+ * button then uses the error colour. Theme-based, so it works in dark mode.
  */
 @Composable
 fun StueberlConfirmationDialog(
@@ -32,10 +30,14 @@ fun StueberlConfirmationDialog(
     isDestructive: Boolean = false,
     dismissLabel: String = stringResource(R.string.common_cancel)
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(20.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = colorScheme.surface,
+        titleContentColor = colorScheme.onSurface,
+        textContentColor = colorScheme.onSurfaceVariant,
         title = {
             Text(
                 text = title,
@@ -45,22 +47,18 @@ fun StueberlConfirmationDialog(
         text = {
             Text(
                 text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextSecondary
+                style = MaterialTheme.typography.bodyLarge
             )
         },
         confirmButton = {
             Button(
                 onClick = onConfirm,
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDestructive) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        SageGreen
-                    },
-                    contentColor = Color.White
-                )
+                colors = if (isDestructive) {
+                    StueberlDefaults.destructiveButtonColors()
+                } else {
+                    StueberlDefaults.primaryButtonColors()
+                }
             ) {
                 Text(
                     text = confirmLabel,
@@ -72,7 +70,7 @@ fun StueberlConfirmationDialog(
             TextButton(
                 onClick = onDismiss,
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = TextSecondary
+                    contentColor = colorScheme.onSurfaceVariant
                 )
             ) {
                 Text(dismissLabel)

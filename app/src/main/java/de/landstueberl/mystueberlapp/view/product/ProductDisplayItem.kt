@@ -345,10 +345,11 @@ fun ProductDisplayItem(
 private fun OrderBadge(
     modifier: Modifier = Modifier
 ) {
+    val color = MaterialTheme.colorScheme.tertiary
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(4.dp),
-        color = AccentGold.copy(alpha = 0.15f)
+        color = color.copy(alpha = 0.15f)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -357,14 +358,14 @@ private fun OrderBadge(
             Icon(
                 imageVector = Icons.Default.Receipt,
                 contentDescription = null,
-                tint = AccentGold,
+                tint = color,
                 modifier = Modifier.size(11.dp)
             )
             Spacer(modifier = Modifier.width(3.dp))
             Text(
                 text = stringResource(R.string.products_screen_order_badge),
                 style = MaterialTheme.typography.labelSmall,
-                color = AccentGold
+                color = color
             )
         }
     }

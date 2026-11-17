@@ -193,8 +193,8 @@
     <string name="order_detail_add_existing_product">Vorhanden</string>
     <string name="order_detail_add_product_hint">Bitte zuerst Kunde und Fälligkeitsdatum eingeben.</string>
     <string name="order_detail_total">Gesamt</string>
-    <string name="order_detail_purchase_price_value">EK: %1$s %2$s</string>
-    <string name="order_detail_sales_price_value">VK: %1$s %2$s</string>
+    <string name="order_detail_purchase_price_value">EK: %1$s</string>
+    <string name="order_detail_sales_price_value">VK: %1$s</string>
 
     <string name="order_detail_created_at">Erstellt am</string>
     <string name="order_detail_resolved_on">Erledigt am</string>

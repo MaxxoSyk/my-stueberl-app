@@ -193,8 +193,8 @@
     <string name="order_detail_add_existing_product">Existing</string>
     <string name="order_detail_add_product_hint">Enter a customer and due date first.</string>
     <string name="order_detail_total">Total</string>
-    <string name="order_detail_purchase_price_value">Cost: %1$s %2$s</string>
-    <string name="order_detail_sales_price_value">Price: %1$s %2$s</string>
+    <string name="order_detail_purchase_price_value">Cost: %1$s</string>
+    <string name="order_detail_sales_price_value">Price: %1$s</string>
 
     <string name="order_detail_created_at">Created</string>
     <string name="order_detail_resolved_on">Resolved</string>
