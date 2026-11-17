@@ -23,13 +23,20 @@ data class EventProducts(
 }
 
 /**
- * Pure, so it can be unit tested. Keeps the receiver's (assignment) order.
+ * Pure, so it can be unit tested.
  *
  * @param eventSaleIds ids of this event's sales: a product counts as sold here
  *   only if its sale belongs to this event
+ * @param newestFirst reverse the assignment order (while preparing, the newest
+ *   product goes on top). Applied before batch grouping, so a batch moves up
+ *   when a member is added.
  */
-fun List<Product>.toEventProducts(eventSaleIds: Set<Int> = emptySet()): EventProducts {
-    val (available, gone) = partition { it.details.status == ProductStatus.AVAILABLE }
+fun List<Product>.toEventProducts(
+    eventSaleIds: Set<Int> = emptySet(),
+    newestFirst: Boolean = false
+): EventProducts {
+    val ordered = if (newestFirst) asReversed() else this
+    val (available, gone) = ordered.partition { it.details.status == ProductStatus.AVAILABLE }
     val (soldHere, elsewhere) = gone.partition { product ->
         product.details.eventSaleId?.let { it in eventSaleIds } == true
     }

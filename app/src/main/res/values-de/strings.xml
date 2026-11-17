@@ -482,4 +482,13 @@
     <string name="event_detail_reopen_confirm_title">Veranstaltung wieder öffnen?</string>
     <string name="event_detail_reopen_confirm_message">Die Veranstaltung wechselt zurück auf „Läuft“. Kasse und Stornieren sind wieder möglich.</string>
     <string name="event_detail_reopen_refused">Die Veranstaltung kann nicht wieder geöffnet werden: Ein Werkstück wurde inzwischen einer Bestellung oder anderen Veranstaltung zugeordnet.</string>
+    <string name="event_detail_summary_title">Ergebnis</string>
+    <string name="event_detail_summary_counts">Verkauft: %1$d · Kunden: %2$d</string>
+    <string name="event_detail_summary_purchase_cost">Einkaufskosten</string>
+    <string name="event_detail_summary_profit">Gewinn</string>
+    <string name="event_detail_summary_profit_without_fee">Gewinn (ohne Standgebühr)</string>
+    <string name="event_detail_section_returned">Zurück ins Stüberl</string>
+    <string name="event_detail_closed_on">Abgeschlossen am %1$s</string>
+    <string name="event_detail_section_expand">Abschnitt einblenden</string>
+    <string name="event_detail_section_collapse">Abschnitt ausblenden</string>
 </resources>
