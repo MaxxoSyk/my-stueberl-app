@@ -26,7 +26,8 @@ class EventRepository(
     suspend fun updateStatus(eventId: Int, status: EventStatus) =
         dao.updateStatus(id = eventId, status = status)
 
-    suspend fun deleteEvent(eventId: Int) = dao.deleteEvent(eventId)
+    /** @return false if the event has sales and was therefore kept */
+    suspend fun deleteEvent(eventId: Int): Boolean = dao.deleteEvent(eventId) > 0
 
     fun getEventsWithProductCountFlow(): Flow<List<EventWithProductCount>> =
         dao.getEventsWithProductCountFlow()

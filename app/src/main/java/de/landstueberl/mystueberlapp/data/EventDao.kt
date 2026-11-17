@@ -28,9 +28,17 @@ interface EventDao {
     @Query("UPDATE EventDetail SET status = :status WHERE id = :id")
     suspend fun updateStatus(id: Int, status: EventStatus)
 
-    /** Product links are removed by CASCADE; the products themselves stay. */
-    @Query("DELETE FROM EventDetail WHERE id = :id")
-    suspend fun deleteEvent(id: Int)
+    /**
+     * Deletes the event unless it has sales: their revenue would vanish from the
+     * figures. Product links and an open basket are removed by CASCADE; the
+     * products themselves stay. @return deleted rows (0 or 1)
+     */
+    @Query("""
+        DELETE FROM EventDetail
+        WHERE id = :id
+          AND NOT EXISTS (SELECT 1 FROM EventSale WHERE eventId = :id)
+    """)
+    suspend fun deleteEvent(id: Int): Int
 
     // ── Reads ──────────────────────────────────
     /**
