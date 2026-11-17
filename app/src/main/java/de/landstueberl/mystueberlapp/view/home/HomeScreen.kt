@@ -16,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,8 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.format
-import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
-import de.landstueberl.mystueberlapp.ui.theme.SageGreen
+import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.rememberTimedReveal
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel
 import java.time.LocalDate
@@ -76,10 +74,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.headlineLarge
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SageGreen,
-                    titleContentColor = FloralWhite
-                )
+                colors = StueberlDefaults.topAppBarColors()
             )
         }
     ) { padding ->

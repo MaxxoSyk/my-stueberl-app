@@ -5,14 +5,13 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
-import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 /**
- * NOTE: several queries below embed [OrderStatus] and [ProductStatus] constant
- * names as SQL string literals. Renaming a constant will not break compilation —
- * it will silently make those queries match nothing.
+ * NOTE: several queries below embed [OrderStatus] constant names as SQL string
+ * literals. Renaming a constant will not break compilation — it will silently
+ * make those queries match nothing.
  */
 @Dao
 interface OrderDao {
@@ -74,25 +73,4 @@ interface OrderDao {
         WHERE id = :orderId AND status = 'OPEN'
     """)
     suspend fun markOrderCancelled(orderId: Int, date: LocalDate)
-
-    // ── Product Attachment ─────────────────────
-    /**
-     * Attaches an existing product to an order. Guarded to AVAILABLE so an
-     * already sold or removed product cannot be pulled into a new order.
-     */
-    @Query("""
-        UPDATE ProductDetail
-        SET orderId = :orderId
-        WHERE id = :productId AND status = 'AVAILABLE' AND orderId IS NULL
-    """)
-    suspend fun attachProductToOrder(productId: Int, orderId: Int)
-
-    /** Sales-area products eligible to be attached to an order. */
-    @Transaction
-    @Query("""
-        SELECT * FROM ProductDetail
-        WHERE status = 'AVAILABLE' AND orderId IS NULL
-        ORDER BY createdAt DESC, id ASC
-    """)
-    fun getAttachableProductsFlow(): Flow<List<Product>>
 }

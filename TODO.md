@@ -6,12 +6,11 @@
   - Main issue: input fields show white text on `FloralWhite` in dark mode
   - Quick first candidate: cost calculator (`CostCalculatorDialog`, `MaterialPositionRow`, price chips)
   - Home tiles: `HomeTile` / `HomeTileRow` now exist (`view/home/HomeTile.kt`); move `StatisticsTile`, `ProductsTile`, `OrdersTile`, `GalleryTile` onto them and delete the private `TileRow`
-  - Home screen top bar: switch to `StueberlDefaults.topAppBarColors()`
-  - `StueberlConfirmationDialog`: switch to `StueberlDefaults.primaryButtonColors()` / `destructiveButtonColors()` (also used by the event detail and till screens)
   - `AttachProductDialog`: theme-based colors (reused by orders and events)
   - `FilterBottomSheet`: theme-based chip and button colors
   - `ProductPriceField`: theme-based version (the event form's stand fee field already shows the pattern)
-  - `OrderBadge`: theme-based, like the new `EventBadge`
+  - `ProductDisplayItem` / `ProductBatchItem`: remaining fixed colors (`AccentGold`, `SageGreen`, `TextSecondary`, …)
+  - `OrderProductItem`: fixed colors (`TextSecondary`, `AccentGold`, `SageGreen`)
 - Rule for all new screens and components: only `MaterialTheme.colorScheme` and `StueberlDefaults`, no direct imports from `Color.kt`
 
 ## ✅ Done: Events feature (part 1)
@@ -51,11 +50,9 @@
 - [x] Extract date picker dialog (done as Events step 3)
 - [ ] Version bumps: `coreKtx`, `activityCompose`, `junit`, `espresso`
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
-- [ ] Validation: `salesPrice ≥ purchasePrice`
+- [ ] Validation: `salesPrice ≥ purchasePrice` (decide: block saving or only warn)
 - [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout`, `eventTiming()` and `eventResult()`. Next candidates: `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()` (incl. DONE → past), `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split + totals + `newestFirst`, `toTillFigures()` (incl. `purchaseCost`), `groupSales()`, `EventDetail.canReopen()`, `AttachSelection` toggling, change calculation in the payment panel, `EventTillViewModel.onScanned()`; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow` (incl. till sales), the `markLabelsPrinted` guard, the `startEvent` guard, `closeEvent` / `reopenEvent` guards, the `deleteEvent` guard (events with sales kept), the `getNextEventFlow()` ordering and skipped statuses, and the till (`addToBasket` results, `completeSale` incl. `BasketChanged` and purchase snapshot, `undoSale`, `resetToAvailable` skipping till sales)
 - [ ] Undo on delete
-- [ ] `OrderProductItem`: prices use `toPlainString()` + symbol instead of `Money.format()` (not localized: "12.50 €" instead of "12,50 €")
-- [ ] `OrderDao`: `getAttachableProductsFlow()` and `attachProductToOrder()` look unused (the repository uses the `ProductDao` versions); check with Find Usages and remove
 - [ ] Hard-coded `'AVAILABLE'` / `'CANCELLED'` / `'SOLD'` literals in SQL: consider passing them as parameters like the event statuses
 - [ ] Two private `sumMoney` helpers (`EventProducts.kt`, `TillFigures.kt`); consider one shared `Money` sum helper
 - [ ] `KEY_PRODUCT_UPDATED` / `KEY_PRODUCT_SAVED` are set on the event detail screen after Edit / Add Product but never read (harmless; list updates via the database). Optionally show a snackbar there
