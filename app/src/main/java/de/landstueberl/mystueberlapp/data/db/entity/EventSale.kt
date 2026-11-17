@@ -29,5 +29,7 @@ data class EventSale(
     val eventId: Int,
     val soldAt: Instant,
     @Embedded(prefix = "total_") val total: Money,
+    /** Sum of the sold products' purchase prices at the time of sale, for profit. */
+    @Embedded(prefix = "purchase_total_") val purchaseTotal: Money,
     val itemCount: Int
 )

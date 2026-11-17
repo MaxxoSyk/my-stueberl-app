@@ -75,6 +75,10 @@ class EventSaleRepository(
                     amount = valid.fold(PriceInput.ZERO_AMOUNT) { acc, p -> acc + p.details.salesPrice.amount },
                     currency = PriceInput.CURRENCY
                 ),
+                purchaseTotal = Money(
+                    amount = valid.fold(PriceInput.ZERO_AMOUNT) { acc, p -> acc + p.details.purchasePrice.amount },
+                    currency = PriceInput.CURRENCY
+                ),
                 itemCount = ids.size
             )
             val saleId = dao.insertSale(sale).toInt()
@@ -98,4 +102,8 @@ class EventSaleRepository(
     }
 
     fun getSoldProductsFlow(eventId: Int): Flow<List<Product>> = dao.getSoldProductsFlow(eventId)
+
+    fun getBasketCountFlow(eventId: Int): Flow<Int> = dao.getBasketCountFlow(eventId)
+
+    fun hasSalesFlow(eventId: Int): Flow<Boolean> = dao.hasSalesFlow(eventId)
 }

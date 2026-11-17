@@ -15,7 +15,11 @@ data class EventSections(
 
 /** Pure function, so it can be unit tested without Android. */
 fun splitEvents(events: List<EventWithProductCount>, today: LocalDate): EventSections {
-    val (upcoming, past) = events.partition { !it.event.lastDay.isBefore(today) }
+    // Closed events are over, even on their last day. Everything else follows the date.
+    val (upcoming, past) = events.partition {
+        it.event.status != EventStatus.DONE && !it.event.lastDay.isBefore(today)
+    }
+
     return EventSections(
         upcoming = upcoming.sortedWith(
             compareBy<EventWithProductCount> { it.event.eventDate }.thenBy { it.event.id }
