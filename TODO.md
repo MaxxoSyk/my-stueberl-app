@@ -25,7 +25,7 @@
 ## 🚧 In progress: Events feature (part 3c: close event)
 Decisions: open basket blocks closing; no recording of sales made without the till; profit = revenue − purchase price of sold products − stand fee (purchase total stored as a snapshot per sale; without stand fee shown as "without stand fee"); DONE events editable; no till for DONE events; "Reopen" while the last day is today or later, refused if a product was assigned elsewhere meanwhile; DONE skipped on the home tile and moved to "Past" immediately
 - [x] 1. Data: `EventDetail.closedOn` + `canReopen()`; `EventSale.purchaseTotal`; `TillFigures.purchaseCost`; `EventDao.closeEvent()` (empty basket) / `reopenEvent()` (last day, no product assigned elsewhere); `getNextEventFlow()` skips CANCELLED + DONE; `splitEvents()` moves DONE to past; `getBasketCountFlow()`, `hasSalesFlow()`; DB version 18
-- [ ] 2. Close + reopen: outlined "Close event" below "Open till", confirmation with summary (revenue, items, customers, products returning, note if before the last day), blocked with hint while the basket isn't empty; "Reopen" in the overflow menu with confirmation
+- [x] 2. Close + reopen: outlined "Close event" below "Open till", disabled with basket hint while products are in the basket; confirmation with summary (revenue, items, customers, products returning, note before the last day, sales final + labels invalid); "Reopen" in ⋮ while `canReopen()`, with confirmation; `EventNotice` snackbars for a blocked close / refused reopen
 - [ ] 3. DONE detail screen: summary card (revenue, items, customers, purchase cost, stand fee, profit), section "Back to the stand", read-only, no till, footer "Closed on …"
 - [ ] 4. Delete guard: events with sales can't be deleted (message instead of the constraint error)
 
@@ -84,5 +84,6 @@ Decisions: open basket blocks closing; no recording of sales made without the ti
   - Until then: every DB version bump wipes the data and restarts IDs, so printed QR labels become invalid and must be reprinted
 - [ ] Device pass on hardware
   - Scanning needs Google Play Services; test offline scanning on the phone you'll use at the market
+  - Emulator: set the time zone to Berlin, otherwise sale times, "today" and the midnight switch follow UTC
 - [ ] Review backup rules
 - [ ] Play Store icon

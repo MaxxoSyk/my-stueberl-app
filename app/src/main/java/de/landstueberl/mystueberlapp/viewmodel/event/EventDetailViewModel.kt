@@ -12,13 +12,16 @@ import de.landstueberl.mystueberlapp.data.EventProducts
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
+import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.allProducts
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.db.entity.EventSale
 import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.data.label.ProductLabel
 import de.landstueberl.mystueberlapp.data.label.ProductLabelCode
 import de.landstueberl.mystueberlapp.data.toEventProducts
+import de.landstueberl.mystueberlapp.data.toTillFigures
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.EventSaleRepository
@@ -42,9 +45,12 @@ sealed interface EventDetailUiState {
     data class Loaded(val event: EventDetail) : EventDetailUiState
 }
 
+/** Specific reasons a close or reopen was refused, shown as a snackbar. */
+enum class EventNotice { CLOSE_BLOCKED, REOPEN_REFUSED }
+
 class EventDetailViewModel(
     private val repo: EventRepository,
-    saleRepo: EventSaleRepository,
+    private val saleRepo: EventSaleRepository,
     private val imageStorage: ProductImageStorage,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -205,6 +211,26 @@ class EventDetailViewModel(
         }
     }
 
+    /** IN_PROGRESS → DONE. Refused in SQL while the basket isn't empty. */
+    fun closeEvent() {
+        if (currentEvent?.status != EventStatus.IN_PROGRESS) return
+        launchWorking {
+            if (!repo.closeEvent(eventId)) _notice.value = EventNotice.CLOSE_BLOCKED
+        }
+    }
+
+    /**
+     * DONE → IN_PROGRESS while the last day hasn't passed. Refused in SQL if a
+     * product was put into an order or another event meanwhile.
+     */
+    fun reopenEvent() {
+        val event = currentEvent ?: return
+        if (!event.canReopen(LocalDate.now())) return
+        launchWorking {
+            if (!repo.reopenEvent(eventId)) _notice.value = EventNotice.REOPEN_REFUSED
+        }
+    }
+
     /** Links stay as history; the products are free again. Guarded in SQL as well. */
     fun cancelEvent() {
         if (currentEvent?.status?.isCancellable != true) return
@@ -227,6 +253,27 @@ class EventDetailViewModel(
             throw e
         }
         onDeleted()
+    }
+
+    // ── Closing ────────────────────────────────
+    /** Closing is blocked while products are still in the till's basket. */
+    val basketCount: StateFlow<Int> = saleRepo.getBasketCountFlow(eventId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), 0)
+
+    /** Revenue, items and customers for the close summary. */
+    val figures: StateFlow<TillFigures> = saleRepo.getSalesFlow(eventId)
+        .map { it.toTillFigures() }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            emptyList<EventSale>().toTillFigures()
+        )
+
+    private val _notice = MutableStateFlow<EventNotice?>(null)
+    val notice: StateFlow<EventNotice?> = _notice.asStateFlow()
+
+    fun resetNotice() {
+        _notice.value = null
     }
 
     private fun launchWorking(block: suspend () -> Unit) {

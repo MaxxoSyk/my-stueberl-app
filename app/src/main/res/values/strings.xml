@@ -463,4 +463,23 @@
         <item quantity="other">The %1$d products go back to the event. Revenue drops by %2$s.</item>
     </plurals>
     <string name="till_msg_undone">Undone: %1$s</string>
+
+    <string name="event_detail_close">Close event</string>
+    <plurals name="event_detail_close_basket_hint">
+        <item quantity="one">%1$d product is still in the till\'s basket. Empty it or finish the sale first.</item>
+        <item quantity="other">%1$d products are still in the till\'s basket. Empty it or finish the sale first.</item>
+    </plurals>
+    <string name="event_detail_close_confirm_title">Close event?</string>
+    <string name="event_detail_close_summary">Revenue: %1$s · Items sold: %2$d · Customers: %3$d</string>
+    <plurals name="event_detail_close_returning">
+        <item quantity="one">%1$d product goes back to the stand.</item>
+        <item quantity="other">%1$d products go back to the stand.</item>
+    </plurals>
+    <string name="event_detail_close_early">The event actually runs until %1$s.</string>
+    <string name="event_detail_close_final">Sales can\'t be undone afterwards. The labels of this event are no longer valid – please remove them.</string>
+    <string name="event_detail_close_blocked">The event couldn\'t be closed. Empty the till\'s basket first.</string>
+    <string name="event_detail_reopen">Reopen event</string>
+    <string name="event_detail_reopen_confirm_title">Reopen event?</string>
+    <string name="event_detail_reopen_confirm_message">The event moves back to \"In progress\". The till and undoing sales are available again.</string>
+    <string name="event_detail_reopen_refused">The event can\'t be reopened: one of its products was put into an order or another event meanwhile.</string>
 </resources>
