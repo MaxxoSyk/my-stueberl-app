@@ -463,4 +463,23 @@
         <item quantity="other">Die %1$d Werkstücke kommen zurück in die Veranstaltung. Der Umsatz sinkt um %2$s.</item>
     </plurals>
     <string name="till_msg_undone">Storniert: %1$s</string>
+
+    <string name="event_detail_close">Veranstaltung abschließen</string>
+    <plurals name="event_detail_close_basket_hint">
+        <item quantity="one">%1$d Werkstück liegt noch im Warenkorb der Kasse. Leere ihn oder schließe den Verkauf zuerst ab.</item>
+        <item quantity="other">%1$d Werkstücke liegen noch im Warenkorb der Kasse. Leere ihn oder schließe den Verkauf zuerst ab.</item>
+    </plurals>
+    <string name="event_detail_close_confirm_title">Veranstaltung abschließen?</string>
+    <string name="event_detail_close_summary">Umsatz: %1$s · Verkauft: %2$d · Kunden: %3$d</string>
+    <plurals name="event_detail_close_returning">
+        <item quantity="one">%1$d Werkstück geht zurück ins Stüberl.</item>
+        <item quantity="other">%1$d Werkstücke gehen zurück ins Stüberl.</item>
+    </plurals>
+    <string name="event_detail_close_early">Die Veranstaltung läuft eigentlich bis %1$s.</string>
+    <string name="event_detail_close_final">Verkäufe können danach nicht mehr storniert werden. Die Etiketten dieser Veranstaltung sind nicht mehr gültig – bitte entfernen.</string>
+    <string name="event_detail_close_blocked">Die Veranstaltung konnte nicht abgeschlossen werden. Leere zuerst den Warenkorb der Kasse.</string>
+    <string name="event_detail_reopen">Wieder öffnen</string>
+    <string name="event_detail_reopen_confirm_title">Veranstaltung wieder öffnen?</string>
+    <string name="event_detail_reopen_confirm_message">Die Veranstaltung wechselt zurück auf „Läuft“. Kasse und Stornieren sind wieder möglich.</string>
+    <string name="event_detail_reopen_refused">Die Veranstaltung kann nicht wieder geöffnet werden: Ein Werkstück wurde inzwischen einer Bestellung oder anderen Veranstaltung zugeordnet.</string>
 </resources>

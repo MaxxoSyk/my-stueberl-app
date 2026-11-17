@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
@@ -88,6 +89,7 @@ import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.view.order.AttachProductDialog
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailUiState
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailViewModel
+import de.landstueberl.mystueberlapp.viewmodel.event.EventNotice
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
@@ -118,6 +120,9 @@ fun EventDetailScreen(
     val selectedForAttach by viewModel.selectedForAttach.collectAsStateWithLifecycle()
     val selectedForLabels by viewModel.selectedForLabels.collectAsStateWithLifecycle()
     val labelPrintedOn by viewModel.labelPrintedOn.collectAsStateWithLifecycle()
+    val basketCount by viewModel.basketCount.collectAsStateWithLifecycle()
+    val figures by viewModel.figures.collectAsStateWithLifecycle()
+    val notice by viewModel.notice.collectAsStateWithLifecycle()
 
     var showOverflowMenu by remember { mutableStateOf(false) }
     var showStartConfirmation by rememberSaveable { mutableStateOf(false) }
@@ -128,11 +133,12 @@ fun EventDetailScreen(
     var showAttachDialog by rememberSaveable { mutableStateOf(false) }
     var showLabelDialog by rememberSaveable { mutableStateOf(false) }
     var isPrintingLabels by remember { mutableStateOf(false) }
-
     // Products of the last print job, waiting for "Did it print?"
     var pendingPrintedIds by rememberSaveable { mutableStateOf<IntArray?>(null) }
-
     var showStartEventConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showCloseConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showReopenConfirmation by rememberSaveable { mutableStateOf(false) }
+    val today = remember { LocalDate.now() }
 
     // Activity context: PrintManager needs a window. Taken outside the Dialog on purpose.
     val context = LocalContext.current
@@ -154,6 +160,21 @@ fun EventDetailScreen(
         if (isError) {
             snackbarHostState.showSnackbar(errorMessage)
             viewModel.resetErrorState()
+        }
+    }
+
+    val closeBlockedMessage = stringResource(R.string.event_detail_close_blocked)
+    val reopenRefusedMessage = stringResource(R.string.event_detail_reopen_refused)
+
+    LaunchedEffect(notice) {
+        val text = when (notice) {
+            EventNotice.CLOSE_BLOCKED -> closeBlockedMessage
+            EventNotice.REOPEN_REFUSED -> reopenRefusedMessage
+            null -> null
+        }
+        if (text != null) {
+            snackbarHostState.showSnackbar(text)
+            viewModel.resetNotice()
         }
     }
 
@@ -231,6 +252,17 @@ fun EventDetailScreen(
                                         }
                                     )
                                 }
+
+                                if (event.canReopen(today)) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.event_detail_reopen)) },
+                                        onClick = {
+                                            showOverflowMenu = false
+                                            showReopenConfirmation = true
+                                        }
+                                    )
+                                }
+
                                 DropdownMenuItem(
                                     text = {
                                         Text(
@@ -328,14 +360,44 @@ fun EventDetailScreen(
                         shape = RoundedCornerShape(10.dp),
                         colors = StueberlDefaults.primaryButtonColors()
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.PointOfSale,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Icon(Icons.Default.PointOfSale, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = stringResource(R.string.event_detail_open_till),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+
+                    // Products in the basket would stay reserved after closing.
+                    if (basketCount > 0) {
+                        Text(
+                            text = pluralStringResource(
+                                R.plurals.event_detail_close_basket_hint,
+                                basketCount,
+                                basketCount
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showCloseConfirmation = true },
+                        enabled = basketCount == 0 && !isWorking,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.event_detail_close),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
@@ -405,7 +467,6 @@ fun EventDetailScreen(
     }
 
     if (showStartEventConfirmation && event != null) {
-        val today = remember { LocalDate.now() }
         val unlabeledCount = products?.items.orEmpty().allProducts()
             .count { it.details.id !in labelPrintedOn }
 
@@ -437,6 +498,51 @@ fun EventDetailScreen(
                 viewModel.startEvent()
             },
             onDismiss = { showStartEventConfirmation = false }
+        )
+    }
+
+    if (showCloseConfirmation && event != null) {
+        val returning = products?.availableCount ?: 0
+        val summary = stringResource(
+            R.string.event_detail_close_summary,
+            figures.revenue.format(),
+            figures.itemsSold,
+            figures.customers
+        )
+        val returnNote = if (returning > 0) {
+            pluralStringResource(R.plurals.event_detail_close_returning, returning, returning)
+        } else {
+            null
+        }
+        val earlyNote = if (event.lastDay.isAfter(today)) {
+            stringResource(R.string.event_detail_close_early, event.lastDay.format(FOOTER_DATE_FORMAT))
+        } else {
+            null
+        }
+        val finalNote = stringResource(R.string.event_detail_close_final)
+
+        StueberlConfirmationDialog(
+            title = stringResource(R.string.event_detail_close_confirm_title),
+            message = listOfNotNull(summary, returnNote, earlyNote, finalNote).joinToString("\n\n"),
+            confirmLabel = stringResource(R.string.event_detail_close),
+            onConfirm = {
+                showCloseConfirmation = false
+                viewModel.closeEvent()
+            },
+            onDismiss = { showCloseConfirmation = false }
+        )
+    }
+
+    if (showReopenConfirmation) {
+        StueberlConfirmationDialog(
+            title = stringResource(R.string.event_detail_reopen_confirm_title),
+            message = stringResource(R.string.event_detail_reopen_confirm_message),
+            confirmLabel = stringResource(R.string.event_detail_reopen),
+            onConfirm = {
+                showReopenConfirmation = false
+                viewModel.reopenEvent()
+            },
+            onDismiss = { showReopenConfirmation = false }
         )
     }
 
