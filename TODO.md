@@ -45,9 +45,7 @@
   - `EventStatusBadge` and `OrderStatusBadge` share the same layout; consider one shared theme-based `StatusBadge` (events already use `eventStatusIconAndTint()`)
 - [x] Extract date picker dialog (done as Events step 3)
 - [ ] Shared tappable date field: `EventDateField` (event form) and the order due date use the same press-interaction pattern; consider one theme-based `StueberlDateField` in `view/common`
-- [ ] Version bumps (by risk):
-  - Patch bumps: `room`, `navigation`, `kotlinxSerialization`, `coil`, `zxing`, `codeScanner`
-  - Larger jumps (own PR, test camera / gallery / printing): `coreKtx`, `activityCompose`
+- [ ] Version bumps: `coreKtx`, `activityCompose` (larger jumps; own PR, test camera / gallery / printing)
 - [ ] Empty-state flash (e.g. home counts start at `0` instead of `–` while loading)
 - [ ] Validation: `salesPrice ≥ purchasePrice` (decide: block saving or only warn)
 - [ ] Tests: unit tests exist for `ProductLabelCode`, `LabelSheetLayout`, `eventTiming()` and `eventResult()`. Next candidates: `PriceInput` (comma and dot, `toInputText()` round trip), `sumMoney()`, `buildMaterialSuggestions()`, `EventRepository.getLocationSuggestions()` grouping, `splitEvents()` (incl. DONE → past), `todayFlow()` with a fixed `Clock`, `EventFormViewModel` end-date shift and stand fee parsing, `toEventProducts()` split + totals + `newestFirst`, `toTillFigures()` (incl. `purchaseCost`), `groupSales()`, `EventDetail.canReopen()`, `AttachSelection` toggling, change calculation in the payment panel, `EventTillViewModel.onScanned()`; Room instrumented tests for `linkProducts` / `unlinkProducts` guards, the `createProductsForEvent()` rollback, the source groups in `getFilteredProductsFlow` (incl. till sales), the `markLabelsPrinted` guard, the `startEvent` guard, `closeEvent` / `reopenEvent` guards, the `deleteEvent` guard (events with sales kept), the `getNextEventFlow()` ordering and skipped statuses, and the till (`addToBasket` results, `completeSale` incl. `BasketChanged` and purchase snapshot, `undoSale`, `resetToAvailable` skipping till sales)
