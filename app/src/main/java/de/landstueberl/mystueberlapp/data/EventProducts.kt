@@ -52,10 +52,3 @@ fun List<Product>.toEventProducts(
 
 /** Sum of the sales prices, e.g. a basket's total. */
 fun List<Product>.salesTotal(): Money = sumMoney { it.details.salesPrice }
-
-/** Every amount has scale 2, so the sum does too and satisfies Money's check. */
-private inline fun List<Product>.sumMoney(selector: (Product) -> Money): Money =
-    Money(
-        amount = fold(PriceInput.ZERO_AMOUNT) { acc, product -> acc + selector(product).amount },
-        currency = PriceInput.CURRENCY
-    )

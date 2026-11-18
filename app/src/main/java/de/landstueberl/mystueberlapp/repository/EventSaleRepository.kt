@@ -4,14 +4,13 @@ import androidx.room.withTransaction
 import de.landstueberl.mystueberlapp.data.BasketAddResult
 import de.landstueberl.mystueberlapp.data.EventSaleDao
 import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.Money
-import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.SaleResult
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.db.entity.EventBasketItem
 import de.landstueberl.mystueberlapp.data.db.entity.EventSale
+import de.landstueberl.mystueberlapp.data.sumMoney
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 import java.time.LocalDate
@@ -70,15 +69,8 @@ class EventSaleRepository(
             val sale = EventSale(
                 eventId = eventId,
                 soldAt = Instant.now(),
-                // Every amount has scale 2, so the sum does too.
-                total = Money(
-                    amount = valid.fold(PriceInput.ZERO_AMOUNT) { acc, p -> acc + p.details.salesPrice.amount },
-                    currency = PriceInput.CURRENCY
-                ),
-                purchaseTotal = Money(
-                    amount = valid.fold(PriceInput.ZERO_AMOUNT) { acc, p -> acc + p.details.purchasePrice.amount },
-                    currency = PriceInput.CURRENCY
-                ),
+                total = valid.sumMoney { it.details.salesPrice },
+                purchaseTotal = valid.sumMoney { it.details.purchasePrice },
                 itemCount = ids.size
             )
             val saleId = dao.insertSale(sale).toInt()

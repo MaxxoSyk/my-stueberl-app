@@ -222,7 +222,7 @@ abstract class ProductFormViewModel(
         _materials.value = draft
         _purchasePrice.value = draft.calculatedTotal()
             ?.amount
-            ?.toPlainString()
+            ?.let(PriceInput::toInputText)
             ?: ""
     }
 

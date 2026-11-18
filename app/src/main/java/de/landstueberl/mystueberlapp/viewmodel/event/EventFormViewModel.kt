@@ -116,7 +116,7 @@ class EventFormViewModel(
         _location.value = event.location.orEmpty()
         _eventDate.value = event.eventDate
         _endDate.value = event.endDate
-        _standFee.value = event.standFee?.amount?.toPlainString().orEmpty()
+        _standFee.value = event.standFee?.amount?.let(PriceInput::toInputText).orEmpty()
         _note.value = event.note.orEmpty()
     }
 

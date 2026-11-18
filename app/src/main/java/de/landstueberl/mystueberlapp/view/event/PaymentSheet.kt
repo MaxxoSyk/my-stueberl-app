@@ -124,13 +124,13 @@ fun PaymentSheet(
                 QuickCashChip(
                     label = stringResource(R.string.pay_exact),
                     selected = cash?.compareTo(total.amount) == 0,
-                    onClick = { cashInput = total.amount.toPlainString() }
+                    onClick = { cashInput = PriceInput.toInputText(total.amount) }
                 )
                 notes.forEach { note ->
                     QuickCashChip(
                         label = "${note.toInt()} ${PriceInput.CURRENCY.symbol}",
                         selected = cash?.compareTo(note) == 0,
-                        onClick = { cashInput = note.toPlainString() }
+                        onClick = { cashInput = PriceInput.toInputText(note) }
                     )
                 }
             }

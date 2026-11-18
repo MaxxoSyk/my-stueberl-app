@@ -165,7 +165,7 @@ private fun MaterialPositionEditor(
         mutableStateOf(
             position.unitPrice.amount
                 .takeIf { it.signum() != 0 }
-                ?.toPlainString()
+                ?.let(PriceInput::toInputText)
                 ?: ""
         )
     }
@@ -247,8 +247,8 @@ private fun MaterialPositionEditor(
             PriceSuggestions(
                 prices = priceSuggestions,
                 currentAmount = parsedAmount,
-                // Scale 2 → "2.50", which PriceInput.isValid accepts.
-                onSelect = { price -> amount = price.amount.toPlainString() }
+                // Device separator, e.g. "2,50"; PriceInput.isValid accepts both.
+                onSelect = { price -> amount = PriceInput.toInputText(price.amount) }
             )
 
             Row(

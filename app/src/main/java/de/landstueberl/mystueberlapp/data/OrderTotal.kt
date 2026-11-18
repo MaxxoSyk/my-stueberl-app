@@ -5,9 +5,4 @@ val Order.total: Money
     get() = productList.orderTotal()
 
 /** Sum of the products' sales prices. Zero for an empty list. */
-fun List<Product>.orderTotal(): Money = Money(
-    amount = fold(PriceInput.ZERO_AMOUNT) { sum, product ->
-        sum + product.details.salesPrice.amount
-    },
-    currency = PriceInput.CURRENCY
-)
+fun List<Product>.orderTotal(): Money = sumMoney { it.details.salesPrice }

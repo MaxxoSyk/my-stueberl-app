@@ -19,13 +19,3 @@ fun List<EventSale>.toTillFigures(): TillFigures = TillFigures(
     itemsSold = sumOf { it.itemCount },
     customers = size
 )
-
-/**
- * Every amount has scale 2, so the sum does too. Not named sumOf: that would
- * shadow the standard sumOf and break Int sums in this file.
- */
-private inline fun List<EventSale>.sumMoney(selector: (EventSale) -> Money): Money =
-    Money(
-        amount = fold(PriceInput.ZERO_AMOUNT) { acc, sale -> acc + selector(sale).amount },
-        currency = PriceInput.CURRENCY
-    )

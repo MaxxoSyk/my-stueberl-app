@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.room.Room
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.label.LabelPrinter
 import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.EventSaleRepository
 import de.landstueberl.mystueberlapp.repository.GalleryRepository
@@ -64,6 +65,7 @@ class MyStueberlApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         cleanUpOrphanedImages()
+        clearLabelCache()
     }
 
     /**
@@ -78,6 +80,17 @@ class MyStueberlApplication : Application() {
                 productImageStorage.clearCameraTemp()
             } catch (e: Exception) {
                 Log.e("StueberlApplication", "Image cleanup failed", e)
+            }
+        }
+    }
+
+    /** The last printed label sheet isn't needed after a restart. */
+    private fun clearLabelCache() {
+        appScope.launch {
+            try {
+                LabelPrinter.clearCache(applicationContext)
+            } catch (e: Exception) {
+                Log.e("StueberlApplication", "Label cache cleanup failed", e)
             }
         }
     }
