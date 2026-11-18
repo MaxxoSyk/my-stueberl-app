@@ -1,6 +1,8 @@
 package de.landstueberl.mystueberlapp.view.order
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -110,6 +112,18 @@ fun OrderDetailScreen(
     val selectedForAttach by viewModel.selectedForAttach.collectAsStateWithLifecycle()
 
     var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    // A read-only field has no onClick; its press interactions stand in for one,
+    // so tapping anywhere on the due date opens the picker (like the event form).
+    val dueDateInteraction = remember { MutableInteractionSource() }
+    LaunchedEffect(dueDateInteraction) {
+        dueDateInteraction.interactions.collect { interaction ->
+            // Disabled fields don't emit presses; the check is a safety net.
+            if (interaction is PressInteraction.Release && isEditable) {
+                showDatePicker = true
+            }
+        }
+    }
+
     var showResolveConfirmation by rememberSaveable { mutableStateOf(false) }
     var showCancelConfirmation by rememberSaveable { mutableStateOf(false) }
     var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
@@ -373,17 +387,13 @@ fun OrderDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     readOnly = true,
                     enabled = isEditable,
+                    interactionSource = dueDateInteraction,
                     trailingIcon = {
-                        IconButton(
-                            onClick = { showDatePicker = true },
-                            enabled = isEditable
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarMonth,
-                                contentDescription = stringResource(R.string.order_detail_pick_date),
-                                tint = SageGreen
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = stringResource(R.string.order_detail_pick_date),
+                            tint = SageGreen
+                        )
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
+import de.landstueberl.mystueberlapp.data.PriceInput
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.db.entity.Image
@@ -66,8 +67,8 @@ class EditProductViewModel(
 
                 // Prefill the inherited form fields
                 _description.value = productDetails.description
-                _purchasePrice.value = productDetails.purchasePrice.amount.toPlainString()
-                _salesPrice.value = productDetails.salesPrice.amount.toPlainString()
+                _purchasePrice.value = PriceInput.toInputText(productDetails.purchasePrice.amount)
+                _salesPrice.value = PriceInput.toInputText(productDetails.salesPrice.amount)
                 _materials.value = product.materialList
 
                 // Existing image, if any

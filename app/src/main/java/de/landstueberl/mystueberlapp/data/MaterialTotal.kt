@@ -13,6 +13,9 @@ val ProductMaterialDetail.lineTotal: BigDecimal
 /**
  * Sum of all lines, or null when the list is empty — in which case the product
  * has no calculation and its purchase price was entered by hand.
+ *
+ * Folds the line totals directly instead of using sumMoney: lineTotal is a
+ * BigDecimal (quantity × unit price), not a Money.
  */
 fun List<ProductMaterialDetail>.calculatedTotal(): Money? {
     if (isEmpty()) return null

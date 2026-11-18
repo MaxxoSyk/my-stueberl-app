@@ -18,14 +18,24 @@ import java.io.FileOutputStream
 /** Writes a label sheet and hands it to Android's print dialog. */
 object LabelPrinter {
 
+    private const val LABELS_DIR = "labels"
+
     /** Rendered off the main thread. Overwrites the previous sheet in the cache. */
     suspend fun createPdf(context: Context, labels: List<ProductLabel>): File =
         withContext(Dispatchers.IO) {
-            val dir = File(context.cacheDir, "labels").apply { mkdirs() }
+            val dir = File(context.cacheDir, LABELS_DIR).apply { mkdirs() }
             val file = File(dir, "labels.pdf")
             FileOutputStream(file).use { LabelSheetPdf.write(labels, it) }
             file
         }
+
+    /**
+     * Deletes the last label sheet. Called on app start: the print spooler has
+     * its own copy by then, so nothing still needs the file.
+     */
+    fun clearCache(context: Context) {
+        File(context.cacheDir, LABELS_DIR).deleteRecursively()
+    }
 
     /** [context] must be an Activity context; PrintManager needs a window. */
     fun print(context: Context, pdf: File, pageCount: Int, jobName: String) {
