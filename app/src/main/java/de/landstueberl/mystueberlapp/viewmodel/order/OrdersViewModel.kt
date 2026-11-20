@@ -47,6 +47,7 @@ class OrdersViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
 
     // ── Error Reporting ────────────────────────
+    // Kept for future list actions; nothing on this screen can fail yet.
     private val _isError = MutableStateFlow(false)
     val isError: StateFlow<Boolean> = _isError.asStateFlow()
 
