@@ -1,24 +1,11 @@
 package de.landstueberl.mystueberlapp.data
 
-import androidx.room.Embedded
+import de.landstueberl.mystueberlapp.data.db.relation.MaterialPriceUsage
 
 /** A previously used material name with up to [MAX_PRICE_SUGGESTIONS] price suggestions. */
 data class MaterialSuggestion(
     val name: String,
     val prices: List<Money>
-)
-
-/**
- * One material name (exact spelling) at one unit price, as aggregated by
- * [ProductDao.getMaterialPriceUsages].
- */
-data class MaterialPriceUsage(
-    val name: String,
-    @Embedded(prefix = "unit_") val unitPrice: Money,
-    /** Highest row id with this name and price — a proxy for "last used". */
-    val lastUsedId: Int,
-    /** Number of products using it, where a whole batch counts once. */
-    val usageCount: Int
 )
 
 private const val MAX_PRICE_SUGGESTIONS = 3
@@ -59,10 +46,12 @@ fun buildMaterialSuggestions(
 
 private fun pricesFor(rows: List<MaterialPriceUsage>, maxPrices: Int): List<Money> =
     rows
+        .asSequence()
         .filter { it.unitPrice.amount.signum() > 0 }
         // Merges spellings: "Wolle" and "wolle" at 2.50 € are one price.
         // Money is always scale 2, so equals() is reliable here.
         .groupBy { it.unitPrice }
+        .asSequence()
         .map { (price, same) ->
             PriceStat(
                 price = price,
@@ -79,5 +68,6 @@ private fun pricesFor(rows: List<MaterialPriceUsage>, maxPrices: Int): List<Mone
                 .thenByDescending { it.lastUsedId }
         )
         .map { it.price }
+        .toList()
 
 private data class PriceStat(val price: Money, val lastUsedId: Int, val usageCount: Int)

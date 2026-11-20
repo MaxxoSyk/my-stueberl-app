@@ -8,9 +8,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
-import de.landstueberl.mystueberlapp.data.Order
+import de.landstueberl.mystueberlapp.data.db.relation.Order
 import de.landstueberl.mystueberlapp.data.OrderStatus
-import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
 import de.landstueberl.mystueberlapp.data.groupByBatch

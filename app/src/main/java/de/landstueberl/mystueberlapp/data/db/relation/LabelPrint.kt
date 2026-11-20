@@ -1,4 +1,4 @@
-package de.landstueberl.mystueberlapp.data.label
+package de.landstueberl.mystueberlapp.data.db.relation
 
 import java.time.LocalDate
 

@@ -1,4 +1,4 @@
-package de.landstueberl.mystueberlapp.data.converter
+package de.landstueberl.mystueberlapp.data.db.converter
 
 import androidx.room.TypeConverter
 import java.math.BigDecimal

@@ -34,7 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.Order
+import de.landstueberl.mystueberlapp.data.db.relation.Order
 import de.landstueberl.mystueberlapp.data.OrderStatus
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.labelRes

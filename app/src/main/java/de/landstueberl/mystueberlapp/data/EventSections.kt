@@ -1,5 +1,6 @@
 package de.landstueberl.mystueberlapp.data
 
+import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
 import java.time.LocalDate
 
 /** The events list, split by date. Status plays no part in the split. */

@@ -25,7 +25,7 @@ data class NextEvent(
 /**
  * Pure, so it can be unit tested.
  *
- * [EventDao.getNextEventFlow] only returns an event past its last day while
+ * [de.landstueberl.mystueberlapp.data.db.dao.EventDao.getNextEventFlow] only returns an event past its last day while
  * it's still IN_PROGRESS, so a past last day always means "still running".
  */
 fun eventTiming(event: EventDetail, today: LocalDate): EventTiming = when {

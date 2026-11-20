@@ -1,5 +1,7 @@
 package de.landstueberl.mystueberlapp.data
 
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+
 /**
  * An event's products, prepared for the detail screen.
  *

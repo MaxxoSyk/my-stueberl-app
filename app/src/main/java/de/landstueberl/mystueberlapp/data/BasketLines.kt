@@ -1,5 +1,7 @@
 package de.landstueberl.mystueberlapp.data
 
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+
 /** A row in the till's basket: a single product, or all basket members of one batch. */
 sealed interface BasketLine {
     val key: String

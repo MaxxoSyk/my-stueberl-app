@@ -6,7 +6,7 @@ import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.OverallFigures
 import de.landstueberl.mystueberlapp.data.PeriodFigures
 import de.landstueberl.mystueberlapp.data.PriceInput
-import de.landstueberl.mystueberlapp.data.StatisticsDao
+import de.landstueberl.mystueberlapp.data.db.dao.StatisticsDao
 import de.landstueberl.mystueberlapp.data.StatisticsPeriod
 import de.landstueberl.mystueberlapp.data.StatisticsTileFigures
 import de.landstueberl.mystueberlapp.data.YearStatistics

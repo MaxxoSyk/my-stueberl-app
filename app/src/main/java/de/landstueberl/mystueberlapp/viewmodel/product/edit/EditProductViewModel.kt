@@ -8,7 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
 import de.landstueberl.mystueberlapp.data.PriceInput
-import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
@@ -100,8 +100,8 @@ class EditProductViewModel(
      */
     fun willLeaveBatch(): Boolean {
         val existing = loadedProduct ?: return false
-        if (existing.details.batchId == null) return false
-        return hasChanges(existing, currentFormValues())
+        return existing.details.batchId != null
+                && hasChanges(existing, currentFormValues())
     }
 
     /**

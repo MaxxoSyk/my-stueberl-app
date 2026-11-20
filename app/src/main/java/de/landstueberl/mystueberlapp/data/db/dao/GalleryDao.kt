@@ -1,7 +1,8 @@
-package de.landstueberl.mystueberlapp.data
+package de.landstueberl.mystueberlapp.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Query
+import de.landstueberl.mystueberlapp.data.GalleryEntry
 import kotlinx.coroutines.flow.Flow
 
 /**

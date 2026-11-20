@@ -1,10 +1,10 @@
 package de.landstueberl.mystueberlapp.repository
 
 import androidx.room.withTransaction
-import de.landstueberl.mystueberlapp.data.EventDao
+import de.landstueberl.mystueberlapp.data.db.dao.EventDao
 import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.EventWithProductCount
-import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
 import de.landstueberl.mystueberlapp.data.db.entity.EventBatchLabel
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
@@ -148,7 +148,7 @@ class EventRepository(
     /**
      * Runs [createProducts] and links everything it created to the event, in
      * one transaction. Throws (and rolls back, so no products are created) if
-     * the event is no longer being prepared, e.g. it was started or cancelled
+     * the event is no longer being prepared, e.g. it was started or canceled
      * while the form was open.
      */
     suspend fun createProductsForEvent(
