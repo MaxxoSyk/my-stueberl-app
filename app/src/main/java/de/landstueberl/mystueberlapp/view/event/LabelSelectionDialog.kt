@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.allProducts
 import de.landstueberl.mystueberlapp.data.format

@@ -1,6 +1,6 @@
 package de.landstueberl.mystueberlapp.repository
 
-import de.landstueberl.mystueberlapp.data.GalleryDao
+import de.landstueberl.mystueberlapp.data.db.dao.GalleryDao
 import de.landstueberl.mystueberlapp.data.GallerySection
 import de.landstueberl.mystueberlapp.data.groupByDate
 import kotlinx.coroutines.flow.Flow

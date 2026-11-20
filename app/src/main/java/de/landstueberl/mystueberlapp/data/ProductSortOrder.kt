@@ -3,6 +3,7 @@ package de.landstueberl.mystueberlapp.data
 import androidx.annotation.StringRes
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import java.time.LocalDate
 
 @get:StringRes

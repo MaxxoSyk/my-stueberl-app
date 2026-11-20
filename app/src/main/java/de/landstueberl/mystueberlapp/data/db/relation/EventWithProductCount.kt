@@ -1,4 +1,4 @@
-package de.landstueberl.mystueberlapp.data
+package de.landstueberl.mystueberlapp.data.db.relation
 
 import androidx.room.Embedded
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail

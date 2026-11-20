@@ -2,8 +2,8 @@ package de.landstueberl.mystueberlapp.repository
 
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.MaterialSuggestion
-import de.landstueberl.mystueberlapp.data.Product
-import de.landstueberl.mystueberlapp.data.ProductDao
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.db.dao.ProductDao
 import de.landstueberl.mystueberlapp.data.ProductFilter
 import de.landstueberl.mystueberlapp.data.ProductSourceFilter
 import de.landstueberl.mystueberlapp.data.buildMaterialSuggestions

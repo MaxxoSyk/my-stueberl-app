@@ -1,5 +1,7 @@
 package de.landstueberl.mystueberlapp.data
 
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+
 /**
  * A row in the products list: either a single product, or a batch of identical
  * ones shown collapsed under a count.

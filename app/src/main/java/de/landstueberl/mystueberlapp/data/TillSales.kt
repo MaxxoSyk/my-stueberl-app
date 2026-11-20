@@ -1,6 +1,7 @@
 package de.landstueberl.mystueberlapp.data
 
 import de.landstueberl.mystueberlapp.data.db.entity.EventSale
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 
 /** A completed sale with the products it contained. */
 data class SaleWithProducts(

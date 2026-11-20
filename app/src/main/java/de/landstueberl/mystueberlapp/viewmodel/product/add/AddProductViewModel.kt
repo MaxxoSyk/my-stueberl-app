@@ -5,7 +5,7 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
-import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail

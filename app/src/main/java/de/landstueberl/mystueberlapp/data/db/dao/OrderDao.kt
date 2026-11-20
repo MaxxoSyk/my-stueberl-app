@@ -1,15 +1,16 @@
-package de.landstueberl.mystueberlapp.data
+package de.landstueberl.mystueberlapp.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import de.landstueberl.mystueberlapp.data.db.relation.Order
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 /**
- * NOTE: several queries below embed [OrderStatus] constant names as SQL string
+ * NOTE: several queries below embed [de.landstueberl.mystueberlapp.data.OrderStatus] constant names as SQL string
  * literals. Renaming a constant will not break compilation — it will silently
  * make those queries match nothing.
  */

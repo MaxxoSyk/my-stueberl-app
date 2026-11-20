@@ -80,7 +80,7 @@ import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.EventProducts
 import de.landstueberl.mystueberlapp.data.EventResult
 import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.allProducts

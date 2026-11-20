@@ -54,7 +54,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.Money
-import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults

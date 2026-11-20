@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import de.landstueberl.mystueberlapp.data.Product
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.ProductFilter
 import de.landstueberl.mystueberlapp.data.ProductListItem
 import de.landstueberl.mystueberlapp.data.ProductSortOrder
