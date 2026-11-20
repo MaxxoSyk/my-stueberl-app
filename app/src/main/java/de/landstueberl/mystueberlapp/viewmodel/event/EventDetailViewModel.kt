@@ -18,6 +18,7 @@ import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.db.entity.EventSale
 import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.label.BatchLabelCode
 import de.landstueberl.mystueberlapp.data.label.ProductLabel
 import de.landstueberl.mystueberlapp.data.label.ProductLabelCode
 import de.landstueberl.mystueberlapp.data.toEventProducts
@@ -33,8 +34,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
@@ -48,6 +51,21 @@ sealed interface EventDetailUiState {
 
 /** Specific reasons an action was refused, shown as a snackbar. */
 enum class EventNotice { CLOSE_BLOCKED, REOPEN_REFUSED, DELETE_BLOCKED }
+
+/** A print job waiting for "Did the labels print correctly?". */
+data class PendingLabelPrint(
+    val productIds: List<Int>,
+    /** batchId → identifier printed on the group label. */
+    val batchIdentifiers: Map<Int, String>
+) {
+    val labelCount: Int get() = productIds.size + batchIdentifiers.size
+}
+
+/** The sheet to print, and what to save once it's confirmed. */
+data class PreparedLabels(
+    val labels: List<ProductLabel>,
+    val pending: PendingLabelPrint
+)
 
 class EventDetailViewModel(
     private val repo: EventRepository,
@@ -143,23 +161,65 @@ class EventDetailViewModel(
 
     fun toggleBatchLabelSelection(productIds: List<Int>) = labelSelection.toggleBatch(productIds)
 
-    fun clearLabelSelection() = labelSelection.clear()
+    fun clearLabelSelection() {
+        labelSelection.clear()
+        _selectedGroups.value = emptySet()
+    }
 
-    /** Preselects every available product. Step 4 narrows this to unprinted ones. */
+    /** Ticks every product label and every group label in the open dialog. */
     fun selectAllForLabels() {
-        labelSelection.replaceWith(availableProducts().map { it.details.id })
+        val groups = _groupBatches.value
+        labelSelection.replaceWith(
+            availableProducts().filter { it.details.batchId !in groups }.map { it.details.id }
+        )
+        _selectedGroups.value = groups
     }
 
-    /**
-     * Labels for the ticked products that are still available, in list order.
-     * A product sold while the dialog was open is simply left out.
-     */
-    fun selectedLabels(): List<ProductLabel> {
-        val selected = labelSelection.current
-        return availableProducts()
-            .filter { it.details.id in selected }
-            .map { ProductLabel(ProductLabelCode(eventId, it.details.id), it.details.description) }
+    /** Labels for the ticked products and groups, plus what to save on confirm. */
+    suspend fun prepareLabels(): PreparedLabels {
+        val available = availableProducts()
+        val groups = _groupBatches.value
+
+        val productsToPrint = available.filter {
+            it.details.id in labelSelection.current && it.details.batchId !in groups
+        }
+        // New identifiers for products that lost theirs to a group label.
+        repo.ensureLabelIdentifiers(eventId, productsToPrint.map { it.details.id })
+        // Each product's own identifier, read fresh: a group label that is being
+        // replaced must not end up in the caption.
+        val ownIdentifiers = repo.getLabelIdentifiersFlow(eventId).first()
+
+        val productLabels = productsToPrint.map { product ->
+            ProductLabel(
+                code = ProductLabelCode(eventId, product.details.id),
+                caption = caption(ownIdentifiers[product.details.id], product.details.description)
+            )
+        }
+
+        val batchIds = _selectedGroups.value.filter { it in groups }
+        val batchIdentifiers = repo.prepareBatchIdentifiers(eventId, batchIds)
+        val groupLabels = batchIds.mapNotNull { batchId ->
+            val members = available.filter { it.details.batchId == batchId }
+            val first = members.firstOrNull() ?: return@mapNotNull null
+            ProductLabel(
+                code = BatchLabelCode(eventId, batchId),
+                caption = caption(batchIdentifiers[batchId], first.details.description) +
+                        " ×${members.size}"
+            )
+        }
+
+        return PreparedLabels(
+            labels = productLabels + groupLabels,
+            pending = PendingLabelPrint(
+                productIds = productLabels.map { (it.code as ProductLabelCode).productId },
+                batchIdentifiers = batchIdentifiers.filterKeys { id -> groupLabels.any { (it.code as BatchLabelCode).batchId == id } }
+            )
+        )
     }
+
+    /** Identifier first, so ellipsizing on the sheet only shortens the description. */
+    private fun caption(identifier: String?, description: String): String =
+        if (identifier == null) description else "$identifier · $description"
 
     /** Observed live, so the dialog shows "Printed on …" right after confirming. */
     val labelPrintedOn: StateFlow<Map<Int, LocalDate>> = repo.getLabelPrintDatesFlow(eventId)
@@ -169,18 +229,105 @@ class EventDetailViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyMap())
 
-    /** Used when the dialog opens: only products that don't have a label yet. */
-    fun preselectUnprintedLabels() {
+    /** batchId → printed date of the batch's group label; covers all its members. */
+    val batchLabelPrintedOn: StateFlow<Map<Int, LocalDate>> = repo.getBatchLabelDatesFlow(eventId)
+        .catch { e ->
+            Log.e(TAG, "Failed to observe group labels of event $eventId", e)
+            emit(emptyMap())
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyMap())
+
+    private val labelIdentifiers: StateFlow<Map<Int, String>> = repo.getLabelIdentifiersFlow(eventId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyMap())
+
+    private val batchLabelIdentifiers: StateFlow<Map<Int, String>> =
+        repo.getBatchLabelIdentifiersFlow(eventId)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyMap())
+
+    private val _pendingPrint = MutableStateFlow<PendingLabelPrint?>(null)
+    val pendingPrint: StateFlow<PendingLabelPrint?> = _pendingPrint.asStateFlow()
+
+    fun onPrintStarted(pending: PendingLabelPrint) {
+        _pendingPrint.value = pending
+    }
+
+    /** "Yes, mark as printed": saves exactly what was on the sheet. */
+    fun confirmPendingPrint() {
+        val pending = _pendingPrint.value ?: return
+        _pendingPrint.value = null
+        launchWorking {
+            repo.markLabelsPrinted(eventId, pending.productIds)
+            repo.markBatchLabelsPrinted(eventId, pending.batchIdentifiers)
+        }
+    }
+
+    fun dismissPendingPrint() {
+        _pendingPrint.value = null
+    }
+
+    /**
+     * productId → the identifier shown for it, only once its label is printed:
+     * the batch's while it has a printed group label (that identifier is only
+     * saved on confirm), otherwise the product's own if its label was printed.
+     */
+    val effectiveIdentifiers: StateFlow<Map<Int, String>> =
+        combine(products, labelIdentifiers, batchLabelIdentifiers, labelPrintedOn) { list, own, batch, printed ->
+            buildMap {
+                list?.items.orEmpty().allProducts().forEach { product ->
+                    val id = product.details.id
+                    val identifier = product.details.batchId?.let(batch::get)
+                        ?: own[id]?.takeIf { id in printed }
+                    identifier?.let { put(id, it) }
+                }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyMap())
+
+    /** Used when the dialog opens: only products without their own or a group label. */
+    private fun preselectUnprintedLabels() {
         val printed = labelPrintedOn.value
+        val batchLabels = batchLabelPrintedOn.value
         labelSelection.replaceWith(
-            availableProducts().map { it.details.id }.filter { it !in printed }
+            availableProducts()
+                .filterNot { hasLabel(it, printed, batchLabels) }
+                .map { it.details.id }
         )
     }
 
-    /** Called only after the user confirmed the printout. */
-    fun markLabelsPrinted(productIds: List<Int>) = launchWorking {
-        repo.markLabelsPrinted(eventId, productIds)
+    /** Batches printed as one group label in the open dialog. */
+    private val _groupBatches = MutableStateFlow<Set<Int>>(emptySet())
+    val groupBatches: StateFlow<Set<Int>> = _groupBatches.asStateFlow()
+
+    /** Group labels ticked for printing (batchIds). */
+    private val _selectedGroups = MutableStateFlow<Set<Int>>(emptySet())
+    val selectedGroups: StateFlow<Set<Int>> = _selectedGroups.asStateFlow()
+
+    /** When the dialog opens: per product by default, group where a group label exists. */
+    fun openLabelSelection() {
+        val printedGroups = batchLabelPrintedOn.value.keys
+        val batchesInList = availableProducts().mapNotNullTo(HashSet()) { it.details.batchId }
+        _groupBatches.value = printedGroups intersect batchesInList
+        _selectedGroups.value = emptySet() // printed group labels aren't preselected
+        preselectUnprintedLabels()
     }
+
+    /** Switches one batch between "one group label" and "one label per product". */
+    fun setGroupMode(batchId: Int, group: Boolean) {
+        val members = availableProducts().filter { it.details.batchId == batchId }
+        if (group) {
+            _groupBatches.update { it + batchId }
+            members.forEach { labelSelection.deselect(it.details.id) }
+            if (batchId !in batchLabelPrintedOn.value) _selectedGroups.update { it + batchId }
+        } else {
+            _groupBatches.update { it - batchId }
+            _selectedGroups.update { it - batchId }
+            // Members without their own label are preselected.
+            members.filter { it.details.id !in labelPrintedOn.value }
+                .forEach { labelSelection.select(it.details.id) }
+        }
+    }
+
+    fun toggleGroupSelection(batchId: Int) =
+        _selectedGroups.update { if (batchId in it) it - batchId else it + batchId }
 
     private fun availableProducts(): List<Product> =
         products.value?.items.orEmpty().allProducts()
@@ -336,3 +483,15 @@ class EventDetailViewModel(
         }
     }
 }
+
+/**
+ * A product has a label if its own label was printed, or its batch has a
+ * printed group label at this event (which also covers members added later).
+ */
+fun hasLabel(
+    product: Product,
+    printedOn: Map<Int, LocalDate>,
+    batchLabelPrintedOn: Map<Int, LocalDate>
+): Boolean =
+    product.details.id in printedOn ||
+            product.details.batchId?.let { it in batchLabelPrintedOn } == true

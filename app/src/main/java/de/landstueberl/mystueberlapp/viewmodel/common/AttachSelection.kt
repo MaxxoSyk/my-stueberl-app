@@ -35,4 +35,8 @@ class AttachSelection {
     fun clear() {
         _selectedIds.value = emptySet()
     }
+
+    fun select(productId: Int) = _selectedIds.update { it + productId }
+
+    fun deselect(productId: Int) = _selectedIds.update { it - productId }
 }

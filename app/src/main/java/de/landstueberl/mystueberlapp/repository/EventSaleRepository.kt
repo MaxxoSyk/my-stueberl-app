@@ -98,4 +98,15 @@ class EventSaleRepository(
     fun getBasketCountFlow(eventId: Int): Flow<Int> = dao.getBasketCountFlow(eventId)
 
     fun hasSalesFlow(eventId: Int): Flow<Boolean> = dao.hasSalesFlow(eventId)
+
+    /** Group label or "+" in the basket: adds the next available member, in one transaction. */
+    suspend fun addNextOfBatch(eventId: Int, batchId: Int): BasketAddResult = db.withTransaction {
+        if (dao.getEventStatus(eventId) != EventStatus.IN_PROGRESS) {
+            return@withTransaction BasketAddResult.EventNotRunning
+        }
+        val productId = dao.getNextAvailableBatchMember(eventId, batchId)
+            ?: return@withTransaction BasketAddResult.BatchEmpty
+        dao.insertBasketItem(EventBasketItem(productId = productId, eventId = eventId))
+        BasketAddResult.Added
+    }
 }

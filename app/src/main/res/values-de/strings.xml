@@ -377,6 +377,18 @@
     <string name="label_dialog_all_printed">Alle Etiketten dieser Veranstaltung sind gedruckt. Kreuze ein Werkstück an, um sein Etikett nachzudrucken.</string>
     <string name="label_dialog_printed_on">Gedruckt am %1$s</string>
     <string name="label_dialog_batch_printed">%1$d von %2$d gedruckt</string>
+    <string name="label_dialog_mode_products">Pro Werkstück</string>
+    <string name="label_dialog_mode_group">Gruppe</string>
+    <plurals name="label_dialog_group_count">
+        <item quantity="one">Ein Etikett für %1$d Werkstück</item>
+        <item quantity="other">Ein Etikett für %1$d Werkstücke</item>
+    </plurals>
+    <string name="label_dialog_group_printed_on">Gruppenetikett gedruckt am %1$s</string>
+    <string name="label_dialog_switch_title">Etikettenart wechseln?</string>
+    <string name="label_dialog_switch_to_group">Die Werkstücke dieser Gruppe haben bereits eigene gedruckte Etiketten. Bitte entferne die alten Etiketten, nachdem das Gruppenetikett gedruckt ist.</string>
+    <string name="label_dialog_switch_to_products">Diese Gruppe hat bereits ein gedrucktes Gruppenetikett. Bitte entferne das alte Gruppenetikett, nachdem die Etiketten der Werkstücke gedruckt sind.</string>
+    <string name="label_dialog_switch_confirm">Wechseln</string>
+
     <string name="label_print_confirm_title">Wurden die Etiketten richtig gedruckt?</string>
     <plurals name="label_print_confirm_message">
         <item quantity="one">Das Etikett wird als gedruckt markiert und beim nächsten Mal nicht vorausgewählt.</item>
@@ -403,6 +415,8 @@
     <string name="till_add">Hinzufügen</string>
     <string name="till_basket">Warenkorb (%1$d)</string>
     <string name="till_basket_empty">Der Warenkorb ist leer. Füge die Werkstücke hinzu, die der Kunde ausgewählt hat.</string>
+    <string name="till_basket_unit_line">%1$d × %2$s</string>
+    <string name="till_basket_add_one">Eins mehr</string>
     <string name="till_remove_item">Aus Warenkorb entfernen</string>
     <string name="till_clear_basket">Warenkorb leeren</string>
     <string name="till_clear_confirm_title">Warenkorb leeren?</string>
@@ -463,6 +477,7 @@
         <item quantity="other">Die %1$d Werkstücke kommen zurück in die Veranstaltung. Der Umsatz sinkt um %2$s.</item>
     </plurals>
     <string name="till_msg_undone">Storniert: %1$s</string>
+    <string name="till_msg_batch_empty">Alle Werkstücke dieser Gruppe sind verkauft oder bereits im Warenkorb.</string>
 
     <string name="event_detail_close">Veranstaltung abschließen</string>
     <plurals name="event_detail_close_basket_hint">

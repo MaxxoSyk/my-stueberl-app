@@ -377,6 +377,18 @@
     <string name="label_dialog_all_printed">All labels for this event have been printed. Tick a product to reprint its label.</string>
     <string name="label_dialog_printed_on">Printed %1$s</string>
     <string name="label_dialog_batch_printed">%1$d of %2$d printed</string>
+    <string name="label_dialog_mode_products">Per product</string>
+    <string name="label_dialog_mode_group">Group</string>
+    <plurals name="label_dialog_group_count">
+        <item quantity="one">One label for %1$d product</item>
+        <item quantity="other">One label for %1$d products</item>
+    </plurals>
+    <string name="label_dialog_group_printed_on">Group label printed %1$s</string>
+    <string name="label_dialog_switch_title">Switch label type?</string>
+    <string name="label_dialog_switch_to_group">The products of this group already have their own printed labels. After printing the group label, please remove the old labels.</string>
+    <string name="label_dialog_switch_to_products">This group already has a printed group label. After printing the product labels, please remove the old group label.</string>
+    <string name="label_dialog_switch_confirm">Switch</string>
+
     <string name="label_print_confirm_title">Did the labels print correctly?</string>
     <plurals name="label_print_confirm_message">
         <item quantity="one">The label will be marked as printed and won\'t be preselected next time.</item>
@@ -403,6 +415,8 @@
     <string name="till_add">Add</string>
     <string name="till_basket">Basket (%1$d)</string>
     <string name="till_basket_empty">The basket is empty. Add the products the customer picked.</string>
+    <string name="till_basket_unit_line">%1$d × %2$s</string>
+    <string name="till_basket_add_one">Add one more</string>
     <string name="till_remove_item">Remove from basket</string>
     <string name="till_clear_basket">Empty basket</string>
     <string name="till_clear_confirm_title">Empty basket?</string>
@@ -463,6 +477,7 @@
         <item quantity="other">The %1$d products go back to the event. Revenue drops by %2$s.</item>
     </plurals>
     <string name="till_msg_undone">Undone: %1$s</string>
+    <string name="till_msg_batch_empty">All products of this group are sold or already in the basket.</string>
 
     <string name="event_detail_close">Close event</string>
     <plurals name="event_detail_close_basket_hint">

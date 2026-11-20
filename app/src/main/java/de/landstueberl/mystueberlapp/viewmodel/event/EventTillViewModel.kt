@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
 import de.landstueberl.mystueberlapp.data.BasketAddResult
+import de.landstueberl.mystueberlapp.data.BasketLine
 import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.Money
 import de.landstueberl.mystueberlapp.data.PriceInput
@@ -22,8 +23,11 @@ import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.groupByBatch
 import de.landstueberl.mystueberlapp.data.groupSales
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.label.BatchLabelCode
+import de.landstueberl.mystueberlapp.data.label.LabelCode
 import de.landstueberl.mystueberlapp.data.label.ProductLabelCode
 import de.landstueberl.mystueberlapp.data.salesTotal
+import de.landstueberl.mystueberlapp.data.toBasketLines
 import de.landstueberl.mystueberlapp.data.toTillFigures
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.EventRepository
@@ -98,6 +102,11 @@ class EventTillViewModel(
             PriceInput.zeroMoney()
         )
 
+    /** The basket for display: batch members grouped into one row with a counter. */
+    val basketLines: StateFlow<List<BasketLine>> = basket
+        .map { it.toBasketLines() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+
     // ── Header Figures ─────────────────────────
     val figures: StateFlow<TillFigures> = saleRepo.getSalesFlow(eventId)
         .map { it.toTillFigures() }
@@ -136,6 +145,26 @@ class EventTillViewModel(
 
     private val eventProducts: StateFlow<List<Product>> = eventRepo.getEventProductsFlow(eventId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptyList())
+
+    /** Batches with at least one more member available, so "+" can stay enabled. */
+    val batchesWithMore: StateFlow<Set<Int>> = combine(eventProducts, basket) { products, basketItems ->
+        val inBasket = basketItems.mapTo(HashSet()) { it.details.id }
+        products
+            .filter { it.details.status == ProductStatus.AVAILABLE && it.details.id !in inBasket }
+            .mapNotNullTo(HashSet()) { it.details.batchId }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), emptySet())
+
+    /** "+" on a batch row: the next available member of the batch. */
+    fun addNextOfBatch(batchId: Int) = launchWorking {
+        val result = saleRepo.addNextOfBatch(eventId, batchId)
+        if (result != BasketAddResult.Added) send(TillMessage.NotAdded(result))
+    }
+
+    /** "−" on a batch row: puts the newest member back (the basket is oldest first). */
+    fun removeNewestOfBatch(batchId: Int) {
+        val newest = basket.value.lastOrNull { it.details.batchId == batchId } ?: return
+        removeFromBasket(newest.details.id)
+    }
 
     /**
      * Event products that can still go into the basket, filtered by the search
@@ -207,20 +236,29 @@ class EventTillViewModel(
     }
 
     // ── Scanning ───────────────────────────────
-    /** Checks the label, then adds it like a manual add. */
+    /** Checks the label, then adds the product, or the next member of a batch. */
     fun onScanned(raw: String) {
-        val code = ProductLabelCode.decode(raw)
+        val code = LabelCode.decode(raw)
         when {
             code == null -> send(TillMessage.ForeignCode)
             code.eventId != eventId -> send(TillMessage.OtherEvent)
-            else -> launchCatching {
+            code is ProductLabelCode -> launchCatching {
                 when (val result = saleRepo.addToBasket(eventId, code.productId)) {
                     BasketAddResult.Added -> send(TillMessage.Added(descriptionOf(code.productId)))
                     else -> send(TillMessage.NotAdded(result))
                 }
             }
+            code is BatchLabelCode -> launchCatching {
+                when (val result = saleRepo.addNextOfBatch(eventId, code.batchId)) {
+                    BasketAddResult.Added -> send(TillMessage.Added(batchDescriptionOf(code.batchId)))
+                    else -> send(TillMessage.NotAdded(result))
+                }
+            }
         }
     }
+
+    private fun batchDescriptionOf(batchId: Int): String =
+        eventProducts.value.firstOrNull { it.details.batchId == batchId }?.details?.description.orEmpty()
 
     fun onScannerFailed(e: Exception) {
         Log.w(TAG, "Scanner failed", e)

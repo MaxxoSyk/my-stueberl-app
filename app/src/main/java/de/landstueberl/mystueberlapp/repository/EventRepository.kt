@@ -6,7 +6,9 @@ import de.landstueberl.mystueberlapp.data.EventStatus
 import de.landstueberl.mystueberlapp.data.EventWithProductCount
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
+import de.landstueberl.mystueberlapp.data.db.entity.EventBatchLabel
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.label.LabelIdentifiers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
@@ -93,13 +95,41 @@ class EventRepository(
     /** Products can only be assigned while the event is being prepared. */
     suspend fun linkProducts(eventId: Int, productIds: List<Int>) {
         if (productIds.isEmpty()) return
-        dao.linkProducts(
-            eventId = eventId,
-            productIds = productIds,
-            addedAt = LocalDate.now(),
-            requiredStatus = EventStatus.IN_PREPARATION.name,
-            activeStatuses = EventStatus.ACTIVE_NAMES
-        )
+        db.withTransaction {
+            dao.linkProducts(
+                eventId = eventId,
+                productIds = productIds,
+                addedAt = LocalDate.now(),
+                requiredStatus = EventStatus.IN_PREPARATION.name,
+                activeStatuses = EventStatus.ACTIVE_NAMES
+            )
+            assignMissingIdentifiers(eventId)
+        }
+    }
+
+    /** Gives new links an identifier unique within the event (skips group-covered members). */
+    private suspend fun assignMissingIdentifiers(eventId: Int) =
+        assignIdentifiers(eventId, dao.getLinksWithoutIdentifier(eventId))
+
+    private suspend fun assignIdentifiers(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        val taken = dao.getTakenLabelIdentifiers(eventId).toMutableSet()
+        productIds.forEach { productId ->
+            val identifier = LabelIdentifiers.generate(taken)
+            taken += identifier
+            dao.setLabelIdentifier(eventId, productId, identifier)
+        }
+    }
+
+    /**
+     * Before printing per-product labels: products without an identifier (e.g.
+     * after switching back from a group label) get a new one.
+     */
+    suspend fun ensureLabelIdentifiers(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        db.withTransaction {
+            assignIdentifiers(eventId, dao.getLinksWithoutIdentifierAmong(eventId, productIds))
+        }
     }
 
     suspend fun unlinkProducts(eventId: Int, productIds: List<Int>) {
@@ -138,14 +168,43 @@ class EventRepository(
         dao.getLabelPrintsFlow(eventId)
             .map { prints -> prints.associate { it.productId to it.labelPrintedAt } }
 
+    /** batchId → date the group label was confirmed as printed. */
+    fun getBatchLabelDatesFlow(eventId: Int): Flow<Map<Int, LocalDate>> =
+        dao.getBatchLabelsFlow(eventId)
+            .map { labels -> labels.associate { it.batchId to it.printedAt } }
+
+    /** Member labels printed: their batch's group label no longer applies. */
     suspend fun markLabelsPrinted(eventId: Int, productIds: List<Int>) {
         if (productIds.isEmpty()) return
-        dao.markLabelsPrinted(
-            eventId = eventId,
-            productIds = productIds,
-            date = LocalDate.now(),
-            printableStatuses = EventStatus.LABEL_PRINTABLE_NAMES
-        )
+        db.withTransaction {
+            if (dao.getEventStatus(eventId)?.canPrintLabels != true) return@withTransaction
+            dao.markLabelsPrinted(
+                eventId = eventId,
+                productIds = productIds,
+                date = LocalDate.now(),
+                printableStatuses = EventStatus.LABEL_PRINTABLE_NAMES
+            )
+            dao.deleteBatchLabelsForProducts(eventId, productIds)
+        }
+    }
+
+    /**
+     * Group labels confirmed as printed, with the identifiers on the sheet.
+     * The members' own labels no longer apply (no mixed use).
+     */
+    suspend fun markBatchLabelsPrinted(eventId: Int, identifiers: Map<Int, String>) {
+        if (identifiers.isEmpty()) return
+        db.withTransaction {
+            if (dao.getEventStatus(eventId)?.canPrintLabels != true) return@withTransaction
+            val today = LocalDate.now()
+            dao.upsertBatchLabels(
+                identifiers.map { (batchId, identifier) ->
+                    EventBatchLabel(eventId, batchId, today, identifier)
+                }
+            )
+            dao.clearMemberLabels(eventId, identifiers.keys.toList())
+            dao.clearMemberIdentifiers(eventId, identifiers.keys.toList())
+        }
     }
 
     /** @return false if the event wasn't in preparation or had no available products */
@@ -155,4 +214,28 @@ class EventRepository(
             inPreparation = EventStatus.IN_PREPARATION.name,
             inProgress = EventStatus.IN_PROGRESS.name
         ) > 0
+
+    /** productId → the product's own identifier at this event. */
+    fun getLabelIdentifiersFlow(eventId: Int): Flow<Map<Int, String>> =
+        dao.getLabelIdentifiersFlow(eventId)
+            .map { rows -> rows.associate { it.productId to it.labelIdentifier } }
+
+    /** batchId → identifier of the batch's printed group label. */
+    fun getBatchLabelIdentifiersFlow(eventId: Int): Flow<Map<Int, String>> =
+        dao.getBatchLabelsFlow(eventId)
+            .map { labels -> labels.associate { it.batchId to it.labelIdentifier } }
+
+    /**
+     * Identifiers to print on group labels: a reprint reuses the saved one, a
+     * new group label gets a fresh one. Saved only once the print is confirmed.
+     */
+    suspend fun prepareBatchIdentifiers(eventId: Int, batchIds: List<Int>): Map<Int, String> {
+        if (batchIds.isEmpty()) return emptyMap()
+        val existing = dao.getBatchLabels(eventId, batchIds)
+            .associate { it.batchId to it.labelIdentifier }
+        val taken = dao.getTakenLabelIdentifiers(eventId).toMutableSet()
+        return batchIds.associateWith { batchId ->
+            existing[batchId] ?: LabelIdentifiers.generate(taken).also { taken += it }
+        }
+    }
 }

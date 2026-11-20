@@ -30,7 +30,11 @@ import java.time.LocalDate
         )
     ],
     // eventId is covered by the primary key index; productId needs its own.
-    indices = [Index("productId")]
+    indices = [
+        Index("productId"),
+        // Unique per event; NULLs (not assigned yet) don't count as duplicates.
+        Index(value = ["eventId", "labelIdentifier"], unique = true)
+    ]
 )
 data class EventProductDetail(
     val eventId: Int,
@@ -40,5 +44,11 @@ data class EventProductDetail(
      * When this product's QR label for this event was confirmed as printed.
      * Null = no label yet. Per link, so relinking to another event resets it.
      */
-    val labelPrintedAt: LocalDate? = null
+    val labelPrintedAt: LocalDate? = null,
+    /**
+     * Short human-readable ID (e.g. "K7QM") shown on the event's product list
+     * and printed in the label caption, so a cut-out label can be matched to
+     * its product. Unique within the event; assigned right after linking.
+     */
+    val labelIdentifier: String? = null
 )

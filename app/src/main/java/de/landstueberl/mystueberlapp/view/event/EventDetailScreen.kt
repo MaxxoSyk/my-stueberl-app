@@ -93,9 +93,11 @@ import de.landstueberl.mystueberlapp.data.label.ProductScanner
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.view.order.AttachProductDialog
+import de.landstueberl.mystueberlapp.view.product.ProductImagePreviewDialog
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailUiState
 import de.landstueberl.mystueberlapp.viewmodel.event.EventDetailViewModel
 import de.landstueberl.mystueberlapp.viewmodel.event.EventNotice
+import de.landstueberl.mystueberlapp.viewmodel.event.hasLabel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
@@ -134,6 +136,11 @@ fun EventDetailScreen(
     val selectedForAttach by viewModel.selectedForAttach.collectAsStateWithLifecycle()
     val selectedForLabels by viewModel.selectedForLabels.collectAsStateWithLifecycle()
     val labelPrintedOn by viewModel.labelPrintedOn.collectAsStateWithLifecycle()
+    val batchLabelPrintedOn by viewModel.batchLabelPrintedOn.collectAsStateWithLifecycle()
+    val groupBatches by viewModel.groupBatches.collectAsStateWithLifecycle()
+    val selectedGroups by viewModel.selectedGroups.collectAsStateWithLifecycle()
+    val effectiveIdentifiers by viewModel.effectiveIdentifiers.collectAsStateWithLifecycle()
+    val pendingPrint by viewModel.pendingPrint.collectAsStateWithLifecycle()
     val basketCount by viewModel.basketCount.collectAsStateWithLifecycle()
     val hasSales by viewModel.hasSales.collectAsStateWithLifecycle()
     val figures by viewModel.figures.collectAsStateWithLifecycle()
@@ -149,10 +156,10 @@ fun EventDetailScreen(
     var showLabelDialog by rememberSaveable { mutableStateOf(false) }
     var isPrintingLabels by remember { mutableStateOf(false) }
     // Products of the last print job, waiting for "Did it print?"
-    var pendingPrintedIds by rememberSaveable { mutableStateOf<IntArray?>(null) }
     var showStartEventConfirmation by rememberSaveable { mutableStateOf(false) }
     var showCloseConfirmation by rememberSaveable { mutableStateOf(false) }
     var showReopenConfirmation by rememberSaveable { mutableStateOf(false) }
+    var previewImageName by rememberSaveable { mutableStateOf<String?>(null) }
     val today = remember { LocalDate.now() }
 
     // Activity context: PrintManager needs a window. Taken outside the Dialog on purpose.
@@ -254,7 +261,7 @@ fun EventDetailScreen(
                                         text = { Text(stringResource(R.string.event_detail_print_labels)) },
                                         onClick = {
                                             showOverflowMenu = false
-                                            viewModel.preselectUnprintedLabels()
+                                            viewModel.openLabelSelection()
                                             showLabelDialog = true
                                         }
                                     )
@@ -473,6 +480,10 @@ fun EventDetailScreen(
                     } else {
                         null
                     },
+                    identifiers = effectiveIdentifiers,
+                    onImageClick = { product ->
+                        previewImageName = product.imageList.firstOrNull()?.fileName
+                    },
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -495,7 +506,7 @@ fun EventDetailScreen(
 
     if (showStartEventConfirmation && event != null) {
         val unlabeledCount = products?.items.orEmpty().allProducts()
-            .count { it.details.id !in labelPrintedOn }
+            .count { !hasLabel(it, labelPrintedOn, batchLabelPrintedOn) }
 
         val base = stringResource(R.string.event_detail_start_event_confirm_message)
         val earlyNote = if (event.eventDate.isAfter(today)) {
@@ -643,29 +654,36 @@ fun EventDetailScreen(
             items = products?.items.orEmpty(),
             selectedIds = selectedForLabels,
             printedOn = labelPrintedOn,
+            groupBatches = groupBatches,
+            selectedGroups = selectedGroups,
+            batchLabelPrintedOn = batchLabelPrintedOn,
+            identifiers = effectiveIdentifiers,
             imageFileOf = imageFileOf,
             isPrinting = isPrintingLabels,
             onToggleProduct = viewModel::toggleLabelSelection,
             onToggleBatch = viewModel::toggleBatchLabelSelection,
+            onSetGroupMode = viewModel::setGroupMode,
+            onToggleGroup = viewModel::toggleGroupSelection,
             onSelectAll = viewModel::selectAllForLabels,
             onSelectNone = viewModel::clearLabelSelection,
             onPrint = {
-                val labels = viewModel.selectedLabels()
-                if (labels.isNotEmpty() && !isPrintingLabels) {
+                if (!isPrintingLabels) {
                     scope.launch {
                         isPrintingLabels = true
                         try {
-                            val pdf = LabelPrinter.createPdf(context, labels)
-                            LabelPrinter.print(
-                                context = context,
-                                pdf = pdf,
-                                pageCount = LabelSheetLayout.pageCount(labels.size),
-                                jobName = jobName
-                            )
-                            // The print screen covers the app; this question is
-                            // waiting when the user comes back from it.
-                            pendingPrintedIds = labels.map { it.code.productId }.toIntArray()
-                            showLabelDialog = false
+                            val prepared = viewModel.prepareLabels()
+                            if (prepared.labels.isNotEmpty()) {
+                                val pdf = LabelPrinter.createPdf(context, prepared.labels)
+                                LabelPrinter.print(
+                                    context = context,
+                                    pdf = pdf,
+                                    pageCount = LabelSheetLayout.pageCount(prepared.labels.size),
+                                    jobName = jobName
+                                )
+                                // Waits for the return from the print screen.
+                                viewModel.onPrintStarted(prepared.pending)
+                                showLabelDialog = false
+                            }
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
@@ -681,21 +699,25 @@ fun EventDetailScreen(
         )
     }
 
-    pendingPrintedIds?.let { ids ->
+    pendingPrint?.let { pending ->
         StueberlConfirmationDialog(
             title = stringResource(R.string.label_print_confirm_title),
             message = pluralStringResource(
                 R.plurals.label_print_confirm_message,
-                ids.size,
-                ids.size
+                pending.labelCount,
+                pending.labelCount
             ),
             confirmLabel = stringResource(R.string.label_print_confirm_yes),
             dismissLabel = stringResource(R.string.label_print_confirm_no),
-            onConfirm = {
-                pendingPrintedIds = null
-                viewModel.markLabelsPrinted(ids.toList())
-            },
-            onDismiss = { pendingPrintedIds = null }
+            onConfirm = viewModel::confirmPendingPrint,
+            onDismiss = viewModel::dismissPendingPrint
+        )
+    }
+
+    previewImageName?.let { fileName ->
+        ProductImagePreviewDialog(
+            imageFile = viewModel.imageFile(fileName),
+            onDismiss = { previewImageName = null }
         )
     }
 }
@@ -709,6 +731,8 @@ private fun EventDetailContent(
     imageFileOf: (Product) -> File?,
     onProductClick: (Int) -> Unit,
     onRemove: ((List<Int>) -> Unit)?,
+    identifiers: Map<Int, String>,
+    onImageClick: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Keyed by status: only events without products to look at start expanded.
@@ -789,11 +813,13 @@ private fun EventDetailContent(
             eventProductSections(
                 products = products,
                 status = event.status,
+                sections = sections,
                 imageFileOf = imageFileOf,
                 expandedBatchIds = expandedBatchIds,
                 onProductClick = onProductClick,
                 onRemove = onRemove,
-                sections = sections
+                identifiers = identifiers,
+                onImageClick = onImageClick
             )
         }
 
@@ -814,7 +840,9 @@ private fun LazyListScope.eventProductSections(
     imageFileOf: (Product) -> File?,
     expandedBatchIds: MutableSet<Int>,
     onProductClick: (Int) -> Unit,
-    onRemove: ((List<Int>) -> Unit)?
+    onRemove: ((List<Int>) -> Unit)?,
+    identifiers: Map<Int, String>,
+    onImageClick: (Product) -> Unit
 ) {
     val toggle = sections.onToggle
 
@@ -858,7 +886,24 @@ private fun LazyListScope.eventProductSections(
                 item(key = "totals") {
                     EventTotals(products = products, modifier = Modifier.animateItem())
                 }
-                productItems(products.items, imageFileOf, expandedBatchIds, onProductClick, onRemove)
+                productItems(
+                    items = products.items,
+                    imageFileOf = imageFileOf,
+                    expandedBatchIds = expandedBatchIds,
+                    onProductClick = onProductClick,
+                    onRemove = onRemove,
+                    // Shown while preparing and during the event (to match a label to its product).
+                    identifiers = if (status == EventStatus.IN_PREPARATION || status == EventStatus.IN_PROGRESS) {
+                        identifiers
+                    } else {
+                        emptyMap()
+                    },
+                    onImageClick = if (status == EventStatus.IN_PREPARATION || status == EventStatus.IN_PROGRESS) {
+                        onImageClick
+                    } else {
+                        null
+                    }
+                )
             }
         }
         soldSection(products, sections, imageFileOf, onProductClick, isFirst = false)
@@ -873,7 +918,9 @@ private fun LazyListScope.productItems(
     imageFileOf: (Product) -> File?,
     expandedBatchIds: MutableSet<Int>,
     onProductClick: (Int) -> Unit,
-    onRemove: ((List<Int>) -> Unit)?
+    onRemove: ((List<Int>) -> Unit)?,
+    identifiers: Map<Int, String> = emptyMap(),
+    onImageClick: ((Product) -> Unit)? = null
 ) {
     items(items = items, key = { it.key }) { item ->
         when (item) {
@@ -882,7 +929,9 @@ private fun LazyListScope.productItems(
                 imageFile = imageFileOf(item.product),
                 onClick = { onProductClick(item.product.details.id) },
                 onRemove = onRemove?.let { remove -> { remove(listOf(item.product.details.id)) } },
+                identifier = identifiers[item.product.details.id],
                 // Fades in/out when the section collapses, and slides when the list reorders.
+                onImageClick = onImageClick?.let { open -> { open(item.product) } },
                 modifier = Modifier.animateItem()
             )
 
@@ -899,7 +948,13 @@ private fun LazyListScope.productItems(
                 },
                 onRemoveProduct = onRemove?.let { remove ->
                     { product: Product -> remove(listOf(product.details.id)) }
-                },
+                },headerIdentifier = item.products
+                    .mapNotNull { identifiers[it.details.id] }
+                    .distinct()
+                    .singleOrNull()
+                    ?.takeIf { item.products.all { p -> p.details.id in identifiers } },
+                identifierOf = { identifiers[it.details.id] },
+                onImageClick = onImageClick,
                 modifier = Modifier.animateItem()
             )
         }

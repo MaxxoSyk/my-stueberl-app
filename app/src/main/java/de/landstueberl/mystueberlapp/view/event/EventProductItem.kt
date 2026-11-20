@@ -3,6 +3,7 @@ package de.landstueberl.mystueberlapp.view.event
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -68,7 +70,9 @@ fun EventProductItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     onRemove: (() -> Unit)? = null,
-    showStatus: Boolean = false
+    showStatus: Boolean = false,
+    identifier: String? = null,
+    onImageClick: (() -> Unit)? = null
 ) {
     val details = product.details
     val colorScheme = MaterialTheme.colorScheme
@@ -92,7 +96,12 @@ fun EventProductItem(
                     .alpha(if (showStatus) NO_LONGER_AVAILABLE_ALPHA else 1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ProductThumbnail(imageFile = imageFile, size = 56.dp)
+                ProductThumbnailWithIdentifier(
+                    imageFile = imageFile,
+                    size = 56.dp,
+                    identifier = identifier,
+                    onClick = onImageClick
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -181,7 +190,11 @@ fun EventProductBatchItem(
     onProductClick: (Product) -> Unit,
     modifier: Modifier = Modifier,
     onRemoveBatch: (() -> Unit)? = null,
-    onRemoveProduct: ((Product) -> Unit)? = null
+    onRemoveProduct: ((Product) -> Unit)? = null,
+    /** Shown on the header when all members share one, e.g. a group label's. */
+    headerIdentifier: String? = null,
+    identifierOf: (Product) -> String? = { null },
+    onImageClick: ((Product) -> Unit)? = null
 ) {
     val details = batch.representative.details
     val colorScheme = MaterialTheme.colorScheme
@@ -204,7 +217,12 @@ fun EventProductBatchItem(
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ProductThumbnail(imageFile = imageFileOf(batch.representative), size = 56.dp)
+                ProductThumbnailWithIdentifier(
+                    imageFile = imageFileOf(batch.representative),
+                    size = 56.dp,
+                    identifier = headerIdentifier,
+                    onClick = onImageClick?.let { open -> { open(batch.representative) } }
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -268,7 +286,9 @@ fun EventProductBatchItem(
                         product = product,
                         imageFile = imageFileOf(product),
                         onClick = { onProductClick(product) },
-                        onRemove = onRemoveProduct?.let { remove -> { remove(product) } }
+                        onRemove = onRemoveProduct?.let { remove -> { remove(product) } },
+                        identifier = identifierOf(product),
+                        onImageClick = onImageClick?.let { open -> { open(product) } }
                     )
                 }
             }
@@ -311,12 +331,20 @@ private fun PriceRow(
 }
 
 @Composable
-internal fun ProductThumbnail(imageFile: File?, size: Dp) {
+internal fun ProductThumbnail(
+    imageFile: File?,
+    size: Dp,
+    /** Opens the image fullscreen; only used when there is an image. */
+    onClick: (() -> Unit)? = null
+) {
+    // Only clickable when there's an image to show.
+    val openImage = onClick?.takeIf { imageFile != null }
     Box(
         modifier = Modifier
             .size(size)
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.primaryContainer),
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .then(if (openImage != null) Modifier.clickable(onClick = openImage) else Modifier),
         contentAlignment = Alignment.Center
     ) {
         if (imageFile != null) {
@@ -326,12 +354,51 @@ internal fun ProductThumbnail(imageFile: File?, size: Dp) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
+            if (openImage != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(3.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f))
+                        .padding(2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ZoomOutMap,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(11.dp)
+                    )
+                }
+            }
         } else {
             Icon(
                 imageVector = Icons.Default.Image,
                 contentDescription = stringResource(R.string.products_screen_no_image),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+/** Thumbnail with the label identifier centered below it, if there is one. */
+@Composable
+internal fun ProductThumbnailWithIdentifier(
+    imageFile: File?,
+    size: Dp,
+    identifier: String?,
+    onClick: (() -> Unit)? = null
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        ProductThumbnail(imageFile = imageFile, size = size, onClick = onClick)
+        identifier?.let {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = it,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                maxLines = 1
             )
         }
     }

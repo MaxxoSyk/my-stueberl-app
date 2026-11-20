@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import de.landstueberl.mystueberlapp.data.db.entity.EventBatchLabel
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
 import de.landstueberl.mystueberlapp.data.label.LabelPrint
+import de.landstueberl.mystueberlapp.data.label.ProductLabelIdentifier
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -303,4 +305,88 @@ interface EventDao {
         inProgress: String,
         activeStatuses: List<String>
     ): Int
+
+    // ── Group Labels ───────────────────────────
+    @Query("SELECT * FROM EventBatchLabel WHERE eventId = :eventId")
+    fun getBatchLabelsFlow(eventId: Int): Flow<List<EventBatchLabel>>
+
+    @Upsert
+    suspend fun upsertBatchLabels(labels: List<EventBatchLabel>)
+
+    /** No mixed use: a printed group label replaces the members' own labels. */
+    @Query("""
+        UPDATE EventProductDetail
+        SET labelPrintedAt = NULL
+        WHERE eventId = :eventId
+          AND productId IN (SELECT id FROM ProductDetail WHERE batchId IN (:batchIds))
+    """)
+    suspend fun clearMemberLabels(eventId: Int, batchIds: List<Int>)
+
+    /** No mixed use: printed member labels replace their batch's group label. */
+    @Query("""
+        DELETE FROM EventBatchLabel
+        WHERE eventId = :eventId
+          AND batchId IN (
+              SELECT batchId FROM ProductDetail
+              WHERE id IN (:productIds) AND batchId IS NOT NULL
+          )
+    """)
+    suspend fun deleteBatchLabelsForProducts(eventId: Int, productIds: List<Int>)
+
+    // ── Label Identifiers ──────────────────────
+    /** Every identifier in use at the event, from member and group labels. */
+    @Query("""
+        SELECT labelIdentifier FROM EventProductDetail
+        WHERE eventId = :eventId AND labelIdentifier IS NOT NULL
+        UNION
+        SELECT labelIdentifier FROM EventBatchLabel WHERE eventId = :eventId
+    """)
+    suspend fun getTakenLabelIdentifiers(eventId: Int): List<String>
+
+    /**
+     * Links that still need their own identifier, e.g. right after linking.
+     * Members of a batch with a group label are skipped: the group's applies.
+     */
+    @Query("""
+        SELECT ep.productId FROM EventProductDetail ep
+        INNER JOIN ProductDetail p ON p.id = ep.productId
+        WHERE ep.eventId = :eventId
+          AND ep.labelIdentifier IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM EventBatchLabel bl
+              WHERE bl.eventId = :eventId AND bl.batchId = p.batchId
+          )
+    """)
+    suspend fun getLinksWithoutIdentifier(eventId: Int): List<Int>
+
+    /** The given products that have no identifier yet, whatever their batch. */
+    @Query("""
+        SELECT productId FROM EventProductDetail
+        WHERE eventId = :eventId AND labelIdentifier IS NULL AND productId IN (:productIds)
+    """)
+    suspend fun getLinksWithoutIdentifierAmong(eventId: Int, productIds: List<Int>): List<Int>
+
+    /** Group label printed: the members' own identifiers no longer apply. */
+    @Query("""
+        UPDATE EventProductDetail SET labelIdentifier = NULL
+        WHERE eventId = :eventId
+          AND productId IN (SELECT id FROM ProductDetail WHERE batchId IN (:batchIds))
+    """)
+    suspend fun clearMemberIdentifiers(eventId: Int, batchIds: List<Int>)
+
+    @Query("""
+        UPDATE EventProductDetail SET labelIdentifier = :identifier
+        WHERE eventId = :eventId AND productId = :productId
+    """)
+    suspend fun setLabelIdentifier(eventId: Int, productId: Int, identifier: String)
+
+    /** Existing group labels, so a reprint keeps its identifier. */
+    @Query("SELECT * FROM EventBatchLabel WHERE eventId = :eventId AND batchId IN (:batchIds)")
+    suspend fun getBatchLabels(eventId: Int, batchIds: List<Int>): List<EventBatchLabel>
+
+    @Query("""
+        SELECT productId, labelIdentifier FROM EventProductDetail
+        WHERE eventId = :eventId AND labelIdentifier IS NOT NULL
+    """)
+    fun getLabelIdentifiersFlow(eventId: Int): Flow<List<ProductLabelIdentifier>>
 }

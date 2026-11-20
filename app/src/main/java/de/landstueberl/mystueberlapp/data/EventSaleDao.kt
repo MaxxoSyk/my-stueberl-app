@@ -110,4 +110,20 @@ interface EventSaleDao {
     /** For the delete guard: an event with sales can't be deleted. */
     @Query("SELECT EXISTS(SELECT 1 FROM EventSale WHERE eventId = :eventId)")
     fun hasSalesFlow(eventId: Int): Flow<Boolean>
+
+    /**
+     * The next member of a batch that can go into the basket: linked to the
+     * event, available and not in a basket yet. Oldest assignment first.
+     */
+    @Query("""
+        SELECT p.id FROM ProductDetail p
+        INNER JOIN EventProductDetail ep ON ep.productId = p.id
+        WHERE ep.eventId = :eventId
+          AND p.batchId = :batchId
+          AND p.status = 'AVAILABLE'
+          AND NOT EXISTS (SELECT 1 FROM EventBasketItem b WHERE b.productId = p.id)
+        ORDER BY ep.addedAt ASC, ep.rowid ASC
+        LIMIT 1
+    """)
+    suspend fun getNextAvailableBatchMember(eventId: Int, batchId: Int): Int?
 }

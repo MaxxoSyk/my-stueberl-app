@@ -10,6 +10,8 @@ sealed interface BasketAddResult {
     /** Sold or removed already. */
     data object NotAvailable : BasketAddResult
     data object AlreadyInBasket : BasketAddResult
+    /** Group label: every member of the batch is sold or already in the basket. */
+    data object BatchEmpty : BasketAddResult
 }
 
 /** Outcome of completing a sale. */

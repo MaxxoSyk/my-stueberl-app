@@ -30,6 +30,7 @@ import androidx.compose.material3.CheckboxColors
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,8 +40,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -57,6 +61,7 @@ import de.landstueberl.mystueberlapp.data.allProducts
 import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.label.LabelSheetLayout
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
+import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -75,21 +80,35 @@ fun LabelSelectionDialog(
     items: List<ProductListItem>,
     selectedIds: Set<Int>,
     printedOn: Map<Int, LocalDate>,
+    groupBatches: Set<Int>,
+    selectedGroups: Set<Int>,
+    batchLabelPrintedOn: Map<Int, LocalDate>,
+    identifiers: Map<Int, String>,
     imageFileOf: (Product) -> File?,
     isPrinting: Boolean,
     onToggleProduct: (Int) -> Unit,
     onToggleBatch: (List<Int>) -> Unit,
+    onSetGroupMode: (batchId: Int, group: Boolean) -> Unit,
+    onToggleGroup: (batchId: Int) -> Unit,
     onSelectAll: () -> Unit,
     onSelectNone: () -> Unit,
     onPrint: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val allIds = remember(items) { items.allProducts().map { it.details.id } }
-    // Only ticks still in the list count; a product may have been sold meanwhile.
-    val count = allIds.count { it in selectedIds }
-    val allSelected = allIds.isNotEmpty() && count == allIds.size
+    // Group mode only applies to batch rows (a last member alone is a single row).
+    val activeGroups = remember(items, groupBatches) {
+        groupBatches intersect items.filterIsInstance<ProductListItem.Batch>().mapTo(HashSet()) { it.batchId }
+    }
+    val productIds = remember(items, activeGroups) {
+        items.allProducts().filter { it.details.batchId !in activeGroups }.map { it.details.id }
+    }
+    val count = productIds.count { it in selectedIds } + selectedGroups.count { it in activeGroups }
+    val allSelected = count > 0 && count == productIds.size + activeGroups.size
     val pages = LabelSheetLayout.pageCount(count)
+
+    // Mode switch waiting for the "remove old labels" warning: batchId to group mode.
+    var pendingSwitch by remember { mutableStateOf<Pair<Int, Boolean>?>(null) }
     val expandedBatchIds = remember { mutableStateSetOf<Int>() }
 
     Dialog(
@@ -185,10 +204,13 @@ fun LabelSelectionDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item(key = "hint") {
-                    val allPrinted = allIds.isNotEmpty() && allIds.all { it in printedOn }
+                    val allPrinted = productIds.isNotEmpty() || activeGroups.isNotEmpty()
+                    val everythingPrinted = allPrinted &&
+                            productIds.all { it in printedOn } &&
+                            activeGroups.all { it in batchLabelPrintedOn }
                     Text(
                         text = stringResource(
-                            if (allPrinted) R.string.label_dialog_all_printed else R.string.label_dialog_hint
+                            if (everythingPrinted) R.string.label_dialog_all_printed else R.string.label_dialog_hint
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colorScheme.onSurfaceVariant
@@ -202,23 +224,55 @@ fun LabelSelectionDialog(
                             checked = item.product.details.id in selectedIds,
                             onToggle = { onToggleProduct(item.product.details.id) },
                             printedOn = printedOn[item.product.details.id],
+                            identifier = identifiers[item.product.details.id]
                         )
 
                         is ProductListItem.Batch -> LabelBatchGroup(
                             batch = item,
                             imageFileOf = imageFileOf,
                             selectedIds = selectedIds,
+                            printedOn = printedOn,
+                            identifiers = identifiers,
+                            isGroup = item.batchId in activeGroups,
+                            groupSelected = item.batchId in selectedGroups,
+                            groupPrintedOn = batchLabelPrintedOn[item.batchId],
                             isExpanded = item.batchId in expandedBatchIds,
                             onToggleExpanded = {
                                 if (!expandedBatchIds.add(item.batchId)) expandedBatchIds.remove(item.batchId)
                             },
                             onToggleBatch = { onToggleBatch(item.products.map { it.details.id }) },
                             onToggleProduct = onToggleProduct,
-                            printedOn = printedOn,
+                            onToggleGroup = { onToggleGroup(item.batchId) },
+                            onRequestMode = { toGroup ->
+                                // Warn only if the other mode already has printed labels.
+                                val needsWarning = if (toGroup) {
+                                    item.products.any { it.details.id in printedOn }
+                                } else {
+                                    item.batchId in batchLabelPrintedOn
+                                }
+                                if (needsWarning) pendingSwitch = item.batchId to toGroup
+                                else onSetGroupMode(item.batchId, toGroup)
+                            }
                         )
                     }
                 }
             }
+        }
+
+        pendingSwitch?.let { (batchId, toGroup) ->
+            StueberlConfirmationDialog(
+                title = stringResource(R.string.label_dialog_switch_title),
+                message = stringResource(
+                    if (toGroup) R.string.label_dialog_switch_to_group
+                    else R.string.label_dialog_switch_to_products
+                ),
+                confirmLabel = stringResource(R.string.label_dialog_switch_confirm),
+                onConfirm = {
+                    pendingSwitch = null
+                    onSetGroupMode(batchId, toGroup)
+                },
+                onDismiss = { pendingSwitch = null }
+            )
         }
     }
 }
@@ -230,7 +284,8 @@ private fun LabelProductRow(
     imageFile: File?,
     checked: Boolean,
     onToggle: () -> Unit,
-    printedOn: LocalDate? = null
+    printedOn: LocalDate? = null,
+    identifier: String? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
     Card(
@@ -247,7 +302,7 @@ private fun LabelProductRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(checked = checked, onCheckedChange = { onToggle() }, colors = labelCheckboxColors())
-            ProductThumbnail(imageFile = imageFile, size = 40.dp)
+            ProductThumbnailWithIdentifier(imageFile = imageFile, size = 40.dp, identifier = identifier)
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -274,25 +329,28 @@ private fun LabelProductRow(
     }
 }
 
-/** Header ticks all / none; expanding allows single members. */
+/** A batch: per product (tri-state, expandable) or one group label. */
 @Composable
 private fun LabelBatchGroup(
     batch: ProductListItem.Batch,
     imageFileOf: (Product) -> File?,
     selectedIds: Set<Int>,
+    printedOn: Map<Int, LocalDate>,
+    identifiers: Map<Int, String>,
+    isGroup: Boolean,
+    groupSelected: Boolean,
+    groupPrintedOn: LocalDate?,
     isExpanded: Boolean,
     onToggleExpanded: () -> Unit,
     onToggleBatch: () -> Unit,
     onToggleProduct: (Int) -> Unit,
-    printedOn: Map<Int, LocalDate>
+    onToggleGroup: () -> Unit,
+    onRequestMode: (toGroup: Boolean) -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val details = batch.representative.details
     val selectedCount = batch.products.count { it.details.id in selectedIds }
-    val state = when (selectedCount) {
-        0 -> ToggleableState.Off
-        batch.count -> ToggleableState.On
-        else -> ToggleableState.Indeterminate
-    }
+    val printedCount = batch.products.count { it.details.id in printedOn }
 
     Column(
         modifier = Modifier
@@ -300,62 +358,109 @@ private fun LabelBatchGroup(
             .animateContentSize()
     ) {
         Card(
-            onClick = onToggleExpanded,
+            // Only per-product mode has members to expand.
+            onClick = if (isGroup) onToggleGroup else onToggleExpanded,
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TriStateCheckbox(state = state, onClick = onToggleBatch, colors = labelCheckboxColors())
-                ProductThumbnail(imageFile = imageFileOf(batch.representative), size = 40.dp)
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = batch.representative.details.description,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = colorScheme.onSurface,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false)
+            Column(modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (isGroup) {
+                        Checkbox(
+                            checked = groupSelected,
+                            onCheckedChange = { onToggleGroup() },
+                            colors = labelCheckboxColors()
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        BatchCountBadge(count = batch.count)
+                    } else {
+                        TriStateCheckbox(
+                            state = when (selectedCount) {
+                                0 -> ToggleableState.Off
+                                batch.count -> ToggleableState.On
+                                else -> ToggleableState.Indeterminate
+                            },
+                            onClick = onToggleBatch,
+                            colors = labelCheckboxColors()
+                        )
                     }
-                    Text(
-                        text = stringResource(R.string.label_dialog_batch_selected, selectedCount, batch.count),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colorScheme.onSurfaceVariant
+                    ProductThumbnailWithIdentifier(
+                        imageFile = imageFileOf(batch.representative),
+                        size = 40.dp,
+                        // Only the group's own identifier, once printed; never a member's.
+                        identifier = if (isGroup && groupPrintedOn != null) {
+                            identifiers[batch.representative.details.id]
+                        } else {
+                            null
+                        }
                     )
-                    val printedCount = batch.products.count { it.details.id in printedOn }
-                    if (printedCount > 0) {
-                        Text(
-                            text = stringResource(R.string.label_dialog_batch_printed, printedCount, batch.count),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colorScheme.secondary
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = details.description,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = colorScheme.onSurface,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            BatchCountBadge(count = batch.count)
+                        }
+                        val status = when {
+                            isGroup && groupPrintedOn != null -> stringResource(
+                                R.string.label_dialog_group_printed_on,
+                                groupPrintedOn.format(PRINTED_DATE_FORMAT)
+                            )
+                            isGroup -> pluralStringResource(
+                                R.plurals.label_dialog_group_count, batch.count, batch.count
+                            )
+                            printedCount > 0 -> stringResource(
+                                R.string.label_dialog_batch_printed, printedCount, batch.count
+                            )
+                            else -> stringResource(
+                                R.string.label_dialog_batch_selected, selectedCount, batch.count
+                            )
+                        }
+                        Text(status, style = MaterialTheme.typography.bodySmall, color = colorScheme.onSurfaceVariant)
+                    }
+                    if (!isGroup) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = stringResource(
+                                if (isExpanded) R.string.products_screen_batch_collapse
+                                else R.string.products_screen_batch_expand
+                            ),
+                            tint = colorScheme.secondary,
+                            modifier = Modifier.size(24.dp)
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = stringResource(
-                        if (isExpanded) R.string.products_screen_batch_collapse
-                        else R.string.products_screen_batch_expand
-                    ),
-                    tint = colorScheme.secondary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+
+                // Mode switch
+                Row(
+                    modifier = Modifier.padding(start = 48.dp, top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = !isGroup,
+                        onClick = { if (isGroup) onRequestMode(false) },
+                        label = { Text(stringResource(R.string.label_dialog_mode_products)) },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    FilterChip(
+                        selected = isGroup,
+                        onClick = { if (!isGroup) onRequestMode(true) },
+                        label = { Text(stringResource(R.string.label_dialog_mode_group)) },
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
             }
         }
 
-        AnimatedVisibility(visible = isExpanded) {
+        AnimatedVisibility(visible = isExpanded && !isGroup) {
             Column(
                 modifier = Modifier.padding(start = 16.dp, top = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -366,7 +471,8 @@ private fun LabelBatchGroup(
                         imageFile = imageFileOf(product),
                         checked = product.details.id in selectedIds,
                         onToggle = { onToggleProduct(product.details.id) },
-                        printedOn = printedOn[product.details.id]
+                        printedOn = printedOn[product.details.id],
+                        identifier = identifiers[product.details.id]
                     )
                 }
             }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,10 +22,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.RemoveCircleOutline
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -65,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.BasketAddResult
+import de.landstueberl.mystueberlapp.data.BasketLine
 import de.landstueberl.mystueberlapp.data.Product
 import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.format
@@ -95,6 +99,8 @@ fun EventTillScreen(
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isWorking by viewModel.isWorking.collectAsStateWithLifecycle()
     val recentSales by viewModel.recentSales.collectAsStateWithLifecycle()
+    val basketLines by viewModel.basketLines.collectAsStateWithLifecycle()
+    val batchesWithMore by viewModel.batchesWithMore.collectAsStateWithLifecycle()
 
     var showAddSheet by rememberSaveable { mutableStateOf(false) }
     var showPaySheet by rememberSaveable { mutableStateOf(false) }
@@ -336,16 +342,27 @@ fun EventTillScreen(
                 if (basket.isEmpty()) {
                     item(key = "basket_empty") { HintText(stringResource(R.string.till_basket_empty)) }
                 } else {
-                    items(items = basket, key = { it.details.id }) { product ->
-                        BasketItemRow(
-                            product = product,
-                            imageFile = imageFileOf(product),
-                            onRemove = if (isRunning) {
-                                { viewModel.removeFromBasket(product.details.id) }
-                            } else {
-                                null
-                            }
-                        )
+                    items(items = basketLines, key = { it.key }) { line ->
+                        when (line) {
+                            is BasketLine.Single -> BasketItemRow(
+                                product = line.product,
+                                imageFile = imageFileOf(line.product),
+                                onRemove = if (isRunning) {
+                                    { viewModel.removeFromBasket(line.product.details.id) }
+                                } else {
+                                    null
+                                }
+                            )
+
+                            is BasketLine.Batch -> BasketBatchRow(
+                                line = line,
+                                imageFile = imageFileOf(line.representative),
+                                enabled = isRunning && !isWorking,
+                                canAddMore = line.batchId in batchesWithMore,
+                                onAdd = { viewModel.addNextOfBatch(line.batchId) },
+                                onRemoveOne = { viewModel.removeNewestOfBatch(line.batchId) }
+                            )
+                        }
                     }
                 }
             }
@@ -564,6 +581,86 @@ private fun BasketItemRow(
     }
 }
 
+/** All basket members of one batch, with a counter instead of a remove icon. */
+@Composable
+private fun BasketBatchRow(
+    line: BasketLine.Batch,
+    imageFile: File?,
+    enabled: Boolean,
+    canAddMore: Boolean,
+    onAdd: () -> Unit,
+    onRemoveOne: () -> Unit
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val details = line.representative.details
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ProductThumbnail(imageFile = imageFile, size = 48.dp)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = details.description,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = stringResource(
+                        R.string.till_basket_unit_line,
+                        line.count,
+                        details.salesPrice.format()
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = line.total.format(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colorScheme.tertiary
+                )
+            }
+
+            // − n +
+            IconButton(onClick = onRemoveOne, enabled = enabled) {
+                Icon(
+                    imageVector = Icons.Default.RemoveCircleOutline,
+                    contentDescription = stringResource(R.string.till_add_sheet_remove_one),
+                    tint = colorScheme.onSurfaceVariant
+                )
+            }
+            AnimatedContent(targetState = line.count, label = "batchCount") { count ->
+                Text(
+                    text = count.toString(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.widthIn(min = 24.dp)
+                )
+            }
+            IconButton(onClick = onAdd, enabled = enabled && canAddMore) {
+                Icon(
+                    imageVector = Icons.Default.AddCircle,
+                    contentDescription = stringResource(R.string.till_basket_add_one),
+                    tint = if (enabled && canAddMore) colorScheme.secondary
+                    else colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                )
+            }
+        }
+    }
+}
+
 private val TillMessage.isSuccess: Boolean
     get() = this is TillMessage.Added || this is TillMessage.Sold || this is TillMessage.Undone
 
@@ -584,6 +681,7 @@ private fun tillMessageText(context: Context, message: TillMessage): String? = w
         BasketAddResult.NotInEvent -> context.getString(R.string.till_msg_not_in_event)
         BasketAddResult.NotAvailable -> context.getString(R.string.till_msg_not_available)
         BasketAddResult.AlreadyInBasket -> context.getString(R.string.till_msg_already_in_basket)
+        BasketAddResult.BatchEmpty -> context.getString(R.string.till_msg_batch_empty)
     }
     is TillMessage.Undone -> context.getString(R.string.till_msg_undone, message.total.format())
 }
