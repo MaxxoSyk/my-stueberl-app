@@ -3,14 +3,14 @@ package de.landstueberl.mystueberlapp.data.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import de.landstueberl.mystueberlapp.data.db.converter.DateConverters
+import de.landstueberl.mystueberlapp.data.db.converter.MoneyConverters
 import de.landstueberl.mystueberlapp.data.db.dao.EventDao
 import de.landstueberl.mystueberlapp.data.db.dao.EventSaleDao
 import de.landstueberl.mystueberlapp.data.db.dao.GalleryDao
 import de.landstueberl.mystueberlapp.data.db.dao.OrderDao
 import de.landstueberl.mystueberlapp.data.db.dao.ProductDao
 import de.landstueberl.mystueberlapp.data.db.dao.StatisticsDao
-import de.landstueberl.mystueberlapp.data.db.converter.DateConverters
-import de.landstueberl.mystueberlapp.data.db.converter.MoneyConverters
 import de.landstueberl.mystueberlapp.data.db.entity.EventBasketItem
 import de.landstueberl.mystueberlapp.data.db.entity.EventBatchLabel
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail

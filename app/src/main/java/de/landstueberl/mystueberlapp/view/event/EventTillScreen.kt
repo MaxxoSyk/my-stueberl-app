@@ -67,12 +67,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.BasketAddResult
-import de.landstueberl.mystueberlapp.data.BasketLine
 import de.landstueberl.mystueberlapp.data.db.relation.Product
-import de.landstueberl.mystueberlapp.data.TillFigures
-import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.label.ProductScanner
+import de.landstueberl.mystueberlapp.data.model.common.format
+import de.landstueberl.mystueberlapp.data.model.till.BasketAddResult
+import de.landstueberl.mystueberlapp.data.model.till.BasketLine
+import de.landstueberl.mystueberlapp.data.model.till.TillFigures
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import de.landstueberl.mystueberlapp.view.common.rememberTimedReveal

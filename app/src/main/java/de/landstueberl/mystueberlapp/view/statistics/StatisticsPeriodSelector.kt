@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import de.landstueberl.mystueberlapp.data.StatisticsPeriod
+import de.landstueberl.mystueberlapp.data.model.statistics.StatisticsPeriod
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 
 // ── Period Selector ────────────────────────────────────────────────────

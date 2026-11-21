@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import de.landstueberl.mystueberlapp.data.OverallFigures
-import de.landstueberl.mystueberlapp.data.PeriodFigures
-import de.landstueberl.mystueberlapp.data.StatisticsPeriod
-import de.landstueberl.mystueberlapp.data.rangeOf
+import de.landstueberl.mystueberlapp.data.model.statistics.OverallFigures
+import de.landstueberl.mystueberlapp.data.model.statistics.PeriodFigures
+import de.landstueberl.mystueberlapp.data.model.statistics.StatisticsPeriod
+import de.landstueberl.mystueberlapp.data.model.statistics.rangeOf
 import de.landstueberl.mystueberlapp.repository.StatisticsRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.NextEvent
-import de.landstueberl.mystueberlapp.data.StatisticsTileFigures
 import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
-import de.landstueberl.mystueberlapp.data.eventTiming
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import de.landstueberl.mystueberlapp.data.model.event.NextEvent
+import de.landstueberl.mystueberlapp.data.model.event.eventTiming
+import de.landstueberl.mystueberlapp.data.model.statistics.StatisticsTileFigures
 import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import de.landstueberl.mystueberlapp.repository.ProductRepository

@@ -1,15 +1,15 @@
 package de.landstueberl.mystueberlapp.repository
 
-import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.MaterialSuggestion
-import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.db.dao.ProductDao
-import de.landstueberl.mystueberlapp.data.ProductFilter
-import de.landstueberl.mystueberlapp.data.ProductSourceFilter
-import de.landstueberl.mystueberlapp.data.buildMaterialSuggestions
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
-import de.landstueberl.mystueberlapp.data.yearRangeOf
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.model.common.yearRangeOf
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import de.landstueberl.mystueberlapp.data.model.product.MaterialSuggestion
+import de.landstueberl.mystueberlapp.data.model.product.ProductFilter
+import de.landstueberl.mystueberlapp.data.model.product.ProductSourceFilter
+import de.landstueberl.mystueberlapp.data.model.product.buildMaterialSuggestions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate

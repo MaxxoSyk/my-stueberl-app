@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import de.landstueberl.mystueberlapp.data.GallerySection
+import de.landstueberl.mystueberlapp.data.db.relation.GallerySection
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.repository.GalleryRepository
 import kotlinx.coroutines.flow.SharingStarted

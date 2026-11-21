@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import de.landstueberl.mystueberlapp.data.Money
+import de.landstueberl.mystueberlapp.data.model.common.Money
 
 /**
  * One line of a product's cost calculation.

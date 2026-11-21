@@ -4,19 +4,19 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
-import de.landstueberl.mystueberlapp.data.db.relation.Product
-import de.landstueberl.mystueberlapp.data.db.relation.ProductEventLink
 import de.landstueberl.mystueberlapp.data.db.entity.EventBatchLabel
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
 import de.landstueberl.mystueberlapp.data.db.relation.LabelPrint
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.db.relation.ProductEventLink
 import de.landstueberl.mystueberlapp.data.db.relation.ProductLabelIdentifier
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 /**
- * NOTE: some queries embed [de.landstueberl.mystueberlapp.data.EventStatus] constant names as SQL string literals
+ * NOTE: some queries embed [EventStatus] constant names as SQL string literals
  * ('CANCELLED'). Renaming an enum constant will not break compilation; it will
  * silently make those queries match nothing.
  */

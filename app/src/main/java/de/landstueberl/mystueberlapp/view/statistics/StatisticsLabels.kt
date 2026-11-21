@@ -2,8 +2,8 @@ package de.landstueberl.mystueberlapp.view.statistics
 
 import androidx.annotation.StringRes
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.DateRange
-import de.landstueberl.mystueberlapp.data.StatisticsPeriod
+import de.landstueberl.mystueberlapp.data.model.statistics.DateRange
+import de.landstueberl.mystueberlapp.data.model.statistics.StatisticsPeriod
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 

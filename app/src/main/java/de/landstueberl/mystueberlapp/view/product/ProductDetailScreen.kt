@@ -32,7 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.ProductListItem
+import de.landstueberl.mystueberlapp.data.model.product.ProductListItem
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
 import de.landstueberl.mystueberlapp.viewmodel.product.ProductDetailViewModel

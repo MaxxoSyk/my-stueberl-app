@@ -4,16 +4,16 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import de.landstueberl.mystueberlapp.data.db.relation.MaterialPriceUsage
-import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.db.entity.Image
 import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
 import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
+import de.landstueberl.mystueberlapp.data.db.relation.MaterialPriceUsage
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 /**
- * NOTE: several queries below embed [de.landstueberl.mystueberlapp.data.ProductStatus] constant names as SQL string
+ * NOTE: several queries below embed [de.landstueberl.mystueberlapp.data.model.product.ProductStatus] constant names as SQL string
  * literals ('AVAILABLE', 'SOLD', 'REMOVED'). Renaming an enum constant will not
  * break compilation — it will silently make those queries match nothing.
  */
@@ -94,7 +94,7 @@ interface ProductDao {
      * active event) or sales area.
      *
      * Ordering here is only for determinism; the display order is applied in
-     * Kotlin via [de.landstueberl.mystueberlapp.data.ProductSortOrder].
+     * Kotlin via [de.landstueberl.mystueberlapp.data.model.product.ProductSortOrder].
      */
     @Transaction
     @Query("""
@@ -355,7 +355,7 @@ interface ProductDao {
      *
      * Zero prices are kept so materials only ever used at 0 € still appear as
      * name suggestions; they are dropped from the price chips in Kotlin. Grouping
-     * by name is case-sensitive here on purpose — see [de.landstueberl.mystueberlapp.data.materialKey].
+     * by name is case-sensitive here on purpose — see [de.landstueberl.mystueberlapp.data.model.product.materialKey].
      */
     @Query("""
     SELECT m.name AS name,

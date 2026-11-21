@@ -4,12 +4,12 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import de.landstueberl.mystueberlapp.data.MaterialSuggestion
-import de.landstueberl.mystueberlapp.data.Money
-import de.landstueberl.mystueberlapp.data.PriceInput
-import de.landstueberl.mystueberlapp.data.calculatedTotal
 import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.model.common.Money
+import de.landstueberl.mystueberlapp.data.model.common.PriceInput
+import de.landstueberl.mystueberlapp.data.model.product.MaterialSuggestion
+import de.landstueberl.mystueberlapp.data.model.product.calculatedTotal
 import de.landstueberl.mystueberlapp.repository.ProductRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

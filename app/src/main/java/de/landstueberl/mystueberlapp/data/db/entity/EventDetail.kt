@@ -3,8 +3,8 @@ package de.landstueberl.mystueberlapp.data.db.entity
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.Money
+import de.landstueberl.mystueberlapp.data.model.common.Money
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
 import java.time.LocalDate
 
 /** A sale event, e.g. a market, that products are taken to. */

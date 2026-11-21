@@ -37,10 +37,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
-import de.landstueberl.mystueberlapp.data.labelRes
+import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import de.landstueberl.mystueberlapp.data.model.event.labelRes
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 

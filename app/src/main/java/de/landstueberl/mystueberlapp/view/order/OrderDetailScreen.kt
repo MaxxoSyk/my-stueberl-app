@@ -64,9 +64,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.OrderStatus
-import de.landstueberl.mystueberlapp.data.format
-import de.landstueberl.mystueberlapp.data.orderTotal
+import de.landstueberl.mystueberlapp.data.model.common.format
+import de.landstueberl.mystueberlapp.data.model.order.OrderStatus
+import de.landstueberl.mystueberlapp.data.model.order.orderTotal
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.FloralWhite
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen

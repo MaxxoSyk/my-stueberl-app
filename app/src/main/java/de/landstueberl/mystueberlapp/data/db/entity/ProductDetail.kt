@@ -5,8 +5,8 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import de.landstueberl.mystueberlapp.data.Money
-import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.data.model.common.Money
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
 import java.time.LocalDate
 
 @Entity(

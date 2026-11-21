@@ -8,27 +8,28 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation.toRoute
-import de.landstueberl.mystueberlapp.data.BasketAddResult
-import de.landstueberl.mystueberlapp.data.BasketLine
-import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.Money
-import de.landstueberl.mystueberlapp.data.PriceInput
-import de.landstueberl.mystueberlapp.data.db.relation.Product
-import de.landstueberl.mystueberlapp.data.ProductListItem
-import de.landstueberl.mystueberlapp.data.ProductStatus
-import de.landstueberl.mystueberlapp.data.SaleResult
-import de.landstueberl.mystueberlapp.data.SaleWithProducts
-import de.landstueberl.mystueberlapp.data.TillFigures
 import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
-import de.landstueberl.mystueberlapp.data.groupByBatch
-import de.landstueberl.mystueberlapp.data.groupSales
+import de.landstueberl.mystueberlapp.data.db.entity.EventSale
+import de.landstueberl.mystueberlapp.data.db.relation.Product
 import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
 import de.landstueberl.mystueberlapp.data.label.BatchLabelCode
 import de.landstueberl.mystueberlapp.data.label.LabelCode
 import de.landstueberl.mystueberlapp.data.label.ProductLabelCode
-import de.landstueberl.mystueberlapp.data.salesTotal
-import de.landstueberl.mystueberlapp.data.toBasketLines
-import de.landstueberl.mystueberlapp.data.toTillFigures
+import de.landstueberl.mystueberlapp.data.model.common.Money
+import de.landstueberl.mystueberlapp.data.model.common.PriceInput
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import de.landstueberl.mystueberlapp.data.model.event.salesTotal
+import de.landstueberl.mystueberlapp.data.model.product.ProductListItem
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
+import de.landstueberl.mystueberlapp.data.model.product.groupByBatch
+import de.landstueberl.mystueberlapp.data.model.till.BasketAddResult
+import de.landstueberl.mystueberlapp.data.model.till.BasketLine
+import de.landstueberl.mystueberlapp.data.model.till.SaleResult
+import de.landstueberl.mystueberlapp.data.model.till.SaleWithProducts
+import de.landstueberl.mystueberlapp.data.model.till.TillFigures
+import de.landstueberl.mystueberlapp.data.model.till.groupSales
+import de.landstueberl.mystueberlapp.data.model.till.toBasketLines
+import de.landstueberl.mystueberlapp.data.model.till.toTillFigures
 import de.landstueberl.mystueberlapp.navigation.Screen
 import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.repository.EventSaleRepository
@@ -113,7 +114,7 @@ class EventTillViewModel(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
-            emptyList<de.landstueberl.mystueberlapp.data.db.entity.EventSale>().toTillFigures()
+            emptyList<EventSale>().toTillFigures()
         )
 
     // ── Recent Sales ───────────────────────────

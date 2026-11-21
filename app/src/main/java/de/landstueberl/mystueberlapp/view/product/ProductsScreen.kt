@@ -53,9 +53,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.ProductListItem
-import de.landstueberl.mystueberlapp.data.ProductSortOrder
-import de.landstueberl.mystueberlapp.data.labelRes
+import de.landstueberl.mystueberlapp.data.model.product.ProductListItem
+import de.landstueberl.mystueberlapp.data.model.product.ProductSortOrder
+import de.landstueberl.mystueberlapp.data.model.product.labelRes
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
