@@ -30,3 +30,17 @@ local.properties
 
 # Deployment target settings
 .idea/deploymentTargetSelector.xml
+
+# Release signing: never commit
+keystore.properties
+*.jks
+*.keystore
+
+# Built APKs / bundles (attach them to the GitHub release instead)
+*.apk
+*.aab
+/app/release/
+output-metadata.json
+
+# Kotlin compiler cache
+.kotlin/
