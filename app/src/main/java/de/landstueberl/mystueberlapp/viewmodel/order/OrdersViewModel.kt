@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import de.landstueberl.mystueberlapp.data.db.relation.Order
-import de.landstueberl.mystueberlapp.data.OrderStatus
+import de.landstueberl.mystueberlapp.data.model.order.OrderStatus
 import de.landstueberl.mystueberlapp.repository.OrderRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

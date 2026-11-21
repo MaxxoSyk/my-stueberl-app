@@ -56,10 +56,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.db.relation.Product
-import de.landstueberl.mystueberlapp.data.ProductListItem
-import de.landstueberl.mystueberlapp.data.allProducts
-import de.landstueberl.mystueberlapp.data.format
 import de.landstueberl.mystueberlapp.data.label.LabelSheetLayout
+import de.landstueberl.mystueberlapp.data.model.common.format
+import de.landstueberl.mystueberlapp.data.model.product.ProductListItem
+import de.landstueberl.mystueberlapp.data.model.product.allProducts
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.StueberlConfirmationDialog
 import java.io.File

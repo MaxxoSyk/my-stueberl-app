@@ -27,7 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.format
+import de.landstueberl.mystueberlapp.data.model.common.format
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.view.common.rememberTimedReveal
 import de.landstueberl.mystueberlapp.viewmodel.home.HomeViewModel

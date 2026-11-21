@@ -36,7 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.db.relation.Product
-import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark

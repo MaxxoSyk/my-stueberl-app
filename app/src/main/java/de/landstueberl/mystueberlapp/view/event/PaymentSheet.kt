@@ -38,9 +38,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.Money
-import de.landstueberl.mystueberlapp.data.PriceInput
-import de.landstueberl.mystueberlapp.data.format
+import de.landstueberl.mystueberlapp.data.model.common.Money
+import de.landstueberl.mystueberlapp.data.model.common.PriceInput
+import de.landstueberl.mystueberlapp.data.model.common.format
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import java.math.BigDecimal
 

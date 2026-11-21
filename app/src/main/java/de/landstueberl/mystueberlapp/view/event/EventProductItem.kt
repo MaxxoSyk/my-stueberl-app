@@ -45,9 +45,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.db.relation.Product
-import de.landstueberl.mystueberlapp.data.ProductListItem
-import de.landstueberl.mystueberlapp.data.ProductStatus
-import de.landstueberl.mystueberlapp.data.format
+import de.landstueberl.mystueberlapp.data.model.common.format
+import de.landstueberl.mystueberlapp.data.model.product.ProductListItem
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
 import java.io.File
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle

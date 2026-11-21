@@ -1,16 +1,16 @@
 package de.landstueberl.mystueberlapp.repository
 
 import androidx.room.withTransaction
-import de.landstueberl.mystueberlapp.data.BasketAddResult
-import de.landstueberl.mystueberlapp.data.db.dao.EventSaleDao
-import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.db.relation.Product
-import de.landstueberl.mystueberlapp.data.ProductStatus
-import de.landstueberl.mystueberlapp.data.SaleResult
 import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
+import de.landstueberl.mystueberlapp.data.db.dao.EventSaleDao
 import de.landstueberl.mystueberlapp.data.db.entity.EventBasketItem
 import de.landstueberl.mystueberlapp.data.db.entity.EventSale
-import de.landstueberl.mystueberlapp.data.sumMoney
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.model.common.sumMoney
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
+import de.landstueberl.mystueberlapp.data.model.till.BasketAddResult
+import de.landstueberl.mystueberlapp.data.model.till.SaleResult
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 import java.time.LocalDate

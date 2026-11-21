@@ -2,10 +2,10 @@ package de.landstueberl.mystueberlapp.data.db.dao
 
 import androidx.room.Dao
 import androidx.room.Query
-import de.landstueberl.mystueberlapp.data.AllTimeStatistics
-import de.landstueberl.mystueberlapp.data.PeriodStatistics
-import de.landstueberl.mystueberlapp.data.ProfitStatistics
-import de.landstueberl.mystueberlapp.data.YearStatistics
+import de.landstueberl.mystueberlapp.data.db.relation.AllTimeStatistics
+import de.landstueberl.mystueberlapp.data.db.relation.PeriodStatistics
+import de.landstueberl.mystueberlapp.data.db.relation.ProfitStatistics
+import de.landstueberl.mystueberlapp.data.db.relation.YearStatistics
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -20,7 +20,7 @@ import java.time.LocalDate
  * range comparisons are numeric.
  *
  * NOTE: status names are embedded as SQL string literals. Renaming a
- * [de.landstueberl.mystueberlapp.data.ProductStatus] constant will not break compilation — it will silently make
+ * [de.landstueberl.mystueberlapp.data.model.product.ProductStatus] constant will not break compilation — it will silently make
  * these queries match nothing.
  */
 @Dao

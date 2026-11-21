@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import de.landstueberl.mystueberlapp.data.EventSections
-import de.landstueberl.mystueberlapp.data.splitEvents
+import de.landstueberl.mystueberlapp.data.model.event.EventSections
+import de.landstueberl.mystueberlapp.data.model.event.splitEvents
 import de.landstueberl.mystueberlapp.repository.EventRepository
 import de.landstueberl.mystueberlapp.util.todayFlow
 import kotlinx.coroutines.flow.SharingStarted

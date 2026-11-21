@@ -4,11 +4,11 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
-import de.landstueberl.mystueberlapp.data.EventStatus
-import de.landstueberl.mystueberlapp.data.db.relation.Product
-import de.landstueberl.mystueberlapp.data.ProductStatus
 import de.landstueberl.mystueberlapp.data.db.entity.EventBasketItem
 import de.landstueberl.mystueberlapp.data.db.entity.EventSale
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 

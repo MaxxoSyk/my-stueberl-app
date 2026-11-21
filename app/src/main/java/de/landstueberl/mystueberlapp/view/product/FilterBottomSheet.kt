@@ -25,9 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.ProductFilter
-import de.landstueberl.mystueberlapp.data.ProductSourceFilter
-import de.landstueberl.mystueberlapp.data.ProductStatus
+import de.landstueberl.mystueberlapp.data.model.product.ProductFilter
+import de.landstueberl.mystueberlapp.data.model.product.ProductSourceFilter
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary

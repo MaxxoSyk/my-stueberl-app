@@ -1,7 +1,7 @@
 package de.landstueberl.mystueberlapp.data.db.relation
 
 import androidx.room.Embedded
-import de.landstueberl.mystueberlapp.data.Money
+import de.landstueberl.mystueberlapp.data.model.common.Money
 
 /**
  * One material name (exact spelling) at one unit price, as aggregated by

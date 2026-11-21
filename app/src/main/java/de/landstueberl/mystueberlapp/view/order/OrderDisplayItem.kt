@@ -35,10 +35,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
 import de.landstueberl.mystueberlapp.data.db.relation.Order
-import de.landstueberl.mystueberlapp.data.OrderStatus
-import de.landstueberl.mystueberlapp.data.format
-import de.landstueberl.mystueberlapp.data.labelRes
-import de.landstueberl.mystueberlapp.data.total
+import de.landstueberl.mystueberlapp.data.model.common.format
+import de.landstueberl.mystueberlapp.data.model.order.OrderStatus
+import de.landstueberl.mystueberlapp.data.model.order.labelRes
+import de.landstueberl.mystueberlapp.data.model.order.total
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.TextSecondary

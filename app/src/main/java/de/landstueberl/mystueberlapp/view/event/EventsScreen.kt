@@ -37,8 +37,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.EventSections
 import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
+import de.landstueberl.mystueberlapp.data.model.event.EventSections
 import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
 import de.landstueberl.mystueberlapp.viewmodel.event.EventsViewModel
 import java.util.Locale

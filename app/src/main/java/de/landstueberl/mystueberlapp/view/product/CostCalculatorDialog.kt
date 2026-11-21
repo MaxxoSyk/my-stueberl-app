@@ -46,12 +46,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.MaterialSuggestion
-import de.landstueberl.mystueberlapp.data.Money
-import de.landstueberl.mystueberlapp.data.PriceInput
-import de.landstueberl.mystueberlapp.data.calculatedTotal
 import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
-import de.landstueberl.mystueberlapp.data.format
+import de.landstueberl.mystueberlapp.data.model.common.Money
+import de.landstueberl.mystueberlapp.data.model.common.PriceInput
+import de.landstueberl.mystueberlapp.data.model.common.format
+import de.landstueberl.mystueberlapp.data.model.product.MaterialSuggestion
+import de.landstueberl.mystueberlapp.data.model.product.calculatedTotal
 import de.landstueberl.mystueberlapp.ui.theme.AccentGold
 import de.landstueberl.mystueberlapp.ui.theme.SageGreen
 import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark

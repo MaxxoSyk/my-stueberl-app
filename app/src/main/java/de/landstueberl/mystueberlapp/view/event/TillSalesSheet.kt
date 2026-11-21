@@ -34,8 +34,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.landstueberl.mystueberlapp.R
-import de.landstueberl.mystueberlapp.data.SaleWithProducts
-import de.landstueberl.mystueberlapp.data.format
+import de.landstueberl.mystueberlapp.data.model.common.format
+import de.landstueberl.mystueberlapp.data.model.till.SaleWithProducts
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
