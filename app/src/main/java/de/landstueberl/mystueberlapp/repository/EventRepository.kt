@@ -1,0 +1,241 @@
+package de.landstueberl.mystueberlapp.repository
+
+import androidx.room.withTransaction
+import de.landstueberl.mystueberlapp.data.db.StueberlDatabase
+import de.landstueberl.mystueberlapp.data.db.dao.EventDao
+import de.landstueberl.mystueberlapp.data.db.entity.EventBatchLabel
+import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.label.LabelIdentifiers
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import java.time.LocalDate
+
+class EventRepository(
+    private val db: StueberlDatabase,
+    private val dao: EventDao
+) {
+
+    /** @return the id of the saved event, new or existing */
+    suspend fun saveEvent(event: EventDetail): Int {
+        // @Upsert returns -1 when it updated an existing row.
+        val generatedId = dao.upsertEvent(event).toInt()
+        return if (event.id == 0) generatedId else event.id
+    }
+
+    suspend fun updateStatus(eventId: Int, status: EventStatus) =
+        dao.updateStatus(id = eventId, status = status)
+
+    /** @return false if the event has sales and was therefore kept */
+    suspend fun deleteEvent(eventId: Int): Boolean = dao.deleteEvent(eventId) > 0
+
+    fun getEventsWithProductCountFlow(): Flow<List<EventWithProductCount>> =
+        dao.getEventsWithProductCountFlow()
+
+    fun getEventFlow(eventId: Int): Flow<EventDetail?> = dao.getEventFlow(eventId)
+
+    suspend fun getEventById(eventId: Int): EventDetail? = dao.getEventById(eventId)
+
+    fun getNextEventFlow(today: LocalDate = LocalDate.now()): Flow<EventDetail?> =
+        dao.getNextEventFlow(
+            today = today,
+            skippedStatuses = listOf(EventStatus.CANCELLED.name, EventStatus.DONE.name),
+            inProgress = EventStatus.IN_PROGRESS.name
+        )
+
+    /** @return false if not running anymore or the basket isn't empty */
+    suspend fun closeEvent(eventId: Int): Boolean =
+        dao.closeEvent(
+            id = eventId,
+            date = LocalDate.now(),
+            inProgress = EventStatus.IN_PROGRESS.name,
+            done = EventStatus.DONE.name
+        ) > 0
+
+    /** @return false if past its last day or a product was assigned elsewhere meanwhile */
+    suspend fun reopenEvent(eventId: Int): Boolean =
+        dao.reopenEvent(
+            id = eventId,
+            today = LocalDate.now(),
+            done = EventStatus.DONE.name,
+            inProgress = EventStatus.IN_PROGRESS.name,
+            activeStatuses = EventStatus.ACTIVE_NAMES
+        ) > 0
+
+    /**
+     * Previously used locations, most used first, newest first on a tie.
+     * Case is ignored (umlauts included, same as material names); the most
+     * recent spelling wins.
+     */
+    suspend fun getLocationSuggestions(): List<String> =
+        dao.getAllLocationsNewestFirst()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .groupBy { it.lowercase() }          // keeps first-seen (= newest) order
+            .values
+            .sortedByDescending { it.size }      // stable: ties stay newest first
+            .map { it.first() }
+
+    /** @see EventDao.cancelEvent */
+    suspend fun cancelEvent(eventId: Int) = dao.cancelEvent(
+        id = eventId,
+        date = LocalDate.now(),
+        cancelled = EventStatus.CANCELLED.name,
+        cancellableStatuses = EventStatus.CANCELLABLE_NAMES
+    )
+
+    fun getEventProductsFlow(eventId: Int): Flow<List<Product>> =
+        dao.getEventProductsFlow(eventId)
+
+    fun getAttachableProductsFlow(eventId: Int): Flow<List<Product>> =
+        dao.getAttachableProductsFlow(eventId, EventStatus.ACTIVE_NAMES)
+
+    /** Products can only be assigned while the event is being prepared. */
+    suspend fun linkProducts(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        db.withTransaction {
+            dao.linkProducts(
+                eventId = eventId,
+                productIds = productIds,
+                addedAt = LocalDate.now(),
+                requiredStatus = EventStatus.IN_PREPARATION.name,
+                activeStatuses = EventStatus.ACTIVE_NAMES
+            )
+            assignMissingIdentifiers(eventId)
+        }
+    }
+
+    /** Gives new links an identifier unique within the event (skips group-covered members). */
+    private suspend fun assignMissingIdentifiers(eventId: Int) =
+        assignIdentifiers(eventId, dao.getLinksWithoutIdentifier(eventId))
+
+    private suspend fun assignIdentifiers(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        val taken = dao.getTakenLabelIdentifiers(eventId).toMutableSet()
+        productIds.forEach { productId ->
+            val identifier = LabelIdentifiers.generate(taken)
+            taken += identifier
+            dao.setLabelIdentifier(eventId, productId, identifier)
+        }
+    }
+
+    /**
+     * Before printing per-product labels: products without an identifier (e.g.
+     * after switching back from a group label) get a new one.
+     */
+    suspend fun ensureLabelIdentifiers(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        db.withTransaction {
+            assignIdentifiers(eventId, dao.getLinksWithoutIdentifierAmong(eventId, productIds))
+        }
+    }
+
+    suspend fun unlinkProducts(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        dao.unlinkProducts(eventId, productIds, EventStatus.IN_PREPARATION.name)
+    }
+
+    fun getAvailableProductCountFlow(eventId: Int): Flow<Int> =
+        dao.getAvailableProductCountFlow(eventId)
+
+    /** productId → eventId, for the "Event" badge and "Go to event". */
+    fun getEventIdByProductFlow(): Flow<Map<Int, Int>> =
+        dao.getActiveEventLinksFlow(EventStatus.ACTIVE_NAMES)
+            .map { links -> links.associate { it.productId to it.eventId } }
+
+    /**
+     * Runs [createProducts] and links everything it created to the event, in
+     * one transaction. Throws (and rolls back, so no products are created) if
+     * the event is no longer being prepared, e.g. it was started or canceled
+     * while the form was open.
+     */
+    suspend fun createProductsForEvent(
+        eventId: Int,
+        createProducts: suspend () -> List<Int>
+    ) {
+        db.withTransaction {
+            check(dao.getEventStatus(eventId) == EventStatus.IN_PREPARATION) {
+                "Event $eventId is not in preparation"
+            }
+            linkProducts(eventId, createProducts())
+        }
+    }
+
+    /** productId → date the label was confirmed as printed. */
+    fun getLabelPrintDatesFlow(eventId: Int): Flow<Map<Int, LocalDate>> =
+        dao.getLabelPrintsFlow(eventId)
+            .map { prints -> prints.associate { it.productId to it.labelPrintedAt } }
+
+    /** batchId → date the group label was confirmed as printed. */
+    fun getBatchLabelDatesFlow(eventId: Int): Flow<Map<Int, LocalDate>> =
+        dao.getBatchLabelsFlow(eventId)
+            .map { labels -> labels.associate { it.batchId to it.printedAt } }
+
+    /** Member labels printed: their batch's group label no longer applies. */
+    suspend fun markLabelsPrinted(eventId: Int, productIds: List<Int>) {
+        if (productIds.isEmpty()) return
+        db.withTransaction {
+            if (dao.getEventStatus(eventId)?.canPrintLabels != true) return@withTransaction
+            dao.markLabelsPrinted(
+                eventId = eventId,
+                productIds = productIds,
+                date = LocalDate.now(),
+                printableStatuses = EventStatus.LABEL_PRINTABLE_NAMES
+            )
+            dao.deleteBatchLabelsForProducts(eventId, productIds)
+        }
+    }
+
+    /**
+     * Group labels confirmed as printed, with the identifiers on the sheet.
+     * The members' own labels no longer apply (no mixed use).
+     */
+    suspend fun markBatchLabelsPrinted(eventId: Int, identifiers: Map<Int, String>) {
+        if (identifiers.isEmpty()) return
+        db.withTransaction {
+            if (dao.getEventStatus(eventId)?.canPrintLabels != true) return@withTransaction
+            val today = LocalDate.now()
+            dao.upsertBatchLabels(
+                identifiers.map { (batchId, identifier) ->
+                    EventBatchLabel(eventId, batchId, today, identifier)
+                }
+            )
+            dao.clearMemberLabels(eventId, identifiers.keys.toList())
+            dao.clearMemberIdentifiers(eventId, identifiers.keys.toList())
+        }
+    }
+
+    /** @return false if the event wasn't in preparation or had no available products */
+    suspend fun startEvent(eventId: Int): Boolean =
+        dao.startEvent(
+            id = eventId,
+            inPreparation = EventStatus.IN_PREPARATION.name,
+            inProgress = EventStatus.IN_PROGRESS.name
+        ) > 0
+
+    /** productId → the product's own identifier at this event. */
+    fun getLabelIdentifiersFlow(eventId: Int): Flow<Map<Int, String>> =
+        dao.getLabelIdentifiersFlow(eventId)
+            .map { rows -> rows.associate { it.productId to it.labelIdentifier } }
+
+    /** batchId → identifier of the batch's printed group label. */
+    fun getBatchLabelIdentifiersFlow(eventId: Int): Flow<Map<Int, String>> =
+        dao.getBatchLabelsFlow(eventId)
+            .map { labels -> labels.associate { it.batchId to it.labelIdentifier } }
+
+    /**
+     * Identifiers to print on group labels: a reprint reuses the saved one, a
+     * new group label gets a fresh one. Saved only once the print is confirmed.
+     */
+    suspend fun prepareBatchIdentifiers(eventId: Int, batchIds: List<Int>): Map<Int, String> {
+        if (batchIds.isEmpty()) return emptyMap()
+        val existing = dao.getBatchLabels(eventId, batchIds)
+            .associate { it.batchId to it.labelIdentifier }
+        val taken = dao.getTakenLabelIdentifiers(eventId).toMutableSet()
+        return batchIds.associateWith { batchId ->
+            existing[batchId] ?: LabelIdentifiers.generate(taken).also { taken += it }
+        }
+    }
+}

@@ -1,0 +1,460 @@
+package de.landstueberl.mystueberlapp.view.home
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Festival
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import de.landstueberl.mystueberlapp.data.model.event.EventTiming
+import de.landstueberl.mystueberlapp.data.model.event.NextEvent
+import de.landstueberl.mystueberlapp.ui.theme.AccentGold
+import de.landstueberl.mystueberlapp.ui.theme.SageGreen
+import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
+import de.landstueberl.mystueberlapp.ui.theme.StueberlDefaults
+import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import de.landstueberl.mystueberlapp.view.common.HIDDEN_VALUE
+import de.landstueberl.mystueberlapp.view.common.runningBorder
+import de.landstueberl.mystueberlapp.view.event.eventDateText
+import de.landstueberl.mystueberlapp.view.event.eventStatusIconAndTint
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+
+private val TILE_DATE_FORMAT: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT)
+
+@Composable
+private fun TileRow(
+    icon: ImageVector,
+    iconTint: Color,
+    label: String,
+    value: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextSecondary,
+            modifier = Modifier.weight(1f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelMedium,
+            color = colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+// ── Statistics Tile ────────────────────────────────────────────────────
+@Composable
+fun StatisticsTile(
+    revenueToday: String,
+    soldToday: Int,
+    revenueThisYear: String,
+    year: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isHidden: Boolean = false,
+    /** Shows the eye icon; null while no event is running. */
+    onToggleReveal: (() -> Unit)? = null
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // ── Tile Header ──
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                    contentDescription = null,
+                    tint = AccentGold,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_screen_tile_statistics),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                if (onToggleReveal != null) {
+                    // Handles its own tap, so it doesn't open the statistics screen.
+                    IconButton(
+                        onClick = onToggleReveal,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isHidden) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = stringResource(
+                                if (isHidden) R.string.till_figures_show else R.string.till_figures_hide
+                            ),
+                            tint = colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = SageGreen.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ── Tile Content ──
+            TileRow(
+                icon = Icons.Default.AttachMoney,
+                iconTint = AccentGold,
+                label = stringResource(R.string.home_screen_stats_revenue_today),
+                value = if (isHidden) HIDDEN_VALUE else revenueToday
+            )
+            TileRow(
+                icon = Icons.Default.ShoppingCart,
+                iconTint = SageGreenDark,
+                label = stringResource(R.string.home_screen_stats_sold_today),
+                value = if (isHidden) HIDDEN_VALUE else soldToday.toString()
+            )
+            TileRow(
+                icon = Icons.AutoMirrored.Filled.TrendingUp,
+                iconTint = SageGreen,
+                label = stringResource(
+                    R.string.home_screen_stats_revenue_year,
+                    year
+                ),
+                value = if (isHidden) HIDDEN_VALUE else revenueThisYear
+            )
+        }
+    }
+}
+
+// ── Products Tile ──────────────────────────────────────────────────────
+@Composable
+fun ProductsTile(
+    availableSalesAreaProducts: Int,
+    pendingOrderProducts: Int,
+    totalProductsCurrentYear: Int,
+    year: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxHeight(),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // ── Tile Header ──
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Inventory,
+                    contentDescription = null,
+                    tint = SageGreenDark,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_screen_tile_products),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = SageGreen.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ── Tile Content ──
+            TileRow(
+                icon = Icons.Default.Storefront,
+                iconTint = SageGreen,
+                label = stringResource(R.string.home_screen_available_sales_area),
+                value = availableSalesAreaProducts.toString()
+            )
+            TileRow(
+                icon = Icons.Default.Receipt,
+                iconTint = AccentGold,
+                label = stringResource(R.string.home_screen_pending_order_products),
+                value = pendingOrderProducts.toString()
+            )
+            TileRow(
+                icon = Icons.Default.Inventory,
+                iconTint = SageGreenDark,
+                label = stringResource(
+                    R.string.home_screen_tile_products_total,
+                    year
+                ),
+                value = totalProductsCurrentYear.toString()
+            )
+        }
+    }
+}
+
+// ── Orders Tile ────────────────────────────────────────────────────────
+@Composable
+fun OrdersTile(
+    openOrders: Int,
+    nextDueDate: LocalDate?,
+    totalOrdersCurrentYear: Int,
+    year: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxHeight(),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // ── Tile Header ──
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Receipt,
+                    contentDescription = null,
+                    tint = SageGreenDark,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_screen_tile_orders),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = SageGreen.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // ── Tile Content ──
+            TileRow(
+                icon = Icons.Default.Schedule,
+                iconTint = AccentGold,
+                label = stringResource(R.string.home_screen_orders_open),
+                value = openOrders.toString()
+            )
+            TileRow(
+                icon = Icons.Default.Event,
+                iconTint = SageGreen,
+                label = stringResource(R.string.home_screen_orders_next_due),
+                value = nextDueDate?.format(TILE_DATE_FORMAT)
+                    ?: stringResource(R.string.home_screen_orders_no_next)
+            )
+            TileRow(
+                icon = Icons.Default.Receipt,
+                iconTint = SageGreenDark,
+                label = stringResource(
+                    R.string.home_screen_tile_orders_total,
+                    year
+                ),
+                value = totalOrdersCurrentYear.toString()
+            )
+        }
+    }
+}
+
+// ── Events Tile ────────────────────────────────────────────────────────
+/**
+ * The next event and how many products are assigned to it, or "–" for both
+ * while loading and when nothing is planned.
+ */
+@Composable
+fun EventsTile(
+    nextEvent: NextEvent?,
+    onClick: () -> Unit,
+    onOpenTill: (eventId: Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val placeholder = stringResource(R.string.home_screen_events_no_next)
+    val isRunning = nextEvent?.event?.status == EventStatus.IN_PROGRESS
+    val colorScheme = colorScheme
+
+    HomeTile(
+        icon = Icons.Default.Festival,
+        title = stringResource(R.string.home_screen_tile_events),
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (isRunning) {
+                    Modifier.runningBorder(
+                        color = colorScheme.secondary,
+                        // Derived from the theme, so it works in dark mode too.
+                        highlight = lerp(colorScheme.secondary, Color.White, 0.7f)
+                    )
+                } else {
+                    Modifier
+                }
+            )
+    ) {
+        if (nextEvent == null) {
+            HomeTileRow(
+                icon = Icons.Default.Event,
+                label = stringResource(R.string.home_screen_events_next),
+                value = placeholder
+            )
+        } else {
+            val (statusIcon, statusTint) = eventStatusIconAndTint(nextEvent.event.status)
+            HomeTileRow(
+                icon = statusIcon,
+                iconTint = statusTint,
+                label = nextEvent.event.name,
+                labelColor = MaterialTheme.colorScheme.onSurface,
+                supportingText = eventDateText(nextEvent.event),
+                value = eventTimingText(nextEvent.timing)
+            )
+        }
+
+        // Always shown, so the tile keeps its height when an event appears.
+        HomeTileRow(
+            icon = Icons.Default.Inventory,
+            label = stringResource(R.string.home_screen_events_products),
+            value = nextEvent?.availableProductCount?.toString() ?: placeholder
+        )
+
+        // Straight to the till while the event runs.
+        val runningEventId = nextEvent?.event
+            ?.takeIf { it.status == EventStatus.IN_PROGRESS }
+            ?.id
+        if (runningEventId != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = { onOpenTill(runningEventId) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = StueberlDefaults.primaryButtonColors()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PointOfSale,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.event_detail_open_till),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun eventTimingText(timing: EventTiming): String = when (timing) {
+    EventTiming.Today -> stringResource(R.string.home_screen_events_today)
+    EventTiming.Tomorrow -> stringResource(R.string.home_screen_events_tomorrow)
+    is EventTiming.InDays -> pluralStringResource(
+        R.plurals.home_screen_events_in_days,
+        timing.days,
+        timing.days
+    )
+    is EventTiming.RunsUntil -> stringResource(
+        R.string.home_screen_events_runs_until,
+        timing.lastDay.format(TILE_DATE_FORMAT)
+    )
+    EventTiming.StillRunning -> stringResource(R.string.home_screen_events_still_running)
+}
+
+// ── Gallery Tile ───────────────────────────────────────────────────────
+@Composable
+fun GalleryTile(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = colorScheme.surface
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.PhotoLibrary,
+                contentDescription = null,
+                tint = SageGreenDark,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = stringResource(R.string.home_screen_tile_gallery),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+    }
+}

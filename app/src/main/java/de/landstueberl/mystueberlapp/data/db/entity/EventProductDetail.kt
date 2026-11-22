@@ -1,0 +1,54 @@
+package de.landstueberl.mystueberlapp.data.db.entity
+
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import java.time.LocalDate
+
+/**
+ * Links a product to an event. A product collects one link per event it was
+ * taken to, which keeps the history after the event is finished.
+ *
+ * "At most one *active* event per product" depends on the event's status, which
+ * lives in another table. SQLite can't enforce that, so the DAO checks it.
+ */
+@Entity(
+    primaryKeys = ["eventId", "productId"],
+    foreignKeys = [
+        // Deleting an event removes its links, never its products.
+        ForeignKey(
+            entity = EventDetail::class,
+            parentColumns = ["id"],
+            childColumns = ["eventId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ProductDetail::class,
+            parentColumns = ["id"],
+            childColumns = ["productId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    // eventId is covered by the primary key index; productId needs its own.
+    indices = [
+        Index("productId"),
+        // Unique per event; NULLs (not assigned yet) don't count as duplicates.
+        Index(value = ["eventId", "labelIdentifier"], unique = true)
+    ]
+)
+data class EventProductDetail(
+    val eventId: Int,
+    val productId: Int,
+    val addedAt: LocalDate = LocalDate.now(),
+    /**
+     * When this product's QR label for this event was confirmed as printed.
+     * Null = no label yet. Per link, so relinking to another event resets it.
+     */
+    val labelPrintedAt: LocalDate? = null,
+    /**
+     * Short human-readable ID (e.g. "K7QM") shown on the event's product list
+     * and printed in the label caption, so a cut-out label can be matched to
+     * its product. Unique within the event; assigned right after linking.
+     */
+    val labelIdentifier: String? = null
+)

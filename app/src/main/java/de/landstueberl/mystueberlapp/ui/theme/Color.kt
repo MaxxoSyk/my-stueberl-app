@@ -2,10 +2,19 @@ package de.landstueberl.mystueberlapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// ── Brand Colors ──────────────────────────────
+val SageGreen = Color(0xFFADC2A3)           // Primary - Top bar
+val SageGreenLight = Color(0xFFD2E0C7)      // Lighter sage for accents
+val SageGreenDark = Color(0xFF6F9168)       // Darker sage for icons
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// ── Background Colors ─────────────────────────
+val WarmBeige = Color(0xFFF2E9DD)           // Main background
+val FloralWhite = Color(0xFFFDF8F0)
+
+// ── Text Colors ───────────────────────────────
+val TextPrimary = Color(0xFF2D2D2D)         // Main text
+val TextSecondary = Color(0xFF6B6B6B)       // Secondary text
+
+// ── Accent Colors ─────────────────────────────
+val AccentGold = Color(0xFFB8893A)          // For statistics/money
+val AccentGoldDark = Color(0xFFD4A853)

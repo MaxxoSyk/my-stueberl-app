@@ -1,0 +1,47 @@
+package de.landstueberl.mystueberlapp.data.db.entity
+
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import de.landstueberl.mystueberlapp.data.model.common.Money
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
+import java.time.LocalDate
+
+@Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = OrderDetail::class,
+            parentColumns = ["id"],
+            childColumns = ["orderId"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = EventSale::class,
+            parentColumns = ["id"],
+            childColumns = ["eventSaleId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [
+        Index("orderId"),
+        Index("status"),
+        Index("batchId"),
+        Index("eventSaleId")
+    ]
+)
+data class ProductDetail(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val description: String,
+    @Embedded(prefix = "purchase_") val purchasePrice: Money,
+    @Embedded(prefix = "sales_") val salesPrice: Money,
+    val status: ProductStatus = ProductStatus.AVAILABLE,
+    val orderId: Int? = null,
+    val batchId: Int? = null,
+    val createdAt: LocalDate = LocalDate.now(),
+    val soldOn: LocalDate? = null,
+    val removedOn: LocalDate? = null,
+    /** Set when sold at an event's till; null for stand and order sales. */
+    val eventSaleId: Int? = null
+)

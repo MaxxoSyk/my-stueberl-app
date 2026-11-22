@@ -1,0 +1,317 @@
+package de.landstueberl.mystueberlapp.viewmodel.product
+
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.image.ProductImageStorage
+import de.landstueberl.mystueberlapp.data.model.product.ProductFilter
+import de.landstueberl.mystueberlapp.data.model.product.ProductListItem
+import de.landstueberl.mystueberlapp.data.model.product.ProductSortOrder
+import de.landstueberl.mystueberlapp.data.model.product.ProductSourceFilter
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
+import de.landstueberl.mystueberlapp.data.model.product.comparator
+import de.landstueberl.mystueberlapp.data.model.product.groupByBatch
+import de.landstueberl.mystueberlapp.repository.EventRepository
+import de.landstueberl.mystueberlapp.repository.ProductRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.io.File
+import java.time.LocalDate
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class ProductsViewModel(
+    private val repo: ProductRepository,
+    eventRepo: EventRepository,
+    private val imageStorage: ProductImageStorage
+) : ViewModel() {
+
+    // ── Filter State ───────────────────────────
+    private val _filter = MutableStateFlow(ProductFilter())
+    val filter: StateFlow<ProductFilter> = _filter.asStateFlow()
+
+    // ── Sort Order ─────────────────────────────
+    // Not part of ProductFilter: changing it re-sorts in memory rather than
+    // re-running the query, and it must not affect the filter badge.
+    private val _sortOrder = MutableStateFlow(ProductSortOrder.OLDEST_FIRST)
+    val sortOrder: StateFlow<ProductSortOrder> = _sortOrder.asStateFlow()
+
+    fun setSortOrder(order: ProductSortOrder) {
+        _sortOrder.value = order
+    }
+
+    // ── Search ─────────────────────────────────
+    // Search bypasses the filter and sort: a query is a direct request for a
+    // product, not a refinement of the current view.
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _isSearchActive = MutableStateFlow(false)
+    val isSearchActive: StateFlow<Boolean> = _isSearchActive.asStateFlow()
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun openSearch() {
+        _isSearchActive.value = true
+    }
+
+    fun closeSearch() {
+        _isSearchActive.value = false
+        _searchQuery.value = ""
+    }
+
+    val availableYears: StateFlow<List<Int>> = repo
+        .getAvailableYearsFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = listOf(LocalDate.now().year)
+        )
+
+    // ── Active Filter Count ────────────────────
+    // Counts *categories* that deviate from the default filter, so a freshly
+    // opened screen shows no badge.
+    val activeFilterCount: StateFlow<Int> = _filter
+        .map { current ->
+            val default = ProductFilter()
+            var count = 0
+            if (current.years != default.years) count++
+            if (current.statuses != default.statuses) count++
+            if (current.productSourceFilter != default.productSourceFilter) count++
+            count
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = 0
+        )
+
+    // ── Filter Narrowing ───────────────────────
+    // Whether the filter can hide rows at all — regardless of whether the user
+    // changed it. Used to pick the right empty-state message, since the default
+    // filter is already narrowing (current year, available, sales area).
+    val isFilterNarrowing: StateFlow<Boolean> = _filter
+        .map { current ->
+            current.years.isNotEmpty() ||
+                    current.statuses.size < ProductStatus.entries.size ||
+                    current.productSourceFilter != ProductSourceFilter.ALL
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = true
+        )
+
+    /** Resolves a stored file name to a file Coil can load. */
+    fun imageFile(fileName: String): File = imageStorage.fileFor(fileName)
+
+    // ── Filter Bottom Sheet ────────────────────
+    private val _isFilterSheetVisible = MutableStateFlow(false)
+    val isFilterSheetVisible: StateFlow<Boolean> = _isFilterSheetVisible.asStateFlow()
+
+    fun showFilterSheet() { _isFilterSheetVisible.value = true }
+    fun hideFilterSheet() { _isFilterSheetVisible.value = false }
+
+    // ── Products List ──────────────────────────
+    // Filter changes re-query; sort changes only re-sort the existing list.
+    private val products: StateFlow<List<Product>> = combine(
+        _filter.flatMapLatest { filter -> repo.getFilteredProductsFlow(filter) },
+        _sortOrder
+    ) { list, order ->
+        list.sortedWith(order.comparator())
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        initialValue = emptyList()
+    )
+
+    /**
+     * The list contents: search results when searching, otherwise the filtered
+     * and sorted products. Both are grouped into batches.
+     */
+    val listItems: StateFlow<List<ProductListItem>> = combine(
+        _isSearchActive,
+        _searchQuery
+    ) { active, query ->
+        active to query
+    }.flatMapLatest { (active, query) ->
+        when {
+            // Searching with a query: results from the whole table
+            active && query.isNotBlank() ->
+                repo.searchProductsFlow(query).map { it.groupByBatch() }
+
+            // Search open but nothing typed yet — no results to show
+            active -> flowOf(emptyList())
+
+            // Normal browsing
+            else -> products.map { it.groupByBatch() }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+        initialValue = emptyList()
+    )
+
+    // ── Event Membership ───────────────────────
+    /**
+     * productId → eventId for available products in an active event. Drives
+     * the "Event" badge and "Go to event"; observed live, so assigning or
+     * cancelling an event updates the list immediately.
+     */
+    val eventIdByProduct: StateFlow<Map<Int, Int>> = eventRepo
+        .getEventIdByProductFlow()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS),
+            initialValue = emptyMap()
+        )
+
+    // ── Selection Mode ─────────────────────────
+    private val _selectedProducts = MutableStateFlow<Set<Int>>(emptySet())
+    val selectedProducts: StateFlow<Set<Int>> = _selectedProducts.asStateFlow()
+
+    // ── Bottom Sheet ───────────────────────────
+    private val _selectedProductId = MutableStateFlow<Int?>(null)
+    val selectedProductId: StateFlow<Int?> = _selectedProductId.asStateFlow()
+
+    // ── Error Reporting ────────────────────────
+    private val _isError = MutableStateFlow(false)
+    val isError: StateFlow<Boolean> = _isError.asStateFlow()
+
+    fun resetErrorState() { _isError.value = false }
+
+    init {
+        // A filter change can hide rows that are still selected; dropping the
+        // selection prevents deleting products the user can no longer see.
+        _filter
+            .drop(1)
+            .onEach { clearSelection() }
+            .launchIn(viewModelScope)
+
+        // Same reasoning for entering or leaving search.
+        _isSearchActive
+            .drop(1)
+            .onEach { clearSelection() }
+            .launchIn(viewModelScope)
+    }
+
+    // ── Filter Updates ─────────────────────────
+    fun toggleYearFilter(year: Int) {
+        val current = _filter.value.years.toMutableSet()
+        if (!current.remove(year)) current.add(year)
+        _filter.value = _filter.value.copy(years = current)
+    }
+
+    fun toggleStatusFilter(status: ProductStatus) {
+        val current = _filter.value.statuses.toMutableSet()
+        if (current.contains(status)) {
+            // Never allow an empty status set — it would match nothing.
+            if (current.size > 1) current.remove(status)
+        } else {
+            current.add(status)
+        }
+        _filter.value = _filter.value.copy(statuses = current)
+    }
+
+    fun setOrderFilter(productSourceFilter: ProductSourceFilter) {
+        _filter.value = _filter.value.copy(productSourceFilter = productSourceFilter)
+    }
+
+    /** Resets filters only — the sort order is controlled separately. */
+    fun resetFilter() {
+        _filter.value = ProductFilter()
+    }
+
+    // ── Bottom Sheet Actions ───────────────────
+    fun onProductTap(product: Product) {
+        _selectedProductId.value = product.details.id
+    }
+
+    fun dismissBottomSheet() {
+        _selectedProductId.value = null
+    }
+
+    // ── Product Status ─────────────────────────
+    fun markAsSold(productId: Int, soldOn: LocalDate) = launchCatching {
+        repo.markProductAsSold(productId, soldOn)
+    }
+
+    fun markAsRemoved(productId: Int, removedOn: LocalDate) = launchCatching {
+        repo.markProductAsRemoved(productId, removedOn)
+    }
+
+    fun resetToAvailable(productId: Int) = launchCatching {
+        repo.resetProductToAvailable(productId)
+    }
+
+    // ── Selection ──────────────────────────────
+    fun toggleSelection(productId: Int) {
+        val current = _selectedProducts.value.toMutableSet()
+        if (!current.remove(productId)) current.add(productId)
+        _selectedProducts.value = current
+    }
+
+    fun clearSelection() {
+        _selectedProducts.value = emptySet()
+    }
+
+    fun deleteSelectedProducts() = launchCatching {
+        val ids = _selectedProducts.value.toList()
+        if (ids.isEmpty()) return@launchCatching
+        repo.deleteProductsByIds(ids)
+        clearSelection()
+    }
+
+    /**
+     * Runs [block] in [viewModelScope], reporting failures via [isError]
+     * instead of crashing the process.
+     */
+    private fun launchCatching(block: suspend () -> Unit) {
+        viewModelScope.launch {
+            try {
+                block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Database operation failed", e)
+                _isError.value = true
+            }
+        }
+    }
+
+    companion object {
+        private const val TAG = "ProductsViewModel"
+        private const val STOP_TIMEOUT_MILLIS = 5_000L
+
+        fun factory(
+            repo: ProductRepository,
+            eventRepository: EventRepository,
+            imageStorage: ProductImageStorage
+        ) = viewModelFactory {
+            initializer<ProductsViewModel> {
+                ProductsViewModel(
+                    repo = repo,
+                    eventRepo = eventRepository,
+                    imageStorage = imageStorage
+                )
+            }
+        }
+    }
+}

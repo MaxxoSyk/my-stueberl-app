@@ -1,0 +1,404 @@
+package de.landstueberl.mystueberlapp.view.product
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Festival
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.ZoomOutMap
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
+import de.landstueberl.mystueberlapp.R
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.model.common.format
+import de.landstueberl.mystueberlapp.data.model.product.ProductStatus
+import de.landstueberl.mystueberlapp.ui.theme.AccentGold
+import de.landstueberl.mystueberlapp.ui.theme.SageGreen
+import de.landstueberl.mystueberlapp.ui.theme.SageGreenDark
+import de.landstueberl.mystueberlapp.ui.theme.SageGreenLight
+import de.landstueberl.mystueberlapp.ui.theme.TextSecondary
+import java.io.File
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+private val DATE_FORMAT: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+
+@Composable
+fun ProductDisplayItem(
+    product: Product,
+    imageFile: File?,
+    isSelected: Boolean,
+    isSelectionMode: Boolean,
+    onTap: () -> Unit,
+    onLongPress: () -> Unit,
+    onImageTap: () -> Unit,
+    modifier: Modifier = Modifier,
+    isEventProduct: Boolean = false
+) {
+    val details = product.details
+    val status = details.status
+    val isOrderProduct = details.orderId != null
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = onTap,
+                onLongClick = onLongPress
+            )
+            .then(
+                if (isSelected) Modifier.border(
+                    width = 2.dp,
+                    color = SageGreenDark,
+                    shape = RoundedCornerShape(14.dp)
+                ) else Modifier
+            ),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // ── Selection Checkbox ──
+                if (isSelectionMode) {
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = { onTap() },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = SageGreenDark,
+                            uncheckedColor = TextSecondary
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+
+                // ── Product Image ──
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(SageGreenLight)
+                        .then(
+                            if (imageFile != null && !isSelectionMode) {
+                                Modifier.combinedClickable(
+                                    onClick = onImageTap,
+                                    onLongClick = onLongPress
+                                )
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (imageFile != null) {
+                        AsyncImage(
+                            model = imageFile,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        // Hint that the thumbnail opens a larger preview
+                        if (!isSelectionMode) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(3.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color.Black.copy(alpha = 0.45f))
+                                    .padding(2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ZoomOutMap,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Image,
+                            contentDescription = stringResource(R.string.products_screen_no_image),
+                            tint = SageGreen,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // ── Product Details ──
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // ── Description + Order Badge ──
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = details.description,
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+
+                        if (isOrderProduct) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            OrderBadge()
+                        } else if (isEventProduct) {
+                            // Orders and events are exclusive, so at most one badge.
+                            Spacer(modifier = Modifier.width(6.dp))
+                            EventBadge()
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.products_screen_purchase_price),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary,
+                            modifier = Modifier.width(56.dp)
+                        )
+                        Text(
+                            text = details.purchasePrice.format(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
+                        if (product.materialList.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.Calculate,
+                                contentDescription = stringResource(
+                                    R.string.products_screen_price_calculated
+                                ),
+                                tint = TextSecondary.copy(alpha = 0.6f),
+                                modifier = Modifier.size(11.dp)
+                            )
+                        }
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.products_screen_sales_price),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary,
+                            modifier = Modifier.width(56.dp)
+                        )
+                        Text(
+                            text = details.salesPrice.format(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = AccentGold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // ── Status Icon ──
+                when (status) {
+                    ProductStatus.REMOVED -> Icon(
+                        imageVector = Icons.Default.Cancel,
+                        contentDescription = stringResource(R.string.products_screen_status_removed),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    ProductStatus.SOLD -> Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = stringResource(R.string.products_screen_status_sold),
+                        tint = SageGreen,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    ProductStatus.AVAILABLE -> Icon(
+                        imageVector = Icons.Default.RadioButtonUnchecked,
+                        contentDescription = stringResource(R.string.products_screen_status_available),
+                        tint = TextSecondary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 6.dp),
+                color = SageGreen.copy(alpha = 0.2f)
+            )
+
+            // ── Bottom Date Row ────────────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // ── Created At ───────
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = TextSecondary.copy(alpha = 0.7f),
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.products_screen_created_at,
+                            details.createdAt.format(DATE_FORMAT)
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary.copy(alpha = 0.7f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // ── Sold / Removed Date ───────
+                val statusDate = when (status) {
+                    ProductStatus.SOLD -> details.soldOn
+                    ProductStatus.REMOVED -> details.removedOn
+                    ProductStatus.AVAILABLE -> null
+                }
+
+                if (statusDate != null) {
+                    val isSold = status == ProductStatus.SOLD
+                    val statusColor = if (isSold) {
+                        SageGreen.copy(alpha = 0.7f)
+                    } else {
+                        MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (isSold) {
+                                Icons.Default.CheckCircle
+                            } else {
+                                Icons.Default.Cancel },
+                            contentDescription = null,
+                            tint = statusColor,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(
+                                if (isSold) {
+                                    R.string.products_screen_sold_on
+                                } else {
+                                    R.string.products_screen_removed_on },
+                                statusDate.format(DATE_FORMAT)
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = statusColor
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ── Order Source Badge ─────────────────────────────────────────────────
+@Composable
+private fun OrderBadge(
+    modifier: Modifier = Modifier
+) {
+    val color = MaterialTheme.colorScheme.tertiary
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(4.dp),
+        color = color.copy(alpha = 0.15f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Receipt,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(11.dp)
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            Text(
+                text = stringResource(R.string.products_screen_order_badge),
+                style = MaterialTheme.typography.labelSmall,
+                color = color
+            )
+        }
+    }
+}
+
+// ── Event Source Badge ─────────────────────────────────────────────────
+/** Theme-based, unlike [OrderBadge]; dark green to stay apart from the gold money/order color. */
+@Composable
+private fun EventBadge(
+    modifier: Modifier = Modifier
+) {
+    val color = MaterialTheme.colorScheme.secondary
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(4.dp),
+        color = color.copy(alpha = 0.15f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Festival,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(11.dp)
+            )
+            Spacer(modifier = Modifier.width(3.dp))
+            Text(
+                text = stringResource(R.string.products_screen_event_badge),
+                style = MaterialTheme.typography.labelSmall,
+                color = color
+            )
+        }
+    }
+}

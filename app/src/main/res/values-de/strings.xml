@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mein Stüberl</string>
+    <string name="home_screen_title">Landstüberl</string>
+
+    <!-- Common -->
+    <string name="common_back">Zurück</string>
+    <string name="common_cancel">Abbrechen</string>
+    <string name="common_close">Schließen</string>
+    <string name="common_ok">OK</string>
+    <string name="common_more">Weitere Optionen</string>
+
+    <!-- Tile Titles -->
+    <string name="home_screen_tile_statistics">Statistiken</string>
+    <string name="home_screen_tile_products">Werkstücke</string>
+    <string name="home_screen_tile_orders">Bestellungen</string>
+    <string name="home_screen_tile_gallery">Werkstück-Galerie</string>
+
+    <!-- Statistics Tile -->
+    <string name="home_screen_stats_revenue_today">Umsatz heute</string>
+    <string name="home_screen_stats_sold_today">Heute verkauft</string>
+    <string name="home_screen_stats_revenue_year">Umsatz %1$d</string>
+
+    <!-- Products Tile -->
+    <string name="home_screen_available_sales_area">Verfügbar im Stüberl</string>
+    <string name="home_screen_tile_products_total">Gesamt %1$d</string>
+    <string name="home_screen_pending_order_products">Für offene Bestellungen</string>
+
+    <!-- Orders Tile -->
+    <string name="home_screen_orders_open">Offen</string>
+    <string name="home_screen_orders_next_due">Nächste fällig</string>
+    <string name="home_screen_orders_no_next">–</string>
+    <string name="home_screen_tile_orders_total">Bestellungen %1$d</string>
+
+    <string name="home_screen_events_next">Nächste Veranstaltung</string>
+    <string name="home_screen_events_no_next">–</string>
+    <string name="home_screen_events_today">Heute</string>
+    <string name="home_screen_events_tomorrow">Morgen</string>
+    <string name="home_screen_events_runs_until">Bis %1$s</string>
+    <plurals name="home_screen_events_in_days">
+        <item quantity="one">In %1$d Tag</item>
+        <item quantity="other">In %1$d Tagen</item>
+    </plurals>
+    <string name="home_screen_events_products">Zugeordnete Werkstücke</string>
+    <string name="home_screen_events_still_running">Läuft noch</string>
+
+    <!-- Products Screen -->
+    <string name="products_screen_title">Werkstücke</string>
+    <string name="products_screen_filter">Filter</string>
+    <string name="products_screen_empty">Noch keine Werkstücke</string>
+    <string name="products_screen_delete">Ausgewählte löschen</string>
+    <string name="products_screen_selected">%1$d ausgewählt</string>
+    <string name="products_screen_status_available">Verfügbar</string>
+    <string name="products_screen_status_sold">Verkauft</string>
+    <string name="products_screen_status_removed">Entfernt</string>
+    <string name="products_screen_purchase_price">Einkauf</string>
+    <string name="products_screen_sales_price">Verkauf</string>
+    <string name="products_screen_created_at">Erstellt: %1$s</string>
+    <string name="products_screen_sold_on">Verkauft: %1$s</string>
+    <string name="products_screen_removed_on">Entfernt: %1$s</string>
+    <string name="products_screen_no_image">Kein Bild</string>
+    <string name="products_screen_success_add">Werkstück erfolgreich gespeichert!</string>
+    <string name="products_screen_success_edit">Werkstück aktualisiert!</string>
+    <string name="products_screen_add">Werkstück hinzufügen</string>
+    <string name="products_screen_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="products_screen_empty_filtered">Keine Werkstücke entsprechen den gewählten Filtern.</string>
+    <string name="products_screen_delete_confirm_title">Werkstücke löschen?</string>
+    <plurals name="products_screen_delete_confirm_message">
+        <item quantity="one">Dieses Werkstück wird dauerhaft gelöscht.</item>
+        <item quantity="other">%1$d Werkstücke werden dauerhaft gelöscht.</item>
+    </plurals>
+    <string name="products_screen_order_badge">Bestellung</string>
+    <string name="products_screen_event_badge">Veranstaltung</string>
+    <string name="products_screen_sort">Sortieren</string>
+    <string name="products_screen_batch_count">×%1$d</string>
+    <string name="products_screen_batch_price_each">%1$s pro Stück</string>
+    <string name="products_screen_batch_expand">Einzelwerkstücke anzeigen</string>
+    <string name="products_screen_batch_collapse">Einzelwerkstücke verbergen</string>
+    <string name="products_screen_price_calculated">Preis aus Materialien berechnet</string>
+
+    <string name="products_screen_search">Suchen</string>
+    <string name="products_screen_search_hint">Beschreibung suchen…</string>
+    <string name="products_screen_search_prompt">Tippe, um Werkstückbeschreibungen zu durchsuchen.</string>
+    <string name="products_screen_search_no_results">Keine Werkstücke entsprechen deiner Suche.</string>
+
+    <string name="products_sort_oldest">Älteste zuerst</string>
+    <string name="products_sort_newest">Neueste zuerst</string>
+    <string name="products_sort_activity">Letzte Änderung</string>
+
+    <!-- Products Screen - Filter Bottom Sheet -->
+    <string name="products_filter_sheet_title">Werkstücke filtern</string>
+    <string name="products_filter_sheet_year">Jahr</string>
+    <string name="products_filter_sheet_status">Werkstück-Status</string>
+    <string name="products_filter_sheet_source">Quelle</string>
+    <string name="products_filter_sheet_reset">Zurücksetzen</string>
+    <string name="products_filter_sheet_apply">Anwenden</string>
+    <string name="products_filter_sheet_status_available">Verfügbar</string>
+    <string name="products_filter_sheet_status_sold">Verkauft</string>
+    <string name="products_filter_sheet_status_removed">Entfernt</string>
+    <string name="products_filter_sheet_source_all">Alle</string>
+    <string name="products_filter_sheet_source_ordered">aus Bestellung</string>
+    <string name="products_filter_sheet_source_event">aus Veranstaltung</string>
+    <string name="products_filter_sheet_source_sales_area">aus Stüberl</string>
+    <string name="products_filter_sheet_active_count">%1$d aktiv</string>
+
+    <!-- Produktformular (gemeinsam für Anlegen & Bearbeiten) -->
+    <string name="product_form_save_failed">Werkstück konnte nicht gespeichert werden. Bitte erneut versuchen.</string>
+    <string name="product_form_description">Beschreibung</string>
+    <string name="product_form_description_placeholder">Werkstückbeschreibung eingeben</string>
+    <string name="product_form_image_placeholder">Bild hinzufügen</string>
+    <string name="product_form_image">Werkstückbild</string>
+    <string name="product_form_save">Speichern</string>
+    <string name="product_form_sales_price">Verkaufspreis</string>
+    <string name="product_form_purchase_price">Einkaufspreis</string>
+    <string name="product_form_quantity">Anzahl</string>
+    <string name="product_form_quantity_hint">Erstellt identische Werkstücke</string>
+    <string name="product_form_quantity_decrease">Anzahl verringern</string>
+    <string name="product_form_quantity_increase">Anzahl erhöhen</string>
+    <string name="product_form_save_multiple">%1$d Werkstücke speichern</string>
+    <string name="product_form_calculate_cost">Kosten berechnen</string>
+
+    <!-- Add Product Screen -->
+    <string name="add_product_screen_title">Werkstück hinzufügen</string>
+
+    <!-- Product Bottom Sheet -->
+    <string name="product_bottom_sheet_mark_sold">Verkauft</string>
+    <string name="product_bottom_sheet_mark_removed">Entfernt</string>
+    <string name="product_bottom_sheet_reset">Zurück auf verfügbar</string>
+    <string name="product_bottom_sheet_edit">Werkstück bearbeiten</string>
+    <string name="product_bottom_sheet_order_managed">Status wird über die zugehörige Bestellung verwaltet.</string>
+    <string name="product_bottom_sheet_go_to_order">Zur Bestellung</string>
+    <string name="product_bottom_sheet_go_to_event">Zur Veranstaltung</string>
+    <string name="product_bottom_sheet_sold_date_title">Verkaufsdatum</string>
+    <string name="product_bottom_sheet_date_hint">Das Werkstück wurde am %1$s angelegt.</string>
+    <string name="product_bottom_sheet_mark_sold_confirm">Verkauft</string>
+    <string name="product_bottom_sheet_removed_date_title">Entnahmedatum</string>
+    <string name="product_bottom_sheet_mark_removed_confirm">Entfernt</string>
+    <string name="product_bottom_sheet_till_sale">An der Veranstaltungskasse verkauft. Zum Rückgängigmachen den Verkauf in der Kasse stornieren.</string>
+
+    <!-- Edit Product Screen -->
+    <string name="edit_product_screen_title">Werkstück bearbeiten</string>
+    <string name="edit_product_screen_created_at">Erstellt am</string>
+    <string name="edit_product_screen_removed_on">Entfernt am</string>
+    <string name="edit_product_screen_sold_on">Verkauft am</string>
+    <string name="edit_product_screen_load_failed">Werkstück konnte nicht geladen werden.</string>
+    <string name="edit_product_screen_retry">Erneut versuchen</string>
+    <string name="edit_product_screen_section_details">Details</string>
+
+    <string name="edit_product_leave_batch_title">Aus Gruppe entfernen?</string>
+    <string name="edit_product_leave_batch_message">Dieses Werkstück wurde als Teil einer Gruppe identischer Produkte erstellt. Da du es geändert hast, wird es künftig einzeln aufgeführt.</string>
+    <string name="edit_product_leave_batch_confirm">Trotzdem speichern</string>
+
+    <!-- Product Status Badge -->
+    <string name="product_status_badge_available">Verfügbar</string>
+    <string name="product_status_badge_sold">Verkauft</string>
+    <string name="product_status_badge_removed">Entfernt</string>
+
+    <string name="image_source_sheet_title">Werkstückbild</string>
+    <string name="image_source_sheet_camera">Foto aufnehmen</string>
+    <string name="image_source_sheet_gallery">Aus Galerie wählen</string>
+    <string name="image_source_sheet_remove">Foto entfernen</string>
+
+    <string name="orders_screen_title">Bestellungen</string>
+    <string name="orders_screen_add">Neue Bestellung</string>
+    <string name="orders_screen_empty">Keine Bestellungen vorhanden.</string>
+    <string name="orders_screen_empty_filtered">Keine Bestellungen entsprechen den gewählten Filtern.</string>
+    <string name="orders_screen_success_update">Bestellung aktualisiert</string>
+    <string name="orders_screen_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="orders_screen_due_date">Fällig am %1$s</string>
+    <string name="orders_screen_created_at">Erstellt am %1$s</string>
+
+    <plurals name="orders_screen_product_count">
+        <item quantity="one">%1$d Werkstück</item>
+        <item quantity="other">%1$d Werkstücke</item>
+    </plurals>
+
+    <string name="order_status_open">Offen</string>
+    <string name="order_status_resolved">Erledigt</string>
+    <string name="order_status_cancelled">Storniert</string>
+
+    <string name="order_detail_title_new">Neue Bestellung</string>
+    <string name="order_detail_title_edit">Bestellung</string>
+    <string name="order_detail_customer_name">Kunde</string>
+    <string name="order_detail_due_date">Fälligkeitsdatum</string>
+    <string name="order_detail_due_date_placeholder">Datum wählen</string>
+    <string name="order_detail_pick_date">Datum wählen</string>
+    <string name="order_detail_note">Notiz</string>
+
+    <string name="order_detail_section_products">Werkstücke</string>
+    <string name="order_detail_section_details">Details</string>
+    <string name="order_detail_no_products">Noch keine Werkstücke.</string>
+    <string name="order_detail_add_new_product">Neu</string>
+    <string name="order_detail_add_existing_product">Vorhanden</string>
+    <string name="order_detail_add_product_hint">Bitte zuerst Kunde und Fälligkeitsdatum eingeben.</string>
+    <string name="order_detail_total">Gesamt</string>
+    <string name="order_detail_purchase_price_value">EK: %1$s</string>
+    <string name="order_detail_sales_price_value">VK: %1$s</string>
+
+    <string name="order_detail_created_at">Erstellt am</string>
+    <string name="order_detail_resolved_on">Erledigt am</string>
+    <string name="order_detail_cancelled_on">Storniert am</string>
+
+    <string name="order_detail_save">Speichern</string>
+    <string name="order_detail_resolve">Als erledigt markieren</string>
+    <string name="order_detail_resolve_short">Erledigt</string>
+    <string name="order_detail_cancel_order">Bestellung stornieren</string>
+    <string name="order_detail_delete">Bestellung löschen</string>
+    <string name="order_detail_remove_product">Aus Bestellung entfernen</string>
+
+    <string name="order_detail_load_failed">Bestellung konnte nicht geladen werden.</string>
+    <string name="order_detail_retry">Erneut versuchen</string>
+    <string name="order_detail_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+
+    <string name="order_detail_resolve_confirm_title">Bestellung als erledigt markieren?</string>
+    <plurals name="order_detail_resolve_confirm_message">
+        <item quantity="one">Das Werkstück dieser Bestellung wird als verkauft markiert.</item>
+        <item quantity="other">Alle %1$d Werkstücke dieser Bestellung werden als verkauft markiert.</item>
+    </plurals>
+
+    <string name="order_detail_cancel_confirm_title">Bestellung stornieren?</string>
+    <string name="order_detail_cancel_confirm_message">Bereits gefertigte Werkstücke werden zu Stüberl-Bestand und behalten ihre Preise.</string>
+
+    <string name="order_detail_delete_confirm_title">Bestellung löschen?</string>
+    <string name="order_detail_delete_confirm_message">Die Bestellung wird gelöscht. Ihre Werkstücke werden zu Stüberl-Bestand.</string>
+
+    <string name="order_detail_remove_product_confirm_title">Aus Bestellung entfernen?</string>
+    <string name="order_detail_remove_product_confirm_message">Das Werkstück wird zu Stüberl-Bestand. Es wird nicht gelöscht.</string>
+
+    <string name="attach_product_title">Werkstücke hinzufügen</string>
+    <string name="attach_product_empty">Keine verfügbaren Werkstücke. Alles im Stüberl ist verkauft, entfernt oder bereits Teil einer Bestellung.</string>
+    <string name="attach_product_confirm_none">Werkstücke auswählen</string>
+
+    <plurals name="attach_product_confirm">
+        <item quantity="one">1 Werkstück hinzufügen</item>
+        <item quantity="other">%1$d Werkstücke hinzufügen</item>
+    </plurals>
+
+    <string name="material_adjustment_label">Preisanpassung</string>
+
+    <string name="material_position_name">Material</string>
+    <string name="material_position_quantity">Anz.</string>
+    <string name="material_position_unit_price">Einzelpreis</string>
+    <string name="material_position_adjustment_amount">Betrag</string>
+    <string name="material_position_unit_line">%1$d × %2$s</string>
+    <string name="material_position_edit">Position bearbeiten</string>
+    <string name="material_position_remove">Position entfernen</string>
+    <string name="material_position_confirm">Position bestätigen</string>
+    <string name="material_position_price_suggestions">Bisherige Preise</string>
+
+    <string name="cost_calculator_title_purchase">Kosten (Einkauf)</string>
+    <string name="cost_calculator_empty">Noch keine Positionen. Füge die Materialien hinzu, die für dieses Werkstück eingesetzt wurden.</string>
+    <string name="cost_calculator_add_position">Position hinzufügen</string>
+    <string name="cost_calculator_total">Gesamt</string>
+    <string name="cost_calculator_apply">Übernehmen</string>
+    <string name="cost_calculator_clear">Alle Positionen löschen</string>
+
+    <string name="statistics_screen_title">Statistik</string>
+    <string name="statistics_period_today">Heute</string>
+    <string name="statistics_period_week">Woche</string>
+    <string name="statistics_period_month">Monat</string>
+    <string name="statistics_period_year">Jahr</string>
+
+    <string name="statistics_section_overall">Gesamt</string>
+    <string name="statistics_revenue_total">Umsatz</string>
+    <string name="statistics_revenue_sales_area">Umsatz Stüberl</string>
+    <string name="statistics_revenue_orders">Umsatz Bestellungen</string>
+    <string name="statistics_sold_count">Verkaufte Werkstücke</string>
+    <string name="statistics_profit_year">Gewinn %1$d</string>
+    <string name="statistics_profit_caption">Umsatz minus Kosten aller verkauften und entfernten Werkstücke</string>
+    <string name="statistics_avg_sale_price_year">Ø Verkaufspreis %1$d</string>
+    <string name="statistics_avg_sale_price_all_time">Ø Verkaufspreis, gesamt</string>
+    <string name="statistics_avg_stock_presence">Ø Verweildauer</string>
+    <string name="statistics_avg_stock_presence_caption">Stüberl-Werkstücke, gesamt</string>
+    <string name="statistics_highest_sale_year">Höchster Verkaufspreis %1$d</string>
+    <string name="statistics_highest_profit_year">Höchster Gewinn %1$d</string>
+    <string name="statistics_free_products_year">Verschenkte Werkstücke %1$d</string>
+    <string name="statistics_removed_products_year">Entfernte Werkstücke %1$d</string>
+    <string name="statistics_days_value">%1$d Tage</string>
+    <string name="statistics_no_value">–</string>
+
+    <string name="gallery_screen_title">Werkstück-Galerie</string>
+    <string name="gallery_screen_empty">Noch keine Fotos. Fotos, die du Werkstücken hinzufügst, erscheinen hier.</string>
+
+    <string name="product_detail_not_found">Dieses Werkstück existiert nicht mehr.</string>
+
+    <!-- Events -->
+    <string name="home_screen_tile_events">Veranstaltungen</string>
+    <string name="events_screen_title">Veranstaltungen</string>
+    <string name="events_screen_add">Neue Veranstaltung</string>
+    <string name="events_screen_empty">Noch keine Veranstaltungen. Tippe auf +, um die erste zu planen.</string>
+    <string name="events_screen_section_upcoming">Anstehend</string>
+    <string name="events_screen_section_past">Vergangen</string>
+    <string name="events_screen_no_upcoming">Keine anstehenden Veranstaltungen.</string>
+    <string name="events_screen_success_save">Veranstaltung gespeichert</string>
+    <plurals name="events_screen_product_count">
+        <item quantity="one">%1$d Werkstück</item>
+        <item quantity="other">%1$d Werkstücke</item>
+    </plurals>
+    <string name="event_date_range">%1$s – %2$s</string>
+
+    <string name="event_status_planned">Geplant</string>
+    <string name="event_status_in_preparation">In Vorbereitung</string>
+    <string name="event_status_in_progress">Läuft</string>
+    <string name="event_status_done">Abgeschlossen</string>
+    <string name="event_status_cancelled">Abgesagt</string>
+
+    <string name="event_form_title_new">Neue Veranstaltung</string>
+    <string name="event_form_title_edit">Veranstaltung bearbeiten</string>
+    <string name="event_form_name">Name</string>
+    <string name="event_form_location">Ort</string>
+    <string name="event_form_start_date">Datum</string>
+    <string name="event_form_end_date">Letzter Tag</string>
+    <string name="event_form_end_date_hint">Leer lassen bei eintägigen Veranstaltungen.</string>
+    <string name="event_form_clear_end_date">Letzten Tag entfernen</string>
+    <string name="event_form_stand_fee">Standgebühr</string>
+    <string name="event_form_stand_fee_hint">Leer lassen, wenn noch unbekannt. 0 für einen kostenlosen Stand.</string>
+    <string name="event_form_note">Notiz</string>
+    <string name="event_form_save">Speichern</string>
+    <string name="event_form_save_hint">Bitte zuerst Name und Datum eingeben.</string>
+    <string name="event_form_save_failed">Veranstaltung konnte nicht gespeichert werden. Bitte erneut versuchen.</string>
+    <string name="event_form_load_failed">Veranstaltung konnte nicht geladen werden.</string>
+    <string name="event_form_retry">Erneut versuchen</string>
+
+    <string name="event_detail_title">Veranstaltung</string>
+    <string name="event_detail_edit">Veranstaltung bearbeiten</string>
+    <string name="event_detail_delete">Veranstaltung löschen</string>
+    <string name="event_detail_start_preparation">Vorbereitung starten</string>
+    <string name="event_detail_start_preparation_confirm_title">Vorbereitung starten?</string>
+    <string name="event_detail_start_preparation_confirm_message">Die Veranstaltung wechselt auf „In Vorbereitung“. Danach kannst du Werkstücke hinzufügen.</string>
+    <string name="event_detail_delete_confirm_title">Veranstaltung löschen?</string>
+    <string name="event_detail_delete_confirm_message">Die Veranstaltung wird dauerhaft gelöscht. Zugeordnete Werkstücke bleiben erhalten.</string>
+    <string name="event_detail_planned_hint">Werkstücke können hinzugefügt werden, sobald die Vorbereitung gestartet wurde.</string>
+    <string name="event_detail_stand_fee_unknown">Noch nicht eingetragen</string>
+    <string name="event_detail_stand_fee_free">Kostenlos</string>
+    <string name="event_detail_created_at">Erstellt am %1$s</string>
+    <string name="event_detail_not_found">Diese Veranstaltung existiert nicht mehr.</string>
+    <string name="event_detail_action_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="event_detail_remove_product">Aus Veranstaltung entfernen</string>
+    <string name="event_detail_remove_batch">Alle aus Veranstaltung entfernen</string>
+    <string name="event_detail_purchase_price">EK: %1$s</string>
+    <string name="event_detail_cancel">Veranstaltung absagen</string>
+    <string name="event_detail_cancel_dismiss">Beibehalten</string>
+    <string name="event_detail_cancel_confirm_title">Veranstaltung absagen?</string>
+    <string name="event_detail_cancel_confirm_message">Die Veranstaltung wird als abgesagt markiert. Ihre Werkstücke sind wieder frei und können im Stüberl verkauft oder zu einer anderen Veranstaltung mitgenommen werden.</string>
+    <string name="event_detail_cancelled_on">Abgesagt am %1$s</string>
+    <string name="event_detail_show_details">Details anzeigen</string>
+    <string name="event_detail_hide_details">Details ausblenden</string>
+    <string name="event_detail_section_products">Werkstücke</string>
+    <string name="event_detail_section_no_longer_available">Nicht mehr verfügbar</string>
+    <string name="event_detail_no_products">Noch keine Werkstücke zugeordnet.</string>
+    <string name="event_detail_total">Gesamt</string>
+    <string name="event_detail_remove_confirm_title">Aus Veranstaltung entfernen?</string>
+    <plurals name="event_detail_remove_confirm_message">
+        <item quantity="one">Das Werkstück wird aus dieser Veranstaltung entfernt. Es bleibt im Bestand.</item>
+        <item quantity="other">%1$d Werkstücke werden aus dieser Veranstaltung entfernt. Sie bleiben im Bestand.</item>
+    </plurals>
+    <string name="event_detail_add_new">Neu</string>
+    <string name="event_detail_add_existing">Vorhanden</string>
+    <string name="event_attach_empty">Keine verfügbaren Werkstücke. Alles im Stüberl ist verkauft, entfernt, Teil einer Bestellung oder bereits einer Veranstaltung zugeordnet.</string>
+    <string name="event_detail_print_labels">Etiketten drucken</string>
+
+    <string name="label_dialog_title">Etiketten drucken</string>
+    <string name="label_dialog_select_all">Alle auswählen</string>
+    <string name="label_dialog_select_none">Keine auswählen</string>
+    <string name="label_dialog_hint">Ein QR-Etikett pro Werkstück. Bereits gedruckte Etiketten sind nicht vorausgewählt; zum Nachdrucken einfach ankreuzen.</string>
+    <string name="label_dialog_batch_selected">%1$d von %2$d ausgewählt</string>
+    <plurals name="label_dialog_confirm">
+        <item quantity="one">%1$d Etikett drucken</item>
+        <item quantity="other">%1$d Etiketten drucken</item>
+    </plurals>
+    <plurals name="label_dialog_pages">
+        <item quantity="one">%1$d Seite (A4)</item>
+        <item quantity="other">%1$d Seiten (A4)</item>
+    </plurals>
+    <string name="label_print_job">Etiketten – %1$s</string>
+    <string name="label_print_failed">Etikettenbogen konnte nicht erstellt werden. Bitte erneut versuchen.</string>
+    <string name="label_dialog_all_printed">Alle Etiketten dieser Veranstaltung sind gedruckt. Kreuze ein Werkstück an, um sein Etikett nachzudrucken.</string>
+    <string name="label_dialog_printed_on">Gedruckt am %1$s</string>
+    <string name="label_dialog_batch_printed">%1$d von %2$d gedruckt</string>
+    <string name="label_dialog_mode_products">Pro Werkstück</string>
+    <string name="label_dialog_mode_group">Gruppe</string>
+    <plurals name="label_dialog_group_count">
+        <item quantity="one">Ein Etikett für %1$d Werkstück</item>
+        <item quantity="other">Ein Etikett für %1$d Werkstücke</item>
+    </plurals>
+    <string name="label_dialog_group_printed_on">Gruppenetikett gedruckt am %1$s</string>
+    <string name="label_dialog_switch_title">Etikettenart wechseln?</string>
+    <string name="label_dialog_switch_to_group">Die Werkstücke dieser Gruppe haben bereits eigene gedruckte Etiketten. Bitte entferne die alten Etiketten, nachdem das Gruppenetikett gedruckt ist.</string>
+    <string name="label_dialog_switch_to_products">Diese Gruppe hat bereits ein gedrucktes Gruppenetikett. Bitte entferne das alte Gruppenetikett, nachdem die Etiketten der Werkstücke gedruckt sind.</string>
+    <string name="label_dialog_switch_confirm">Wechseln</string>
+
+    <string name="label_print_confirm_title">Wurden die Etiketten richtig gedruckt?</string>
+    <plurals name="label_print_confirm_message">
+        <item quantity="one">Das Etikett wird als gedruckt markiert und beim nächsten Mal nicht vorausgewählt.</item>
+        <item quantity="other">%1$d Etiketten werden als gedruckt markiert und beim nächsten Mal nicht vorausgewählt.</item>
+    </plurals>
+    <string name="label_print_confirm_yes">Ja, als gedruckt markieren</string>
+    <string name="label_print_confirm_no">Nein</string>
+
+    <string name="event_detail_start_event">Veranstaltung starten</string>
+    <string name="event_detail_start_event_needs_products">Füge zuerst Werkstücke hinzu, bevor du die Veranstaltung startest.</string>
+    <string name="event_detail_start_event_confirm_title">Veranstaltung starten?</string>
+    <string name="event_detail_start_event_confirm_message">Die Veranstaltung wechselt auf „Läuft“. Werkstücke können dann nicht mehr hinzugefügt oder entfernt werden.</string>
+    <string name="event_detail_start_event_early">Die Veranstaltung beginnt erst am %1$s.</string>
+    <plurals name="event_detail_start_event_unlabeled">
+        <item quantity="one">%1$d Werkstück hat noch kein gedrucktes Etikett.</item>
+        <item quantity="other">%1$d Werkstücke haben noch kein gedrucktes Etikett.</item>
+    </plurals>
+    <string name="event_detail_in_progress_hint">Die Veranstaltung läuft. Werkstücke können nicht mehr hinzugefügt oder entfernt werden.</string>
+    <string name="event_detail_section_sold_at_event">Bei dieser Veranstaltung verkauft</string>
+    <string name="event_detail_open_till">Kasse öffnen</string>
+
+    <string name="till_title">Kasse</string>
+    <string name="till_total">Gesamt</string>
+    <string name="till_add">Hinzufügen</string>
+    <string name="till_basket">Warenkorb (%1$d)</string>
+    <string name="till_basket_empty">Der Warenkorb ist leer. Füge die Werkstücke hinzu, die der Kunde ausgewählt hat.</string>
+    <string name="till_basket_unit_line">%1$d × %2$s</string>
+    <string name="till_basket_add_one">Eins mehr</string>
+    <string name="till_remove_item">Aus Warenkorb entfernen</string>
+    <string name="till_clear_basket">Warenkorb leeren</string>
+    <string name="till_clear_confirm_title">Warenkorb leeren?</string>
+    <string name="till_clear_confirm_message">Alle Werkstücke werden aus dem Warenkorb entfernt. Es wird nichts verkauft.</string>
+    <string name="till_not_running">Die Veranstaltung läuft nicht. Es kann nichts verkauft werden.</string>
+
+    <string name="till_figures_show">Zahlen anzeigen</string>
+    <string name="till_figures_hide">Zahlen ausblenden</string>
+
+    <string name="till_figure_revenue">Umsatz</string>
+    <string name="till_figure_items">Verkauft</string>
+    <string name="till_figure_customers">Kunden</string>
+
+    <string name="till_add_sheet_title">Werkstücke hinzufügen</string>
+    <string name="till_search_hint">Beschreibung suchen…</string>
+    <string name="till_add_empty">Alle verfügbaren Werkstücke sind im Warenkorb oder verkauft.</string>
+    <string name="till_add_no_results">Keine Werkstücke entsprechen deiner Suche.</string>
+    <plurals name="till_add_sheet_basket">
+        <item quantity="one">%1$d Werkstück im Warenkorb</item>
+        <item quantity="other">%1$d Werkstücke im Warenkorb</item>
+    </plurals>
+    <string name="till_add_sheet_in_basket">%1$d im Warenkorb</string>
+    <string name="till_add_sheet_remove_one">Eins zurücklegen</string>
+
+    <string name="till_msg_failed">Aktion fehlgeschlagen. Bitte erneut versuchen.</string>
+    <string name="till_msg_not_running">Die Veranstaltung läuft nicht mehr.</string>
+    <string name="till_msg_not_in_event">Dieses Werkstück gehört nicht zu dieser Veranstaltung.</string>
+    <string name="till_msg_not_available">Dieses Werkstück ist bereits verkauft oder entfernt.</string>
+    <string name="till_msg_already_in_basket">Dieses Werkstück ist bereits im Warenkorb.</string>
+
+    <string name="till_pay">Bezahlen</string>
+    <string name="pay_sheet_title">Bezahlung</string>
+    <plurals name="pay_sheet_items">
+        <item quantity="one">%1$d Werkstück</item>
+        <item quantity="other">%1$d Werkstücke</item>
+    </plurals>
+    <string name="pay_cash_given">Erhalten</string>
+    <string name="pay_exact">Passend</string>
+    <string name="pay_change">Rückgeld</string>
+    <string name="pay_missing">Es fehlen %1$s</string>
+    <string name="pay_complete">Verkauf abschließen</string>
+    <string name="pay_back">Zurück zum Warenkorb</string>
+    <string name="till_msg_sold">Verkauft: %1$s</string>
+    <string name="till_msg_basket_changed">Der Warenkorb hat sich geändert. Es wurde nichts verkauft – bitte Summe erneut prüfen.</string>
+
+    <string name="till_scan">Etikett scannen</string>
+    <string name="till_msg_added">Hinzugefügt: %1$s</string>
+    <string name="till_msg_added_generic">Zum Warenkorb hinzugefügt</string>
+    <string name="till_msg_foreign_code">Das ist kein Etikett aus dieser App.</string>
+    <string name="till_msg_other_event">Dieses Etikett gehört zu einer anderen Veranstaltung.</string>
+    <string name="till_msg_scanner_unavailable">Der Scanner ist nicht verfügbar. Beim ersten Mal wird eine Internetverbindung benötigt.</string>
+
+    <string name="till_sales_title">Verkäufe</string>
+    <string name="till_undo">Stornieren</string>
+    <string name="till_undo_confirm_title">Verkauf stornieren?</string>
+    <plurals name="till_undo_confirm_message">
+        <item quantity="one">Das Werkstück kommt zurück in die Veranstaltung. Der Umsatz sinkt um %2$s.</item>
+        <item quantity="other">Die %1$d Werkstücke kommen zurück in die Veranstaltung. Der Umsatz sinkt um %2$s.</item>
+    </plurals>
+    <string name="till_msg_undone">Storniert: %1$s</string>
+    <string name="till_msg_batch_empty">Alle Werkstücke dieser Gruppe sind verkauft oder bereits im Warenkorb.</string>
+
+    <string name="event_detail_close">Veranstaltung abschließen</string>
+    <plurals name="event_detail_close_basket_hint">
+        <item quantity="one">%1$d Werkstück liegt noch im Warenkorb der Kasse. Leere ihn oder schließe den Verkauf zuerst ab.</item>
+        <item quantity="other">%1$d Werkstücke liegen noch im Warenkorb der Kasse. Leere ihn oder schließe den Verkauf zuerst ab.</item>
+    </plurals>
+    <string name="event_detail_close_confirm_title">Veranstaltung abschließen?</string>
+    <string name="event_detail_close_summary">Umsatz: %1$s · Verkauft: %2$d · Kunden: %3$d</string>
+    <plurals name="event_detail_close_returning">
+        <item quantity="one">%1$d Werkstück geht zurück ins Stüberl.</item>
+        <item quantity="other">%1$d Werkstücke gehen zurück ins Stüberl.</item>
+    </plurals>
+    <string name="event_detail_close_early">Die Veranstaltung läuft eigentlich bis %1$s.</string>
+    <string name="event_detail_close_final">Verkäufe können danach nicht mehr storniert werden. Die Etiketten dieser Veranstaltung sind nicht mehr gültig – bitte entfernen.</string>
+    <string name="event_detail_close_blocked">Die Veranstaltung konnte nicht abgeschlossen werden. Leere zuerst den Warenkorb der Kasse.</string>
+    <string name="event_detail_reopen">Wieder öffnen</string>
+    <string name="event_detail_reopen_confirm_title">Veranstaltung wieder öffnen?</string>
+    <string name="event_detail_reopen_confirm_message">Die Veranstaltung wechselt zurück auf „Läuft“. Kasse und Stornieren sind wieder möglich.</string>
+    <string name="event_detail_reopen_refused">Die Veranstaltung kann nicht wieder geöffnet werden: Ein Werkstück wurde inzwischen einer Bestellung oder anderen Veranstaltung zugeordnet.</string>
+    <string name="event_detail_delete_blocked">Diese Veranstaltung hat Verkäufe und kann nicht gelöscht werden, damit ihre Umsätze erhalten bleiben.</string>
+    <string name="event_detail_summary_title">Ergebnis</string>
+    <string name="event_detail_summary_counts">Verkauft: %1$d · Kunden: %2$d</string>
+    <string name="event_detail_summary_purchase_cost">Einkaufskosten</string>
+    <string name="event_detail_summary_profit">Gewinn</string>
+    <string name="event_detail_summary_profit_without_fee">Gewinn (ohne Standgebühr)</string>
+    <string name="event_detail_section_returned">Zurück ins Stüberl</string>
+    <string name="event_detail_closed_on">Abgeschlossen am %1$s</string>
+    <string name="event_detail_section_expand">Abschnitt einblenden</string>
+    <string name="event_detail_section_collapse">Abschnitt ausblenden</string>
+</resources>

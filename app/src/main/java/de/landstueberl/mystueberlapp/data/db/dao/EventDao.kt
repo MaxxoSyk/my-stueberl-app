@@ -1,0 +1,396 @@
+package de.landstueberl.mystueberlapp.data.db.dao
+
+import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Transaction
+import androidx.room.Upsert
+import de.landstueberl.mystueberlapp.data.db.entity.EventBatchLabel
+import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.db.relation.EventWithProductCount
+import de.landstueberl.mystueberlapp.data.db.relation.LabelPrint
+import de.landstueberl.mystueberlapp.data.db.relation.Product
+import de.landstueberl.mystueberlapp.data.db.relation.ProductEventLink
+import de.landstueberl.mystueberlapp.data.db.relation.ProductLabelIdentifier
+import de.landstueberl.mystueberlapp.data.model.event.EventStatus
+import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
+
+/**
+ * NOTE: some queries embed [EventStatus] constant names as SQL string literals
+ * ('CANCELLED'). Renaming an enum constant will not break compilation; it will
+ * silently make those queries match nothing.
+ */
+@Dao
+interface EventDao {
+
+    // ── Writes ─────────────────────────────────
+    @Upsert
+    suspend fun upsertEvent(event: EventDetail): Long
+
+    /**
+     * Changes only the status, so a status switch can't overwrite fields edited
+     * elsewhere. Which transitions are allowed is decided in the ViewModel.
+     */
+    @Query("UPDATE EventDetail SET status = :status WHERE id = :id")
+    suspend fun updateStatus(id: Int, status: EventStatus)
+
+    /**
+     * Deletes the event unless it has sales: their revenue would vanish from the
+     * figures. Product links and an open basket are removed by CASCADE; the
+     * products themselves stay. @return deleted rows (0 or 1)
+     */
+    @Query("""
+        DELETE FROM EventDetail
+        WHERE id = :id
+          AND NOT EXISTS (SELECT 1 FROM EventSale WHERE eventId = :id)
+    """)
+    suspend fun deleteEvent(id: Int): Int
+
+    // ── Reads ──────────────────────────────────
+    /**
+     * All events, earliest first. Splitting into "upcoming" and "past" happens
+     * in Kotlin, because it depends on today's date (see [EventDetail.lastDay]).
+     */
+    @Query("""
+        SELECT e.*,
+               (SELECT COUNT(*) FROM EventProductDetail ep WHERE ep.eventId = e.id) AS productCount
+        FROM EventDetail e
+        ORDER BY e.eventDate ASC, e.id ASC
+    """)
+    fun getEventsWithProductCountFlow(): Flow<List<EventWithProductCount>>
+
+    /** Observed by the detail screen, so a status change shows up right away. */
+    @Query("SELECT * FROM EventDetail WHERE id = :id")
+    fun getEventFlow(id: Int): Flow<EventDetail?>
+
+    /** One-time read for prefilling the edit form. */
+    @Query("SELECT * FROM EventDetail WHERE id = :id")
+    suspend fun getEventById(id: Int): EventDetail?
+
+    /**
+     * The event for the home tile: a running event first (even past its last
+     * day, until it's closed), otherwise the nearest one that isn't over yet.
+     * Cancelled and closed events are skipped.
+     */
+    @Query("""
+        SELECT * FROM EventDetail
+        WHERE status NOT IN (:skippedStatuses)
+          AND (COALESCE(endDate, eventDate) >= :today OR status = :inProgress)
+        ORDER BY
+            CASE WHEN status = :inProgress THEN 0 ELSE 1 END,
+            eventDate ASC,
+            id ASC
+        LIMIT 1
+    """)
+    fun getNextEventFlow(
+        today: LocalDate,
+        skippedStatuses: List<String>,
+        inProgress: String
+    ): Flow<EventDetail?>
+
+    /** Every location entered so far, newest first. Grouped in Kotlin. */
+    @Query("SELECT location FROM EventDetail WHERE location IS NOT NULL ORDER BY id DESC")
+    suspend fun getAllLocationsNewestFirst(): List<String>
+
+    // ── Cancel ─────────────────────────────────
+    /**
+     * Cancels the event if it hasn't started yet. Links stay as history; the
+     * products are free again because the event is no longer active.
+     */
+    @Query("""
+        UPDATE EventDetail
+        SET status = :cancelled, cancelledOn = :date
+        WHERE id = :id AND status IN (:cancellableStatuses)
+    """)
+    suspend fun cancelEvent(
+        id: Int,
+        date: LocalDate,
+        cancelled: String,
+        cancellableStatuses: List<String>
+    )
+
+    // ── Event Products ─────────────────────────
+    /**
+     * Every product linked to the event, in the order it was assigned.
+     * `ep.rowid` keeps insertion order within a day, since `addedAt` has no time.
+     * Selecting only `p.*` avoids column clashes with the join table.
+     */
+    @Transaction
+    @Query("""
+        SELECT p.* FROM ProductDetail p
+        INNER JOIN EventProductDetail ep ON ep.productId = p.id
+        WHERE ep.eventId = :eventId
+        ORDER BY ep.addedAt ASC, ep.rowid ASC
+    """)
+    fun getEventProductsFlow(eventId: Int): Flow<List<Product>>
+
+    /**
+     * Stand stock that could be taken to the event: available, not in an
+     * order, not in any active event, and not linked to this event already.
+     */
+    @Transaction
+    @Query("""
+        SELECT * FROM ProductDetail p
+        WHERE p.status = 'AVAILABLE'
+          AND p.orderId IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN EventDetail e ON e.id = ep.eventId
+              WHERE ep.productId = p.id AND e.status IN (:activeStatuses)
+          )
+          AND NOT EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              WHERE ep.productId = p.id AND ep.eventId = :eventId
+          )
+        ORDER BY p.createdAt DESC, p.id ASC
+    """)
+    fun getAttachableProductsFlow(
+        eventId: Int,
+        activeStatuses: List<String>
+    ): Flow<List<Product>>
+
+    /**
+     * Links products to the event in one guarded statement. A product is skipped
+     * if it was sold, put in an order or taken to another event meanwhile, and
+     * nothing is linked unless the event is still in [requiredStatus].
+     */
+    @Query("""
+        INSERT OR IGNORE INTO EventProductDetail (eventId, productId, addedAt)
+        SELECT :eventId, p.id, :addedAt FROM ProductDetail p
+        WHERE p.id IN (:productIds)
+          AND p.status = 'AVAILABLE'
+          AND p.orderId IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN EventDetail e ON e.id = ep.eventId
+              WHERE ep.productId = p.id AND e.status IN (:activeStatuses)
+          )
+          AND EXISTS (
+              SELECT 1 FROM EventDetail WHERE id = :eventId AND status = :requiredStatus
+          )
+    """)
+    suspend fun linkProducts(
+        eventId: Int,
+        productIds: List<Int>,
+        addedAt: LocalDate,
+        requiredStatus: String,
+        activeStatuses: List<String>
+    )
+
+    /** Removes links, but only while the event is still in [requiredStatus]. */
+    @Query("""
+        DELETE FROM EventProductDetail
+        WHERE eventId = :eventId
+          AND productId IN (:productIds)
+          AND EXISTS (
+              SELECT 1 FROM EventDetail WHERE id = :eventId AND status = :requiredStatus
+          )
+    """)
+    suspend fun unlinkProducts(eventId: Int, productIds: List<Int>, requiredStatus: String)
+
+    /** For the home tile: what is actually being taken along. */
+    @Query("""
+        SELECT COUNT(*) FROM EventProductDetail ep
+        INNER JOIN ProductDetail p ON p.id = ep.productId
+        WHERE ep.eventId = :eventId AND p.status = 'AVAILABLE'
+    """)
+    fun getAvailableProductCountFlow(eventId: Int): Flow<Int>
+
+    /**
+     * Products that belong to an event in the product list, with that event:
+     * available products held by an active event, plus products sold at an
+     * event's till (via their sale). Each productId appears once: a sold
+     * product is never AVAILABLE. Products sold elsewhere are left out (rule 1a).
+     */
+    @Query("""
+        SELECT ep.productId AS productId, ep.eventId AS eventId
+        FROM EventProductDetail ep
+        INNER JOIN EventDetail e ON e.id = ep.eventId
+        INNER JOIN ProductDetail p ON p.id = ep.productId
+        WHERE e.status IN (:activeStatuses) AND p.status = 'AVAILABLE'
+        UNION
+        SELECT p.id AS productId, s.eventId AS eventId
+        FROM ProductDetail p
+        INNER JOIN EventSale s ON s.id = p.eventSaleId
+    """)
+    fun getActiveEventLinksFlow(activeStatuses: List<String>): Flow<List<ProductEventLink>>
+
+    /** Single-column read for guards inside transactions. Null if the event is gone. */
+    @Query("SELECT status FROM EventDetail WHERE id = :id")
+    suspend fun getEventStatus(id: Int): EventStatus?
+
+    /** Products of the event whose label was confirmed as printed. */
+    @Query("""
+        SELECT productId, labelPrintedAt FROM EventProductDetail
+        WHERE eventId = :eventId AND labelPrintedAt IS NOT NULL
+    """)
+    fun getLabelPrintsFlow(eventId: Int): Flow<List<LabelPrint>>
+
+    /** Only while labels can be printed for the event (guarded like linking). */
+    @Query("""
+        UPDATE EventProductDetail
+        SET labelPrintedAt = :date
+        WHERE eventId = :eventId
+          AND productId IN (:productIds)
+          AND EXISTS (
+              SELECT 1 FROM EventDetail WHERE id = :eventId AND status IN (:printableStatuses)
+          )
+    """)
+    suspend fun markLabelsPrinted(
+        eventId: Int,
+        productIds: List<Int>,
+        date: LocalDate,
+        printableStatuses: List<String>
+    )
+
+    /**
+     * Starts the event, but only from [inPreparation] and only if it has at
+     * least one available product. @return the number of updated rows (0 or 1)
+     */
+    @Query("""
+        UPDATE EventDetail
+        SET status = :inProgress
+        WHERE id = :id
+          AND status = :inPreparation
+          AND EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN ProductDetail p ON p.id = ep.productId
+              WHERE ep.eventId = :id AND p.status = 'AVAILABLE'
+          )
+    """)
+    suspend fun startEvent(id: Int, inPreparation: String, inProgress: String): Int
+
+    /**
+     * Closes a running event, but only with an empty basket, so no products stay
+     * reserved. Remaining products go back to the stand by themselves: a DONE
+     * event is no longer active. @return updated rows (0 or 1)
+     */
+    @Query("""
+        UPDATE EventDetail
+        SET status = :done, closedOn = :date
+        WHERE id = :id
+          AND status = :inProgress
+          AND NOT EXISTS (SELECT 1 FROM EventBasketItem WHERE eventId = :id)
+    """)
+    suspend fun closeEvent(id: Int, date: LocalDate, inProgress: String, done: String): Int
+
+    /**
+     * Reopens a closed event until its last day is over, unless one of its
+     * available products was put into an order or another active event meanwhile.
+     * @return updated rows (0 or 1)
+     */
+    @Query("""
+        UPDATE EventDetail
+        SET status = :inProgress, closedOn = NULL
+        WHERE id = :id
+          AND status = :done
+          AND COALESCE(endDate, eventDate) >= :today
+          AND NOT EXISTS (
+              SELECT 1 FROM EventProductDetail ep
+              INNER JOIN ProductDetail p ON p.id = ep.productId
+              WHERE ep.eventId = :id
+                AND p.status = 'AVAILABLE'
+                AND (
+                    p.orderId IS NOT NULL
+                    OR EXISTS (
+                        SELECT 1 FROM EventProductDetail other
+                        INNER JOIN EventDetail oe ON oe.id = other.eventId
+                        WHERE other.productId = p.id
+                          AND other.eventId != :id
+                          AND oe.status IN (:activeStatuses)
+                    )
+                )
+          )
+    """)
+    suspend fun reopenEvent(
+        id: Int,
+        today: LocalDate,
+        done: String,
+        inProgress: String,
+        activeStatuses: List<String>
+    ): Int
+
+    // ── Group Labels ───────────────────────────
+    @Query("SELECT * FROM EventBatchLabel WHERE eventId = :eventId")
+    fun getBatchLabelsFlow(eventId: Int): Flow<List<EventBatchLabel>>
+
+    @Upsert
+    suspend fun upsertBatchLabels(labels: List<EventBatchLabel>)
+
+    /** No mixed use: a printed group label replaces the members' own labels. */
+    @Query("""
+        UPDATE EventProductDetail
+        SET labelPrintedAt = NULL
+        WHERE eventId = :eventId
+          AND productId IN (SELECT id FROM ProductDetail WHERE batchId IN (:batchIds))
+    """)
+    suspend fun clearMemberLabels(eventId: Int, batchIds: List<Int>)
+
+    /** No mixed use: printed member labels replace their batch's group label. */
+    @Query("""
+        DELETE FROM EventBatchLabel
+        WHERE eventId = :eventId
+          AND batchId IN (
+              SELECT batchId FROM ProductDetail
+              WHERE id IN (:productIds) AND batchId IS NOT NULL
+          )
+    """)
+    suspend fun deleteBatchLabelsForProducts(eventId: Int, productIds: List<Int>)
+
+    // ── Label Identifiers ──────────────────────
+    /** Every identifier in use at the event, from member and group labels. */
+    @Query("""
+        SELECT labelIdentifier FROM EventProductDetail
+        WHERE eventId = :eventId AND labelIdentifier IS NOT NULL
+        UNION
+        SELECT labelIdentifier FROM EventBatchLabel WHERE eventId = :eventId
+    """)
+    suspend fun getTakenLabelIdentifiers(eventId: Int): List<String>
+
+    /**
+     * Links that still need their own identifier, e.g. right after linking.
+     * Members of a batch with a group label are skipped: the group's applies.
+     */
+    @Query("""
+        SELECT ep.productId FROM EventProductDetail ep
+        INNER JOIN ProductDetail p ON p.id = ep.productId
+        WHERE ep.eventId = :eventId
+          AND ep.labelIdentifier IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM EventBatchLabel bl
+              WHERE bl.eventId = :eventId AND bl.batchId = p.batchId
+          )
+    """)
+    suspend fun getLinksWithoutIdentifier(eventId: Int): List<Int>
+
+    /** The given products that have no identifier yet, whatever their batch. */
+    @Query("""
+        SELECT productId FROM EventProductDetail
+        WHERE eventId = :eventId AND labelIdentifier IS NULL AND productId IN (:productIds)
+    """)
+    suspend fun getLinksWithoutIdentifierAmong(eventId: Int, productIds: List<Int>): List<Int>
+
+    /** Group label printed: the members' own identifiers no longer apply. */
+    @Query("""
+        UPDATE EventProductDetail SET labelIdentifier = NULL
+        WHERE eventId = :eventId
+          AND productId IN (SELECT id FROM ProductDetail WHERE batchId IN (:batchIds))
+    """)
+    suspend fun clearMemberIdentifiers(eventId: Int, batchIds: List<Int>)
+
+    @Query("""
+        UPDATE EventProductDetail SET labelIdentifier = :identifier
+        WHERE eventId = :eventId AND productId = :productId
+    """)
+    suspend fun setLabelIdentifier(eventId: Int, productId: Int, identifier: String)
+
+    /** Existing group labels, so a reprint keeps its identifier. */
+    @Query("SELECT * FROM EventBatchLabel WHERE eventId = :eventId AND batchId IN (:batchIds)")
+    suspend fun getBatchLabels(eventId: Int, batchIds: List<Int>): List<EventBatchLabel>
+
+    @Query("""
+        SELECT productId, labelIdentifier FROM EventProductDetail
+        WHERE eventId = :eventId AND labelIdentifier IS NOT NULL
+    """)
+    fun getLabelIdentifiersFlow(eventId: Int): Flow<List<ProductLabelIdentifier>>
+}

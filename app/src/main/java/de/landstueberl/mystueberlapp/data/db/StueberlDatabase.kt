@@ -1,0 +1,50 @@
+package de.landstueberl.mystueberlapp.data.db
+
+import androidx.room.Database
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import de.landstueberl.mystueberlapp.data.db.converter.DateConverters
+import de.landstueberl.mystueberlapp.data.db.converter.MoneyConverters
+import de.landstueberl.mystueberlapp.data.db.dao.EventDao
+import de.landstueberl.mystueberlapp.data.db.dao.EventSaleDao
+import de.landstueberl.mystueberlapp.data.db.dao.GalleryDao
+import de.landstueberl.mystueberlapp.data.db.dao.OrderDao
+import de.landstueberl.mystueberlapp.data.db.dao.ProductDao
+import de.landstueberl.mystueberlapp.data.db.dao.StatisticsDao
+import de.landstueberl.mystueberlapp.data.db.entity.EventBasketItem
+import de.landstueberl.mystueberlapp.data.db.entity.EventBatchLabel
+import de.landstueberl.mystueberlapp.data.db.entity.EventDetail
+import de.landstueberl.mystueberlapp.data.db.entity.EventProductDetail
+import de.landstueberl.mystueberlapp.data.db.entity.EventSale
+import de.landstueberl.mystueberlapp.data.db.entity.Image
+import de.landstueberl.mystueberlapp.data.db.entity.OrderDetail
+import de.landstueberl.mystueberlapp.data.db.entity.ProductDetail
+import de.landstueberl.mystueberlapp.data.db.entity.ProductMaterialDetail
+
+@Database(
+    entities = [
+        ProductDetail::class,
+        Image::class,
+        OrderDetail::class,
+        ProductMaterialDetail::class,
+        EventDetail::class,
+        EventProductDetail::class,
+        EventSale::class,
+        EventBasketItem::class,
+        EventBatchLabel::class
+    ],
+    version = 19,
+    exportSchema = true
+)
+@TypeConverters(
+    MoneyConverters::class,
+    DateConverters::class
+)
+abstract class StueberlDatabase : RoomDatabase() {
+    abstract fun productDao(): ProductDao
+    abstract fun orderDao(): OrderDao
+    abstract fun statisticsDao(): StatisticsDao
+    abstract fun galleryDao(): GalleryDao
+    abstract fun eventDao(): EventDao
+    abstract fun eventSaleDao(): EventSaleDao
+}
