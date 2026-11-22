@@ -1,19 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup rules for Android 12+ (API 31+). Keep in sync with backup_rules.xml.
+    Cache (camera temp, label sheets) is never backed up.
 -->
 <data-extraction-rules>
+    <!-- Google account backup -->
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <include domain="database" path="." />
+        <include domain="file" path="images/" />
+        <include domain="sharedpref" path="." />
     </cloud-backup>
-    <!--
+
+    <!-- Moving to a new phone (cable or Wi-Fi transfer) -->
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <include domain="database" path="." />
+        <include domain="file" path="images/" />
+        <include domain="sharedpref" path="." />
     </device-transfer>
-    -->
 </data-extraction-rules>

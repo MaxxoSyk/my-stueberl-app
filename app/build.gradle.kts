@@ -16,7 +16,9 @@ plugins {
 android {
     namespace = "de.landstueberl.mystueberlapp"
     compileSdk {
-        version = release(37)
+        version = release(37) {
+            minorApiLevel = 2
+        }
     }
 
     defaultConfig {
@@ -53,9 +55,15 @@ android {
             }
         }
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    sourceSets {
+        // Migration tests read the exported schema JSONs from here.
+        getByName("androidTest").assets.directories.add("$projectDir/schemas")
     }
 }
 
@@ -80,6 +88,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.room.testing)
     ksp(libs.room.compiler)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
@@ -95,6 +104,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.room.testing)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
